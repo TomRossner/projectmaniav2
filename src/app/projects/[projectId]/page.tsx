@@ -1,0 +1,155 @@
+'use client'
+
+import isAuth from '@/app/ProtectedRoute';
+import React, { useEffect, useRef, useState } from 'react';
+import EditModal from '@/components/modals/EditModal';
+import NewTaskModal from '@/components/modals/NewTaskModal';
+import DashboardTop from '@/components/DashboardTop';
+import Stage from '@/components/Stage';
+import { useAppDispatch } from '@/hooks/hooks';
+import { IProject, IStage, setCurrentStage, setCurrentStageIndex, setStages, setTasks } from '@/store/projects/projects.slice';
+import useProjects from '@/hooks/useProjects';
+import NewStageModal from '@/components/modals/NewStageModal';
+import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
+import { updateProject } from '@/services/projects.api';
+import { TScrollDirection } from '@/utils/types';
+import { scrollToIndex } from '@/utils/utils';
+import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
+import { redirect } from 'next/navigation';
+import { LINKS } from '@/utils/links';
+
+const Project = () => {
+  const {currentProject, stages, currentStage, currentStageIndex} = useProjects();
+  const dispatch = useAppDispatch();
+
+  const [noMoreNext, setNoMoreNext] = useState<boolean>(false);
+  const [noMorePrev, setNoMorePrev] = useState<boolean>(false);
+
+  const stagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const updateCurrentStageIndex = (direction: TScrollDirection, totalStages: number): void => {
+    if (direction === 'next' && currentStageIndex < totalStages) {
+      dispatch(setCurrentStageIndex(currentStageIndex + 1));
+    } else if (direction === 'prev' && currentStageIndex > 0) {
+      dispatch(setCurrentStageIndex(currentStageIndex - 1));
+    }
+  }
+
+  const handleScroll = (direction: TScrollDirection) => {
+    if (stages.length === 1) return;
+    
+    const container = stagesContainerRef.current as HTMLDivElement;
+    
+    // container.children.length
+    const totalStages = container.children.length - 1;
+
+    updateCurrentStageIndex(direction, totalStages);
+
+    scrollToIndex(currentStageIndex, direction, container);
+  }
+
+  const moveNext = () => handleScroll('next');
+  const movePrev = () => handleScroll('prev');
+
+  const handleUpdateProject = async (project: IProject): Promise<void> => {
+    const response = await updateProject(project);
+    // console.log(response);
+  }
+
+  const handleDisableNextAndPrevButtons = (index: number, stagesLength: number): void => {
+    if (stagesLength <= 1) {
+      setNoMoreNext(true);
+      setNoMorePrev(true);
+      
+      return;
+    }
+
+    stagesLength = stagesLength - 1;
+
+    if (index === stagesLength) setNoMoreNext(true);
+    if (index === 0 && stagesLength) setNoMorePrev(true);
+
+    if (index !== stagesLength && noMoreNext) setNoMoreNext(false);
+    if (index > 0 && noMorePrev) setNoMorePrev(false);
+  }
+
+  // Set currentStageIndex to 0
+  useEffect(() => {
+    dispatch(setCurrentStageIndex(0));
+  }, [])
+  
+  // Update currentProject's stages when stages change
+  useEffect(() => {
+    if (currentProject) {
+      dispatch(setStages(currentProject.stages));
+    }
+  }, [currentProject])
+
+  // Set currentStage to be the first stage of currentProject if null, happens on mount.
+  useEffect(() => {
+    if (currentProject && stages.length && !currentStage) {
+      dispatch(setCurrentStage(currentProject.stages[0]));
+    }
+  }, [stages, currentStage])
+
+  // Update currentProject in API when changed
+  useEffect(() => {
+    if (currentProject) {
+      // Update project in API
+      handleUpdateProject(currentProject);
+    } else if (!currentProject) redirect(LINKS['PROJECTS']);
+  }, [currentProject])
+
+  // Update currentStage when currentStageIndex changes
+  useEffect(() => {
+    if (currentStageIndex < 0) setCurrentStageIndex(0);
+    else dispatch(setCurrentStage(stages[currentStageIndex]));
+  }, [currentStageIndex])
+
+  // Update buttons disable attribute when currenStageIndex changes
+  useEffect(() => {
+      handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
+  }, [currentStageIndex, stages])
+
+  useEffect(() => {
+    if (!stages.length && currentStage) dispatch(setCurrentStage(null));
+
+    const updatedCurrentStage: IStage = stages.find((stage: IStage) => stage.stageId === currentStage?.stageId) as IStage;
+    if (currentStage) dispatch(setCurrentStage(updatedCurrentStage));
+  }, [stages])
+
+  useEffect(() => {
+    handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
+  }, [currentStage])
+
+
+  return (
+    <>
+    <EditModal/>
+    <NewTaskModal/>
+    <NewStageModal/>
+    <DeleteStagePrompt/>
+    <DeleteProjectPrompt/>
+    <div className='flex justify-end w-full'>
+        <div className='p-2 flex items-start justify-center h-[90vh] max-w-screen-lg w-full'>
+            <div className='grow self-stretch border p-4 border-stone-500 rounded-bl-lg w-full flex flex-col items-center'>
+                <DashboardTop
+                  noMoreNext={noMoreNext}
+                  noMorePrev={noMorePrev}
+                  moveNext={moveNext}
+                  movePrev={movePrev}
+                />
+                
+                <div id='stagesContainer' ref={stagesContainerRef} className='w-full h-full snap-x snap-mandatory flex overflow-y-hidden overflow-x-auto no-scrollbar gap-5'>
+                  {currentProject?.stages.map((stage: IStage) =>
+                    <Stage {...stage} key={stage.stageId}/>
+                  )}
+                </div>
+            </div>
+        </div>
+    </div>
+    </>
+  )
+}
+
+export default isAuth(Project);
