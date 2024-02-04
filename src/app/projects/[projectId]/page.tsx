@@ -2,12 +2,11 @@
 
 import isAuth from '@/app/ProtectedRoute';
 import React, { useEffect, useRef, useState } from 'react';
-import EditModal from '@/components/modals/EditModal';
 import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
 import { useAppDispatch } from '@/hooks/hooks';
-import { IProject, IStage, setCurrentStage, setCurrentStageIndex, setStages, setTasks } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentStage, setCurrentStageIndex, setStages } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
@@ -17,9 +16,14 @@ import { scrollToIndex } from '@/utils/utils';
 import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
 import { redirect } from 'next/navigation';
 import { LINKS } from '@/utils/links';
+import EditTaskModal from '@/components/modals/EditTaskModal';
+import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
+import EditStageModal from '@/components/modals/EditStageModal';
+import EditDashboardModal from '@/components/modals/EditDashboardModal';
+import { AxiosResponse } from 'axios';
 
 const Project = () => {
-  const {currentProject, stages, currentStage, currentStageIndex} = useProjects();
+  const {currentProject, stages, currentStage, currentStageIndex, currentTask} = useProjects();
   const dispatch = useAppDispatch();
 
   const [noMoreNext, setNoMoreNext] = useState<boolean>(false);
@@ -51,10 +55,8 @@ const Project = () => {
   const moveNext = () => handleScroll('next');
   const movePrev = () => handleScroll('prev');
 
-  const handleUpdateProject = async (project: IProject): Promise<void> => {
-    const response = await updateProject(project);
-    // console.log(response);
-  }
+  const handleUpdateProject = async (project: IProject): Promise<AxiosResponse> =>
+    await updateProject(project);
 
   const handleDisableNextAndPrevButtons = (index: number, stagesLength: number): void => {
     if (stagesLength <= 1) {
@@ -122,14 +124,16 @@ const Project = () => {
     handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
   }, [currentStage])
 
-
   return (
     <>
-    <EditModal/>
+    <EditStageModal/>
+    <EditDashboardModal/>
     <NewTaskModal/>
     <NewStageModal/>
     <DeleteStagePrompt/>
     <DeleteProjectPrompt/>
+    <EditTaskModal {...currentTask as ITask}/>
+    <DeleteTaskPrompt/>
     <div className='flex justify-end w-full'>
         <div className='p-2 flex items-start justify-center h-[90vh] max-w-screen-lg w-full'>
             <div className='grow self-stretch border p-4 border-stone-500 rounded-bl-lg w-full flex flex-col items-center'>
