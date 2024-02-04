@@ -3,25 +3,31 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 interface IAppInitialState {
     menuOpen: boolean;
     errorModalOpen: boolean;
-    editModalOpen: boolean;
+    editStageModalOpen: boolean;
     newTaskModalOpen: boolean;
     error: string | null;
     newStageModalOpen: boolean;
     deleteStagePromptOpen: boolean;
     deleteProjectPromptOpen: boolean;
     newProjectModalOpen: boolean;
+    editTaskModalOpen: boolean;
+    deleteTaskPromptOpen: boolean;
+    editProjectModalOpen: boolean;
 }
 
 const initialState: IAppInitialState = {
     menuOpen: false,
     errorModalOpen: false,
-    editModalOpen: false,
+    editStageModalOpen: false,
     newTaskModalOpen: false,
     error: null,
     newStageModalOpen: false,
     deleteStagePromptOpen: false,
     deleteProjectPromptOpen: false,
     newProjectModalOpen: false,
+    editTaskModalOpen: false,
+    deleteTaskPromptOpen: false,
+    editProjectModalOpen: false
 }
 
 export const appSlice = createSlice({
@@ -48,14 +54,14 @@ export const appSlice = createSlice({
             state.errorModalOpen = true;
         },
 
-        toggleEditModal: (state) => {
-            state.editModalOpen = !state.editModalOpen;
+        toggleEditStageModal: (state) => {
+            state.editStageModalOpen = !state.editStageModalOpen;
         },
-        closeEditModal: (state) => {
-            state.editModalOpen = false;
+        closeEditStageModal: (state) => {
+            state.editStageModalOpen = false;
         },
-        openEditModal: (state) => {
-            state.editModalOpen = true;
+        openEditStageModal: (state) => {
+            state.editStageModalOpen = true;
         },
 
         toggleNewTaskModal: (state) => {
@@ -111,6 +117,36 @@ export const appSlice = createSlice({
         openNewProjectModal: (state) => {
             state.newProjectModalOpen = true;
         },
+
+        toggleEditTaskModal: (state) => {
+            state.editTaskModalOpen = !state.editTaskModalOpen;
+        },
+        closeEditTaskModal: (state) => {
+            state.editTaskModalOpen = false;
+        },
+        openEditTaskModal: (state) => {
+            state.editTaskModalOpen = true;
+        },
+
+        toggleDeleteTaskPrompt: (state) => {
+            state.deleteTaskPromptOpen = !state.deleteTaskPromptOpen;
+        },
+        closeDeleteTaskPrompt: (state) => {
+            state.deleteTaskPromptOpen = false;
+        },
+        openDeleteTaskPrompt: (state) => {
+            state.deleteTaskPromptOpen = true;
+        },
+
+        toggleEditProjectModal: (state) => {
+            state.editProjectModalOpen = !state.editProjectModalOpen;
+        },
+        closeEditProjectModal: (state) => {
+            state.editProjectModalOpen = false;
+        },
+        openEditProjectModal: (state) => {
+            state.editProjectModalOpen = true;
+        },
     }
 })
 
@@ -123,9 +159,9 @@ export const {
     closeErrorModal,
     openErrorModal,
     
-    toggleEditModal,
-    closeEditModal,
-    openEditModal,
+    toggleEditStageModal,
+    closeEditStageModal,
+    openEditStageModal,
     
     toggleNewTaskModal,
     closeNewTaskModal,
@@ -148,4 +184,16 @@ export const {
     toggleNewProjectModal,
     closeNewProjectModal,
     openNewProjectModal,
+
+    toggleEditTaskModal,
+    closeEditTaskModal,
+    openEditTaskModal,
+
+    toggleDeleteTaskPrompt,
+    closeDeleteTaskPrompt,
+    openDeleteTaskPrompt,
+    
+    toggleEditProjectModal,
+    closeEditProjectModal,
+    openEditProjectModal,
 } = appSlice.actions;

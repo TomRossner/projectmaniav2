@@ -14,6 +14,7 @@ import { capitalizeFirstLetter, convertToISODate } from '@/utils/utils';
 import Label from '../common/Label';
 import useProjects from '@/hooks/useProjects';
 import { IBaseTask } from '@/utils/interfaces';
+import { createNewTask } from '@/services/projects.api';
 
 const NewTaskModal = () => {
     const {newTaskModalOpen} = useNewTaskModal();
@@ -25,31 +26,37 @@ const NewTaskModal = () => {
 
     const dispatch = useAppDispatch();
 
-    const handleCreate = (newTaskData: IBaseTask): void => {
+    const handleCreate = async (newTaskData: IBaseTask): Promise<void> => {
         if (!currentStage) {
             dispatch(setError('Failed creating task'));
             return;
         }
 
-        const newTask = {
+        const date = new Date(inputValues.dueDate).toJSON();
+
+        const newTask: Partial<ITask> = {
             ...newTaskData,
-            dueDate: new Date(inputValues.dueDate).toJSON(),
+            dueDate: date,
             currentStage: {
                 stageId: currentStage?.stageId,
                 title: currentStage?.title
             }
         }
 
+        const {data: task} = await createNewTask(newTask);
+
+        const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
+            if (currentStage.stageId === stage.stageId) {
+                return {
+                    ...currentStage,
+                    tasks: [...currentStage.tasks, task]
+                }
+            } else return stage;
+        }) as IStage[];
+
         const updatedCurrentProject: IProject = {
             ...currentProject,
-            stages: currentProject?.stages.map((stage: IStage) => {
-                if (currentStage.stageId === stage.stageId) {
-                    return {
-                        ...currentStage,
-                        tasks: [...currentStage.tasks, newTask]
-                    }
-                } else return stage;
-            })
+            stages: updatedStages
         } as IProject;
 
         dispatch(setCurrentProject(updatedCurrentProject));

@@ -4,7 +4,7 @@ export const selectMobileMenu = (state: RootState): boolean => state.app.menuOpe
 
 export const selectErrorModal = (state: RootState): boolean => state.app.errorModalOpen;
 
-export const selectEditModal = (state: RootState): boolean => state.app.editModalOpen;
+export const selectEditStageModal = (state: RootState): boolean => state.app.editStageModalOpen;
 
 export const selectNewTaskModal = (state: RootState): boolean => state.app.newTaskModalOpen;
 
@@ -17,3 +17,9 @@ export const selectDeleteStagePrompt = (state: RootState): boolean => state.app.
 export const selectDeleteProjectPrompt = (state: RootState): boolean => state.app.deleteProjectPromptOpen;
 
 export const selectNewProjectModal = (state: RootState): boolean => state.app.newProjectModalOpen;
+
+export const selectEditTaskModalOpen = (state: RootState): boolean => state.app.editTaskModalOpen;
+
+export const selectDeleteTaskPrompt = (state: RootState): boolean => state.app.deleteTaskPromptOpen;
+
+export const selectEditProjectModalOpen = (state: RootState): boolean => state.app.editProjectModalOpen;

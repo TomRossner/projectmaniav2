@@ -1,5 +1,7 @@
 import {
-  selectEditModal,
+  selectEditProjectModalOpen,
+  selectEditStageModal,
+  selectEditTaskModalOpen,
   selectErrorModal,
   selectNewProjectModal,
   selectNewStageModal,
@@ -8,19 +10,24 @@ import {
 import { useAppSelector } from "./hooks";
 
 const useModals = () => {
-    const editModalOpen = useAppSelector(selectEditModal);
+    const editStageModalOpen = useAppSelector(selectEditStageModal);
     const errorModalOpen = useAppSelector(selectErrorModal);
 
     const newStageModalOpen = useAppSelector(selectNewStageModal);
     const newTaskModalOpen = useAppSelector(selectNewTaskModal);
     const newProjectModalOpen = useAppSelector(selectNewProjectModal);
 
+    const editTaskModalOpen = useAppSelector(selectEditTaskModalOpen);
+    const editProjectModalOpen = useAppSelector(selectEditProjectModalOpen);
+
   return {
-    editModalOpen,
+    editStageModalOpen,
     errorModalOpen,
     newStageModalOpen,
     newTaskModalOpen,
-    newProjectModalOpen
+    newProjectModalOpen,
+    editTaskModalOpen,
+    editProjectModalOpen
   }
 }
 
