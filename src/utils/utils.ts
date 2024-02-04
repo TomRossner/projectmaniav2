@@ -9,8 +9,9 @@ const capitalizeFirstLetter = (string: string): string => {
     return `${firstLetter.toUpperCase()}${rest}`;
 }
 
-const convertToISODate = (date: string): string => {
-    return new Date(date).toISOString().substring(0, 10);
+const convertToISODate = (date: string): string | void => {
+    if (!date) return;
+    else return new Date(date).toISOString().substring(0, 10);
 }
 
 const scrollToIndex = (index: number, direction: TScrollDirection, container: HTMLDivElement): void => {

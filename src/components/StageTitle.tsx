@@ -4,7 +4,7 @@ import React from 'react';
 
 const StageTitle = ({title}: {title: string}) => {
   return (
-    <h2 className='text-2xl'>{title}</h2>
+    <h2 className='text-2xl flex-1 truncate'>{title}</h2>
   )
 }
 

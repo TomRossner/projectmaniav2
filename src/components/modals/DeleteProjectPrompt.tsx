@@ -18,7 +18,6 @@ const DeleteProjectPrompt = () => {
     const dispatch = useAppDispatch();
 
     const closePrompt = (): void => {
-        dispatch(setCurrentProject(null));
         dispatch(closeDeleteProjectPrompt());
     }
 
@@ -30,8 +29,7 @@ const DeleteProjectPrompt = () => {
                 return;
             }
             
-            const response = await deleteProject(currentProject.projectId);
-            console.log(response)
+            await deleteProject(currentProject.projectId);
             
             dispatch(setProjects([
                 ...projects.filter((project: IProject) =>
@@ -39,7 +37,8 @@ const DeleteProjectPrompt = () => {
                 )
             ]));
 
-            closePrompt();      
+            dispatch(setCurrentProject(null));
+            closePrompt();  
     
         } catch (error: any) {
             console.error(error);

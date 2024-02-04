@@ -10,12 +10,12 @@ const StageContent = (stage: IStage) => {
 
   useEffect(() => {
     setTasks(stage.tasks);
-  }, [])
+  }, [stage])
   
   return (
     <div className='w-full h-full rounded-bl-lg bg-slate-100 flex justify-center overflow-y-auto'>
         {tasks.length ? (
-          <div className='w-full flex flex-col p-4 gap-3 items-center min-h-full'>
+          <div className='w-full flex flex-col p-4 gap-3 items-center min-h-full overflow-y-auto'>
             {tasks.map((task: ITask, index: number) =>
                 <Task key={index} {...task}/>
             )}

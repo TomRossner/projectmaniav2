@@ -7,7 +7,7 @@ export interface IInputProps {
     type: string;
     id: string;
     name: string;
-    value: any;
+    value?: any;
     placeholder?: string;
     additionalStyles?: string;
     onChange: (ev: React.ChangeEvent<HTMLInputElement>) => void;
@@ -33,7 +33,7 @@ const Input = (props: IInputProps) => {
         <Label
           htmlFor={id}
           labelText={labelText}
-          additionalStyles={labelAdditionalStyles + ' text-stone-800'}
+          additionalStyles={labelAdditionalStyles ? labelAdditionalStyles : 'text-stone-800'}
         />
 
         <input

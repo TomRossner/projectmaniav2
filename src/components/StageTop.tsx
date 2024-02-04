@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import { openDeleteStagePrompt, openEditModal, openNewTaskModal } from '@/store/app/app.slice';
+import { openDeleteStagePrompt, openEditStageModal, openNewTaskModal } from '@/store/app/app.slice';
 import React, { useEffect, useRef, useState } from 'react';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { GoSearch } from 'react-icons/go';
@@ -27,7 +27,7 @@ const StageTop = (stage: IStage) => {
     const handleEdit = (): void => {
         // Make sure this stage is the currentStage
         // dispatch(setCurrentStage(stage));
-        dispatch(openEditModal());
+        dispatch(openEditStageModal());
     }
 
     const handleAddNewTask = (): void => {
@@ -49,14 +49,14 @@ const StageTop = (stage: IStage) => {
   return (
     <>
     <div className='flex items-center gap-2 px-3 py-2 w-full justify-between'>
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-2 min-w-0'>
             <span title={`${stage.tasks.length} total tasks`} className='min-w-6 max-w-fit text-center aspect-square px-2 pt-1 text-lg font-semibold text-stone-500 border bg-slate-50'>
                 {stage.tasks.length}
             </span>
             <StageTitle title={stage.title as string}/>
         </div>
 
-        <div className='flex items-center gap-1 justify-around py-1'>
+        <div className='flex items-center gap-1 py-1 flex-grow justify-end'>
 
             <ButtonWithIcon
                 title='Add task'

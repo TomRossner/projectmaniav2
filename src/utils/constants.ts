@@ -39,6 +39,11 @@ const DEFAULT_PROJECT: Partial<IProject> = {
     team: []
 }
 
+const TASK_MENU_OPTIONS: string[] = [
+    'Edit',
+    'Delete'
+]
+
 export {
     APP_VERSION,
     APP_VERSION_FULL,
@@ -49,5 +54,6 @@ export {
     DEFAULT_TASK_VALUES,
     SCROLL_DIRECTIONS,
     DEFAULT_PROJECT_TITLE,
-    DEFAULT_PROJECT
+    DEFAULT_PROJECT,
+    TASK_MENU_OPTIONS
 }

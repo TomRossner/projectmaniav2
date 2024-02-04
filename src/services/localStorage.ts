@@ -6,14 +6,9 @@ const saveJwt = (token: string): void => {
     return localStorage.setItem('token', token);
 }
 
-const getJwt = (): string => {
-    const token = localStorage.getItem('token') as string;
-    return token;
-}
+const getJwt = (): string => localStorage.getItem('token') as string;
 
-const deleteJwt = (): void => {
-    return localStorage.removeItem('token');
-}
+const deleteJwt = (): void => localStorage.removeItem('token');
 
 const getUserFromJwt = (): TUser => {
     try {
@@ -23,9 +18,7 @@ const getUserFromJwt = (): TUser => {
     }
 }
 
-const setTokenHeader = (): void => {
-    setCommonHeader('x-auth-token', getJwt() as string);
-}
+const setTokenHeader = (): void => setCommonHeader('x-auth-token', getJwt() as string);
 
 const setCommonHeader = (headerName: string, value: string | null): void => {
     axios.defaults.headers.common[headerName] = value;

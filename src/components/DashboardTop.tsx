@@ -8,8 +8,9 @@ import ProjectTitle from './ProjectTitle';
 import Line from './common/Line';
 import { BiPlus } from 'react-icons/bi';
 import { useAppDispatch } from '@/hooks/hooks';
-import { openDeleteProjectPrompt, openNewStageModal } from '@/store/app/app.slice';
+import { openDeleteProjectPrompt, openEditProjectModal, openNewStageModal } from '@/store/app/app.slice';
 import { HiOutlineTrash } from 'react-icons/hi';
+import { RiEditLine } from 'react-icons/ri';
 
 interface IDashboardTopProps {
   moveNext: () => void;
@@ -33,10 +34,16 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: IDashboardTo
 
     const disabledStyles = 'sm:hidden disabled:border-slate-200 disabled:text-slate-200 disabled:hover:border-slate-200 disabled:hover:text-slate-200 disabled:cursor-default';
 
+    const handleEdit = () => {
+      dispatch(openEditProjectModal());
+    }
   return (
     <>
     <div className='flex items-center justify-between w-full'>
-        <ProjectTitle title={currentProject?.title as string} subtitle={currentProject?.subtitle}/>
+        <div className='flex items-center gap-3 hover:nth group'>
+          <ProjectTitle title={currentProject?.title as string} subtitle={currentProject?.subtitle}/>
+          <ButtonWithIcon additionalStyles='group-hover:flex hidden' action={handleEdit} icon={<RiEditLine/>} title='Edit title'/>
+        </div>
 
         <div className='flex items-center gap-1'>
             <ButtonWithIcon action={openModal} title='Add stage' icon={<BiPlus/>}/>
