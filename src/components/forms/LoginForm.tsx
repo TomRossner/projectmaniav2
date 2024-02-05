@@ -1,20 +1,16 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import InputContainer from '../common/InputContainer';
 import Input from '../common/Input';
 import { fetchUserAsync, setAuthError, setIsLoading, setUser } from '@/store/auth/auth.slice';
 import { IFormProps } from './SignUpForm';
 import { useAppDispatch } from '@/hooks/hooks';
 import { ILoginCredentials } from '@/utils/interfaces';
-import { googleSignIn } from '@/services/auth.api';
 import FormHeader from './FormHeader';
 import GoogleLogo from '../GoogleLogo';
-import { getJwt, getUserFromJwt } from '@/services/localStorage';
-import ErrorModal from '../modals/ErrorModal';
+import { getUserFromJwt } from '@/services/localStorage';
 import useAuth from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { LINKS } from '@/utils/links';
 import LoadingIcon from '../LoadingIcon';
 
 export const INITIAL_LOGIN_DATA: ILoginCredentials = {
@@ -22,16 +18,12 @@ export const INITIAL_LOGIN_DATA: ILoginCredentials = {
     password: ''
 }
 
-const LoginForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
+const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
     const [loginData, setLoginData] = useState<ILoginCredentials>(INITIAL_LOGIN_DATA);
-    
-    // const [formError, setFormError] = useState<string | null>(null);
 
     const dispatch = useAppDispatch();
 
-    const {isLoading, user} = useAuth();
-
-    const router = useRouter();
+    const {isLoading} = useAuth();
 
     const handleLoginFormSubmit = async (ev: React.FormEvent<HTMLFormElement>): Promise<void> => {
         ev.preventDefault();

@@ -1,5 +1,5 @@
 import { useAppDispatch } from '@/hooks/hooks';
-import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
+import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
 import React from 'react';

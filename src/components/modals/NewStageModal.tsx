@@ -8,14 +8,13 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import Line from '../common/Line';
 import { DEFAULT_STAGE } from '@/utils/constants';
-import { IProject, IStage, setCurrentProject, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import useStage from '@/hooks/useModals';
 import { createStage } from '@/services/projects.api';
 
 const NewStageModal = () => {
     const {newStageModalOpen} = useStage();
-
     const {currentProject, stages} = useProjects();
 
     const [inputValues, setInputValues] = useState<IStage>(DEFAULT_STAGE);

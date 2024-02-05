@@ -10,7 +10,6 @@ import InputContainer from '../common/InputContainer';
 import Input from '../common/Input';
 import FormHeader from './FormHeader';
 import { INITIAL_LOGIN_DATA } from './LoginForm';
-import ErrorModal from '../modals/ErrorModal';
 import { isValidPasswordPattern } from '@/utils/forms';
 
 const INITIAL_SIGN_UP_DATA: IUserSignUpData = {
@@ -35,7 +34,6 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
 
     const handleSignUpFormSubmit = async (ev: React.FormEvent<HTMLFormElement>): Promise<void> => {
         ev.preventDefault();
-        // dispatch(setIsLoading(true));
   
         if (formError) setFormError(null);
   

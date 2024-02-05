@@ -9,7 +9,7 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import Line from '../common/Line';
 import { DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, PRIORITIES } from '@/utils/constants';
-import { IProject, IStage, ITask, TPriority, setCurrentProject, setCurrentStage, setTasks } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, TPriority, setCurrentProject } from '@/store/projects/projects.slice';
 import { capitalizeFirstLetter, convertToISODate } from '@/utils/utils';
 import Label from '../common/Label';
 import useProjects from '@/hooks/useProjects';
@@ -18,7 +18,7 @@ import { createNewTask } from '@/services/projects.api';
 
 const NewTaskModal = () => {
     const {newTaskModalOpen} = useNewTaskModal();
-    const {currentProject, tasks, currentStage} = useProjects();
+    const {currentProject, currentStage} = useProjects();
 
     const [selectedPriority, setSelectedPriority] = useState<TPriority>(DEFAULT_PRIORITY);
 

@@ -1,17 +1,15 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import TaskTitle from './TaskTitle';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BsThreeDots } from 'react-icons/bs';
 import TaskMenu from './TaskMenu';
-import useProjects from '@/hooks/useProjects';
 import { ITask, setCurrentTask } from '@/store/projects/projects.slice';
 import { useAppDispatch } from '@/hooks/hooks';
 
 const TaskTop = ({title, task}: {title: string, task: ITask}) => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const {currentTask} = useProjects();
   const dispatch = useAppDispatch();
 
   const toggleMenu = () => {

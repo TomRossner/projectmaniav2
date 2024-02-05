@@ -9,8 +9,7 @@ import { RiEditLine } from 'react-icons/ri';
 import { BiPlus } from 'react-icons/bi';
 import StageTitle from './StageTitle';
 import Line from './common/Line';
-import { IStage, setCurrentStage } from '@/store/projects/projects.slice';
-import { BsThreeDotsVertical, BsThreeDots } from "react-icons/bs";
+import { IStage } from '@/store/projects/projects.slice';
 import { HiOutlineTrash } from "react-icons/hi2";
 
 const StageTop = (stage: IStage) => {

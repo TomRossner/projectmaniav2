@@ -1,16 +1,13 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import useAuth from '@/hooks/useAuth';
 import useEditModal from '@/hooks/useModals';
 import useProjects from '@/hooks/useProjects';
 import { closeEditStageModal } from '@/store/app/app.slice';
-import { IProject, IStage, ITeamMember, setCurrentProject, setCurrentStage, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
-import Image from 'next/image';
 import { redirect } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import defaultProfilePic from "../../assets/defaultProfilePic.jpg"; 
 import Input from '../common/Input';
 import ModalTitle from './ModalTitle';
 import Button from '../common/Button';
@@ -21,7 +18,6 @@ const EditStageModal = () => {
 
     const {currentProject, currentStage, stages} = useProjects();
     const {editStageModalOpen} = useEditModal();
-    const {user} = useAuth();
 
     const DEFAULT_VALUES = {
         title: '',

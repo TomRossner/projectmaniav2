@@ -8,7 +8,7 @@ import { closeDeleteStagePrompt, setError } from '@/store/app/app.slice';
 import ModalTitle from './ModalTitle';
 import useProjects from '@/hooks/useProjects';
 import Line from '../common/Line';
-import { IProject, IStage, setCurrentProject, setCurrentStage, setCurrentStageIndex, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, setCurrentProject, setCurrentStageIndex } from '@/store/projects/projects.slice';
 
 const DeleteStagePrompt = () => {
     const {deleteStagePromptOpen} = useDeleteStagePrompt();

@@ -1,7 +1,7 @@
 'use client'
 
 import { TASK_MENU_OPTIONS } from '@/utils/constants';
-import React, { useEffect } from 'react';
+import React from 'react';
 import TaskMenuOption from './TaskMenuOption';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeEditTaskModal, openDeleteTaskPrompt, openEditTaskModal } from '@/store/app/app.slice';
