@@ -37,6 +37,7 @@ const Input = (props: IInputProps) => {
         />
 
         <input
+            autoComplete='on'
             onChange={onChange}
             type={type}
             id={id}

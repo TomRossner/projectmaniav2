@@ -98,7 +98,7 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
   return (
     <>
     <form
-        autoComplete='off'
+        autoComplete='on'
         id='signUpForm'
         onSubmit={handleSignUpFormSubmit}
         className={`

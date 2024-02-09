@@ -16,8 +16,6 @@ const convertToISODate = (date: string): string | void => {
 
 const scrollToIndex = (index: number, direction: TScrollDirection, container: HTMLDivElement): void => {
     const nextStageOffset = index * container.clientWidth;
-
-    // console.log({index})
     
     container.scrollTo({
       left: direction === 'next'

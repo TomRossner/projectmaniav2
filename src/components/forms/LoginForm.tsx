@@ -80,7 +80,7 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
   return (
     <>
     <form
-        autoComplete='off'
+        autoComplete='on'
         id='loginForm'
         onSubmit={handleLoginFormSubmit}
         className={`

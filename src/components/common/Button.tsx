@@ -3,14 +3,15 @@
 import React from 'react';
 interface IButtonProps {
     text: string;
-    action: () => void;
+    action?: () => void;
+    type?: 'submit' | 'reset' | 'button' | undefined;
     additionalStyles?: string;
 }
 
-const Button = ({text, action, additionalStyles}: IButtonProps) => {
+const Button = ({text, action, additionalStyles, type}: IButtonProps) => {
   return (
     <button
-        type='button'
+        type={type ? type : 'button'}
         onClick={action}
         className={`
             ${additionalStyles}

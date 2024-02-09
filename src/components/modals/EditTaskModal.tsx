@@ -140,7 +140,7 @@ const EditTaskModal = (task: ITask) => {
   return (
     <>
     {editTaskModalOpen && currentTask && inputValues && <div id='modalBackdrop' className='w-screen h-screen absolute top-0 left-0 right-0 bottom-0 m-auto flex items-center justify-center z-50'>
-        <div id='editModal' className='min-w-[400px] max-w-[500px] min-h-24 m-auto border border-stone-500 bg-slate-100 py-3 px-4 rounded-bl-lg flex flex-col drop-shadow-md'>
+        <form autoComplete='on' onSubmit={() => handleSave(inputValues as ITask)} className='min-w-[400px] max-w-[500px] min-h-24 m-auto border border-stone-500 bg-slate-100 py-3 px-4 rounded-bl-lg flex flex-col drop-shadow-md'>
             <ModalTitle text={`Edit ${currentTask?.title}`}/>
             
             <Line additionalStyles='pb-3'/>
@@ -165,7 +165,7 @@ const EditTaskModal = (task: ITask) => {
             />
 
             <div className='flex gap-1 items-center w-full py-4'>
-                <Label htmlFor="taskPriority" labelText='Priority' additionalStyles='text-xl block w-1/4'/>
+                <p className='text-xl block w-1/4 text-stone-800'>Priority</p>
 
                 <div className='w-full flex items-center gap-1'>
                     {PRIORITIES.map((priority: TPriority) => {
@@ -174,7 +174,7 @@ const EditTaskModal = (task: ITask) => {
                                 <input
                                     hidden
                                     type="radio"
-                                    name='taskPriority'
+                                    name='priority'
                                     key={priority}
                                     id={priority}
                                     value={priority}
@@ -211,15 +211,16 @@ const EditTaskModal = (task: ITask) => {
             <textarea value={inputValues.description} name="description" id="description"  className='text-lg px-1 outline-none mb-4 border rounded-bl-lg border-stone-300 w-full min-h-20 max-h-40' onChange={handleInputChange}/>
 
             <div className='flex w-full items-center justify-between'>
-                <Input type='file' additionalStyles='hidden' labelText='Thumbnail' name='thumbnail' onChange={handleUploadChange} id='thumbnail'/>
+                <p className='text-xl text-stone-800 cursor-default'>Thumbnail</p>
                 {inputValues.imgSrc
                     ? <button type='button' className='text-xl cursor-pointer text-stone-800' onClick={handleRemoveThumbnail}>Remove</button>
                     :   <Input
                             type='file'
-                            id='thumbnail'
+                            id='imgSrc'
                             labelText='Choose thumbnail'
-                            name='thumbnail'
-                            onChange={handleUploadChange} additionalStyles='hidden'
+                            name='imgSrc'
+                            onChange={handleUploadChange}
+                            additionalStyles='hidden'
                             labelAdditionalStyles='cursor-pointer text-blue-500'
                         />
                 }
@@ -230,11 +231,11 @@ const EditTaskModal = (task: ITask) => {
             <Line additionalStyles='py-1'/>
             
             <div className='flex items-center gap-1 justify-end'>
-                <Button text='Save' action={() => handleSave(inputValues as ITask)} additionalStyles='text-white bg-blue-400 rounded-bl-lg hover:bg-blue-500' />
+                <Button text='Save' type='submit' additionalStyles='text-white bg-blue-400 rounded-bl-lg hover:bg-blue-500' />
                 
                 <Button text='Cancel' action={closeModal} additionalStyles='text-stone-700 hover:bg-slate-200' />
             </div>
-        </div>
+        </form>
     </div>}
     </>
   )
