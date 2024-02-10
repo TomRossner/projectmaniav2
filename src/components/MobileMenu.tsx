@@ -14,6 +14,7 @@ import { CgProfile } from "react-icons/cg";
 import useMobileMenu from '@/hooks/useMobileMenu';
 import useAuth from '@/hooks/useAuth';
 import { TbLogout2 } from "react-icons/tb";
+import { IoSettingsOutline } from "react-icons/io5";
 
 export interface IMenuItem {
     text: string;
@@ -40,11 +41,11 @@ const MobileMenu = () => {
             icon: <BiHome/>
         },
         {
-            text: "Teams",
+            text: "About",
             action: () => {
                 closeMenu();
             },
-            icon: <RiTeamLine/>
+            icon: <LuInfo/>
         },
         {
             text: "Projects",
@@ -64,11 +65,11 @@ const MobileMenu = () => {
 
     const ul2: IMenuItem[] = [
         {
-            text: "About",
+            text: "Settings",
             action: () => {
                 closeMenu();
             },
-            icon: <LuInfo/>
+            icon: <IoSettingsOutline/>
         },
         {
             text: user ? `${user.firstName} ${user.lastName}` : "Profile",

@@ -26,7 +26,8 @@ const DEFAULT_TASK_VALUES: IBaseTask = {
     dueDate: new Date(Date.now()).toJSON(),
     description: '',
     priority: DEFAULT_PRIORITY as TPriority,
-    isDone: false
+    isDone: false,
+    imgSrc: ''
 }
 
 const SCROLL_DIRECTIONS: TScrollDirection[] = ['next', "prev"];

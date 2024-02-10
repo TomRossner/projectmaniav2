@@ -2,7 +2,7 @@ export const LINKS: {[key: string]: string} = {
     HOME: '/',
     PROJECTS: '/projects',
     MESSAGES: '/messages',
-    TEAMS: '/teams',
+    SETTINGS: '/settings',
     ABOUT: '/about',
     PROFILE: '/profile',
     SIGN_IN: '/sign-in',
