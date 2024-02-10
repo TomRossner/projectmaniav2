@@ -15,6 +15,7 @@ import Label from '../common/Label';
 import useProjects from '@/hooks/useProjects';
 import { IBaseTask } from '@/utils/interfaces';
 import { createNewTask } from '@/services/projects.api';
+import Image from 'next/image';
 
 const NewTaskModal = () => {
     const {newTaskModalOpen} = useNewTaskModal();
@@ -117,6 +118,25 @@ const NewTaskModal = () => {
         }
     }
 
+    const handleUploadChange = (e: any) => {
+        if (!e.target.files.length) return;
+        handleUpload(e.target.files[0]);
+    }
+
+    const handleUpload = (file: any) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+
+        reader.onload = async () => {
+          const base64EncodedFile = reader.result as string;
+          setInputValues({...inputValues, imgSrc: base64EncodedFile} as ITask);
+        }
+    }
+
+    const handleRemoveThumbnail = ()=> {
+        setInputValues({...inputValues, imgSrc: ''} as ITask);
+    }
+
     useEffect(() => {
         setInputValues(inputValues => ({
             ...inputValues,
@@ -198,6 +218,34 @@ const NewTaskModal = () => {
                         })}
                     </div>
                 </div>
+
+                {/* Thumbnail */}
+                <div className='flex w-full items-center justify-between'>
+                    <p className='text-stone-800 text-xl'>Thumbnail</p>
+                    {
+                        inputValues.imgSrc
+                            ?   <button type='button' className='text-xl cursor-pointer text-stone-800' onClick={handleRemoveThumbnail}>Remove</button>
+                            :   <Input
+                                    type='file'
+                                    id='imgSrc'
+                                    labelText='Choose thumbnail'
+                                    name='imgSrc'
+                                    onChange={handleUploadChange}
+                                    additionalStyles='hidden'
+                                    labelAdditionalStyles='cursor-pointer text-blue-500'
+                                />
+                    }
+                </div>
+                {
+                    inputValues.imgSrc && (
+                        <Image
+                            src={inputValues.imgSrc}
+                            width={100} height={60}
+                            alt='Thumbnail'
+                            className='w-full border border-black rounded-bl-lg'
+                        />
+                    )
+                }
             </div>
             
             <Line additionalStyles='pb-1'/> 

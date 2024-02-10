@@ -41,6 +41,7 @@ interface IBaseTask {
     isDone: boolean;
     currentStage?: Partial<IStage>;
     description?: string;
+    imgSrc?: string;
 }
 
 export type {
