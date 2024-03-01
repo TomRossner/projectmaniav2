@@ -134,8 +134,8 @@ const Project = () => {
     <DeleteProjectPrompt/>
     <EditTaskModal {...currentTask as ITask}/>
     <DeleteTaskPrompt/>
-    <div className='flex justify-end w-full'>
-        <div className='p-2 flex items-start justify-center h-[90vh] max-w-screen-lg w-full'>
+    <div className='flex justify-end w-full h-[90vh]'>
+        <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full'>
             <div className='grow self-stretch border p-4 border-stone-500 rounded-bl-lg w-full flex flex-col items-center'>
                 <DashboardTop
                   noMoreNext={noMoreNext}
@@ -144,7 +144,7 @@ const Project = () => {
                   movePrev={movePrev}
                 />
                 
-                <div id='stagesContainer' ref={stagesContainerRef} className='w-full h-full snap-x snap-mandatory flex overflow-y-hidden overflow-x-auto no-scrollbar gap-5'>
+                <div id='stagesContainer' ref={stagesContainerRef} className='w-full grow snap-x snap-mandatory flex overflow-y-hidden overflow-x-auto no-scrollbar gap-5'>
                   {currentProject?.stages.map((stage: IStage) =>
                     <Stage {...stage} key={stage.stageId}/>
                   )}

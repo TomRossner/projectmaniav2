@@ -20,7 +20,7 @@ const Task = (task: ITask) => {
     const dispatch = useDispatch();
 
   return (
-    <div onClick={() => dispatch(setCurrentTask(task))} className='w-full max-w-[400px] min-h-[100px] flex flex-col flex-wrap px-3 py-2 gap-3 rounded-bl-lg border border-slate-300 cursor-pointer transition-all bg-slate-200 hover:border-blue-500 hover:bg-slate-50'>
+    <div onClick={() => dispatch(setCurrentTask(task))} className='w-full max-w-[400px] h-auto flex flex-col px-3 py-2 gap-3 rounded-bl-lg border border-slate-300 cursor-pointer transition-all bg-slate-200 hover:border-blue-500 hover:bg-slate-50'>
         {task.imgSrc && (
           <div className='w-full h-32 flex items-start overflow-clip rounded-bl-lg border border-stone-200'>
             <Image src={task.imgSrc} width={100} height={60} alt='Thumbnail' className='opacity-75 aspect-auto w-full h-auto'/>
