@@ -12,7 +12,6 @@ import Line from './common/Line';
 import { IStage, ITask } from '@/store/projects/projects.slice';
 import { HiOutlineTrash } from "react-icons/hi2";
 import TaskPriority from './TaskPriority';
-import TaskTitle from './TaskTitle';
 
 const StageTop = (stage: IStage) => {
     const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -24,7 +23,7 @@ const StageTop = (stage: IStage) => {
     
     const dispatch = useAppDispatch();
 
-    const toggleInputVisibility = () => {
+    const toggleInputVisibility = (): void => {
         setInputVisible(!inputVisible);
     }
 
@@ -40,7 +39,7 @@ const StageTop = (stage: IStage) => {
         dispatch(openNewTaskModal());
     }
 
-    const handleDeletePrompt = () => {
+    const handleDeletePrompt = (): void => {
         dispatch(openDeleteStagePrompt());
     }
 
@@ -48,8 +47,9 @@ const StageTop = (stage: IStage) => {
         setSearchInputValue(ev.target.value);
     }
 
+    // Needs improvement
     const searchTasks = (inputValue: string): void => {
-        const value = inputValue.trim().toLowerCase();
+        const value: string = inputValue.trim().toLowerCase();
         const results: ITask[] = stage.tasks.filter((task: ITask) => task.title.toLowerCase().includes(value));
 
         if (!results && searchResults.length) {
@@ -60,15 +60,23 @@ const StageTop = (stage: IStage) => {
         }
     }
 
-    const colorText = (text: string): any => {
-        const letters = text.split("");
-        const coloredLetters = letters.map((letter: string, index: number) => {
-            if (searchInputValue.trim().toLowerCase().includes(letter.toLowerCase()))
-                return <span key={`${index}${letter}`} className='bg-blue-300 text-xl text-stone-800 font-medium'>{letter}</span>
-            else return <span key={`${index}${letter}`} className='text-xl text-stone-800 font-medium'>{letter}</span>
+    const colorMatchedLetters = (text: string): JSX.Element[] => {
+        const letters: string[] = text.trim().split("");
+
+        const value: string = searchInputValue.trim().toLowerCase();
+
+        const coloredLetters: JSX.Element[] = letters.map((letter: string, index: number) => {
+            return (
+                <span key={index} className={`${
+                    value.includes(letter.toLowerCase())
+                        ? 'bg-blue-300' : ''} text-xl text-stone-800 font-medium`}
+                >
+                    {letter}
+                </span>
+            )
         })
 
-        return coloredLetters;
+        return coloredLetters as JSX.Element[];
     }
 
     useEffect(() => {
@@ -88,7 +96,7 @@ const StageTop = (stage: IStage) => {
 
   return (
     <>
-    <div className='flex items-center gap-2 px-3 py-2 w-full justify-between'>
+    <div className='flex items-center gap-2 px-3 py-2 w-full justify-between relative'>
         <div className='flex items-center gap-2 min-w-0'>
             <span title={`${stage.tasks.length} total tasks`} className='min-w-6 max-w-fit text-center aspect-square px-2 pt-1 text-lg font-semibold text-stone-500 border bg-slate-50'>
                 {stage.tasks.length}
@@ -153,17 +161,20 @@ const StageTop = (stage: IStage) => {
         </div>
 
         {inputVisible &&
-            <div className='flex flex-col gap-3 px-2 py-3 absolute top-14 right-0 z-10 w-5/6 bg-white border border-stone-800 rounded-bl-lg'>
-                {searchResults.length
-                    ?   searchResults.map(
-                            (task: ITask) =>
-                                <div key={task.taskId} className='w-full p-1 flex justify-between border border-blue-500 rounded-bl-lg bg-slate-100'>
-                                    <p className='text-xl text-stone-800'>{colorText(task.title)}</p>
-                                    <TaskPriority priority={task.priority}/>
-                                </div>
-                        )
-                    :   <p className='text-stone-800 text-lg'>No tasks found</p>
-                }
+            <div className='flex flex-col px-2 py-1 absolute top-14 right-0 z-10 w-5/6 bg-white border border-stone-800 rounded-bl-lg'>
+                {searchResults.length ? <p className='text-right w-full px-1'>{searchResults.length} results</p> : null}
+                <div className='flex flex-col gap-3 py-3'>
+                    {searchResults.length
+                        ?   searchResults.map(
+                                (task: ITask) =>
+                                    <div key={task.taskId} className='w-full p-1 flex justify-between border border-blue-500 rounded-bl-lg bg-slate-100'>
+                                        <p className='text-xl text-stone-800'>{colorMatchedLetters(task.title)}</p>
+                                        <TaskPriority priority={task.priority}/>
+                                    </div>
+                            )
+                        :   <p className='text-stone-800 text-lg'>No tasks found</p>
+                    }
+                </div>
             </div>
         }
     </div>

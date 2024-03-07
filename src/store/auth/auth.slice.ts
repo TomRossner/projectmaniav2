@@ -2,13 +2,18 @@ import { login } from "@/services/auth.api";
 import { saveJwt } from "@/services/localStorage";
 import { ILoginCredentials } from "@/utils/interfaces";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { IProject } from "../projects/projects.slice";
 
-interface IUser {
+export interface IUser {
     firstName: string;
     lastName: string;
     email: string;
-    userId: string;
-    imgSrc?: string;
+    userId?: string;
+    imgUrl?: string;
+    createdAt?: Date;
+    isOnline?: boolean;
+    contacts?: string[];
+    mostRecentProject?: Partial<IProject> | null;
 }
 
 export interface IAuthState {

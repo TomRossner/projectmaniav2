@@ -1,16 +1,9 @@
 'use client'
 
-import useAuth from '@/hooks/useAuth';
-import { APP_VERSION } from '@/utils/constants';
+import Home from "@/components/Home";
 
-export default function Home() {
-  const {user} = useAuth();
-
+export default function HomePage() {
   return (
-    <main className='text-xl py-5 px-4'>
-      <h1 className='text-2xl text-center font-semibold'>
-        {user ? `Welcome back ${user?.firstName}` : `Welcome to ProjectMania v${APP_VERSION} !`}
-      </h1>
-    </main>
+    <Home/>
   )
 }

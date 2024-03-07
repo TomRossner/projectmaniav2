@@ -21,9 +21,19 @@ import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
 import EditStageModal from '@/components/modals/EditStageModal';
 import EditDashboardModal from '@/components/modals/EditDashboardModal';
 import { AxiosResponse } from 'axios';
+import { TUser, setUser } from '@/store/auth/auth.slice';
+import useAuth from '@/hooks/useAuth';
 
 const Project = () => {
-  const {currentProject, stages, currentStage, currentStageIndex, currentTask} = useProjects();
+  const {user} = useAuth();
+  const {
+    currentProject,
+    stages,
+    currentStage,
+    currentStageIndex,
+    currentTask
+  } = useProjects();
+
   const dispatch = useAppDispatch();
 
   const [noMoreNext, setNoMoreNext] = useState<boolean>(false);

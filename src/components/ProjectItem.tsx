@@ -1,9 +1,11 @@
 import { useAppDispatch } from '@/hooks/hooks';
+import useAuth from '@/hooks/useAuth';
+import { TUser, setUser } from '@/store/auth/auth.slice';
 import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
 import React from 'react';
-import {BsCircleFill} from 'react-icons/bs';
+import { BsCircleFill } from 'react-icons/bs';
 
 const ProjectItem = (project: IProject) => {
     const {
@@ -14,9 +16,18 @@ const ProjectItem = (project: IProject) => {
         subtitle
     } = project;
 
+    const {user} = useAuth();
+
     const dispatch = useAppDispatch();
 
     const handleSelectProject = (): void => {
+      // dispatch(setUser({
+      //   ...user,
+      //   mostRecentProject: {
+      //     projectId: project.projectId
+      //   }
+      // } as TUser));
+
       dispatch(setCurrentProject(project));
     }
 

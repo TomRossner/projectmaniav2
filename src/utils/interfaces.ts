@@ -1,16 +1,4 @@
-import { IStage, TPriority } from "@/store/projects/projects.slice";
-
-interface IUserData {
-    email: string;
-    firstName: string;
-    lastName: string;
-
-    imgUrl?: string;
-    id?: string;
-    createdAt?: Date;
-    online?: boolean;
-    contacts?: string[];
-}
+import { IProject, IStage, TPriority } from "@/store/projects/projects.slice";
 
 interface IUserSignUpData extends ILoginCredentials {
     firstName: string;
@@ -45,7 +33,6 @@ interface IBaseTask {
 }
 
 export type {
-    IUserData,
     ILoginCredentials,
     IPasswordRegExp,
     IUserSignUpData,

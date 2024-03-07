@@ -13,6 +13,9 @@ const getAllProjects = async (userId: string): Promise<AxiosResponse> =>
         }
     })
 
+const getProjectById = async (projectId: string): Promise<AxiosResponse> =>
+    await axios.get(`/projects/id/${projectId}`);
+
 const createStage = async (projectId: string, stageData: IStage): Promise<AxiosResponse> =>
     await axios.post(`/projects/${projectId}/new-stage`, stageData);
 
@@ -31,6 +34,7 @@ const createNewTask = async (newTask: Partial<ITask>): Promise<AxiosResponse> =>
 export {
     createProject,
     getAllProjects,
+    getProjectById,
     createStage,
     updateProject,
     deleteProject,
