@@ -25,7 +25,7 @@ const useAuth = () => {
       user,
       isAuthenticated,
       isLoading,
-      authError,
+      authError
     }
 }
 

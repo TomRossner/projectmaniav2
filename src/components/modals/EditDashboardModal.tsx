@@ -65,7 +65,7 @@ const EditDashboardModal = () => {
     <>
     {editProjectModalOpen && currentProject && inputValues && <div id='modalBackdrop' className='w-screen h-screen absolute top-0 left-0 right-0 bottom-0 m-auto flex items-center justify-center z-50'>
         <form onSubmit={() => handleSave(inputValues as IStage)} autoComplete='on' className='min-w-[300px] max-w-[400px] min-h-24 m-auto border border-stone-500 bg-slate-100 py-3 px-4 rounded-bl-lg flex flex-col drop-shadow-md'>
-            <ModalTitle text={`Edit ${currentStage?.title}`}/>
+            <ModalTitle text={`Edit ${currentProject?.title}`}/>
             
             <Line additionalStyles='pb-3'/>
             

@@ -1,6 +1,7 @@
 import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
-import { TUser, setUser } from '@/store/auth/auth.slice';
+import { updateUser } from '@/services/user.api';
+import { IUser, TUser, setUser } from '@/store/auth/auth.slice';
 import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
@@ -20,14 +21,7 @@ const ProjectItem = (project: IProject) => {
 
     const dispatch = useAppDispatch();
 
-    const handleSelectProject = (): void => {
-      // dispatch(setUser({
-      //   ...user,
-      //   mostRecentProject: {
-      //     projectId: project.projectId
-      //   }
-      // } as TUser));
-
+    const handleSelectProject = async (): Promise<void> => {
       dispatch(setCurrentProject(project));
     }
 

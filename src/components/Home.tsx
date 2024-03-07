@@ -26,43 +26,17 @@ const Home = () => {
     dispatch(setCurrentProject(mostRecentProject));
   }
 
-  // const updateMostRecentProject = (mostRecentProject: IProject | null) => {
-  //   dispatch(setUser({
-  //     ...user,
-  //     mostRecentProject: mostRecentProject ? {
-  //       projectId: mostRecentProject.projectId
-  //     } as Partial<IProject> : null
-  //   } as TUser));
-  // }
+  useEffect(() => {
+    const getMostRecentProject = async (): Promise<void> => {
+      if (user?.mostRecentProject) {
+        const {data: project} = await getProjectById(user.mostRecentProject?.projectId as string);
+        console.log(project)
+        setMostRecentProject(project);
+      }
+    }
 
-  // useEffect(() => {
-  //   const getMostRecentProject = async (): Promise<void> => {
-  //     if (user?.mostRecentProject) {
-  //       const {data: project} = await getProjectById(user.mostRecentProject?.projectId as string);
-  //       setMostRecentProject(project);
-  //     }
-  //   }
-
-  //   if (user && !mostRecentProject) getMostRecentProject();
-  // }, [user])
-
-  // useEffect(() => {
-  //   if (mostRecentProject) {
-  //     // Set mostRecentProject to user
-  //     updateMostRecentProject(mostRecentProject && projects.length ? mostRecentProject : null);
-  //   }
-  // }, [mostRecentProject])
-
-  // useEffect(() => {
-  //   const updateUserInDB = async (user: IUser): Promise<AxiosResponse> =>
-  //     await updateUser(user);
-
-  //   if (user) {
-  //     updateUserInDB(user as IUser);
-  //     console.log('Updating user');
-  //   }
-  // }, [user])
-
+    if (user) getMostRecentProject();
+  }, [user])
 
   return (
     <main className='text-xl py-5 px-6 flex gap-16 flex-col items-start w-full'>

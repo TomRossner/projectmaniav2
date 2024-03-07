@@ -24,11 +24,13 @@ const setCommonHeader = (headerName: string, value: string | null): void => {
     axios.defaults.headers.common[headerName] = value;
 }
 
+const refreshUser = () => getUserFromJwt();
 
 export {
     saveJwt,
     getJwt,
     deleteJwt,
     getUserFromJwt,
-    setTokenHeader
+    setTokenHeader,
+    refreshUser
 }

@@ -109,28 +109,28 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
 
         <InputContainer
             input={
-            <Input
-                value={loginData.email}
-                type='email'
-                name='email'
-                id='loginEmail'
-                labelText='Email'
-                onChange={handleLogInInputChange}
-            />
+                <Input
+                    value={loginData.email}
+                    type='email'
+                    name='email'
+                    id='loginEmail'
+                    labelText='Email'
+                    onChange={handleLogInInputChange}
+                />
             }
         />
             
 
         <InputContainer
             input={
-            <Input
-                value={loginData.password}
-                type='password'
-                name='password'
-                id='loginPassword'
-                labelText='Password'
-                onChange={handleLogInInputChange}
-            />
+                <Input
+                    value={loginData.password}
+                    type='password'
+                    name='password'
+                    id='loginPassword'
+                    labelText='Password'
+                    onChange={handleLogInInputChange}
+                />
             }
         />
             

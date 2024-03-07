@@ -128,67 +128,67 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
         <div className='grid grid-cols-2 w-full gap-2'>
             <InputContainer 
                 input={
-                <Input
-                    value={signUpData.firstName}
-                    type='text'
-                    name='firstName'
-                    id='firstName'
-                    labelText='First name'
-                    onChange={handleSignUpInputChange}
-                />
+                    <Input
+                        value={signUpData.firstName}
+                        type='text'
+                        name='firstName'
+                        id='firstName'
+                        labelText='First name'
+                        onChange={handleSignUpInputChange}
+                    />
                 }
             />
 
             <InputContainer 
                 input={
-                <Input
-                    value={signUpData.lastName}
-                    type='text'
-                    name='lastName'
-                    id='lastName'
-                    labelText='Last name'
-                    onChange={handleSignUpInputChange}
-                />
+                    <Input
+                        value={signUpData.lastName}
+                        type='text'
+                        name='lastName'
+                        id='lastName'
+                        labelText='Last name'
+                        onChange={handleSignUpInputChange}
+                    />
                 }
             />
             
             <InputContainer
                 input={
-                <Input
-                    value={signUpData.email}
-                    type='email'
-                    name='email'
-                    id='signUpEmail'
-                    labelText='Email'
-                    onChange={handleSignUpInputChange}
-                />
+                    <Input
+                        value={signUpData.email}
+                        type='email'
+                        name='email'
+                        id='signUpEmail'
+                        labelText='Email'
+                        onChange={handleSignUpInputChange}
+                    />
                 }
                 additionalStyles='col-span-2'
             />
             
             <InputContainer 
                 input={
-                <Input
-                    value={signUpData.password}
-                    type='password'
-                    name='password'
-                    id='signUpPassword'
-                    labelText='Password'
-                    onChange={handleSignUpInputChange}
-                />
+                    <Input
+                        value={signUpData.password}
+                        type='password'
+                        name='password'
+                        id='signUpPassword'
+                        labelText='Password'
+                        onChange={handleSignUpInputChange}
+                    />
                 }
             />
 
             <InputContainer 
                 input={
-                <Input
-                    value={signUpData.confirmPassword}
-                    type='password'
-                    name='confirmPassword'
-                    id='confirmPassword'
-                    labelText='Confirm password'
-                    onChange={handleSignUpInputChange}
-                />
+                    <Input
+                        value={signUpData.confirmPassword}
+                        type='password'
+                        name='confirmPassword'
+                        id='confirmPassword'
+                        labelText='Confirm password'
+                        onChange={handleSignUpInputChange}
+                    />
                 }
             />
         </div>

@@ -21,8 +21,10 @@ import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
 import EditStageModal from '@/components/modals/EditStageModal';
 import EditDashboardModal from '@/components/modals/EditDashboardModal';
 import { AxiosResponse } from 'axios';
-import { TUser, setUser } from '@/store/auth/auth.slice';
+import { IUser, TUser, setUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
+import { updateUser } from '@/services/user.api';
+import { refreshUser, saveJwt } from '@/services/localStorage';
 
 const Project = () => {
   const {user} = useAuth();
@@ -123,6 +125,7 @@ const Project = () => {
       handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
   }, [currentStageIndex, stages])
 
+  // Update currentStage when stages change
   useEffect(() => {
     if (!stages.length && currentStage) dispatch(setCurrentStage(null));
 
@@ -130,9 +133,32 @@ const Project = () => {
     if (currentStage) dispatch(setCurrentStage(updatedCurrentStage));
   }, [stages])
 
+  // Update next and previous buttons when currentStage changes
   useEffect(() => {
     handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
   }, [currentStage])
+
+  // Set mostRecentProject and update user
+  useEffect(() => {
+    const updatedUser: IUser = {
+      ...user,
+      mostRecentProject: {
+        projectId: currentProject?.projectId
+      }
+    } as IUser;
+
+    dispatch(setUser(updatedUser));
+
+    const updateUserData = async (userData: IUser): Promise<void> => {
+      // Returns updated token to save in LocalStorage
+      const {data: {token}} = await updateUser(userData);
+      saveJwt(token);
+
+      dispatch(setUser(refreshUser()));
+    } 
+
+    updateUserData(updatedUser);
+  }, [])
 
   return (
     <>
