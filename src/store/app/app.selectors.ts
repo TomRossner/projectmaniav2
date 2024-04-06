@@ -23,3 +23,5 @@ export const selectEditTaskModalOpen = (state: RootState): boolean => state.app.
 export const selectDeleteTaskPrompt = (state: RootState): boolean => state.app.deleteTaskPromptOpen;
 
 export const selectEditProjectModalOpen = (state: RootState): boolean => state.app.editProjectModalOpen;
+
+export const selectBackLayer = (state: RootState): boolean => state.app.backLayerOpen;

@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 
 const isAuth = (Component: any) => {
     return function IsAuth(props: any) {
-        const {isAuthenticated} = useAuth()
+        const {isAuthenticated} = useAuth();
         
         useEffect(() => {
             if (!isAuthenticated) {

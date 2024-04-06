@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import isAuth from '../ProtectedRoute';
 import { useAppDispatch } from '@/hooks/hooks';
 import { IProject, ITeamMember, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
 import useAuth from '@/hooks/useAuth';
 import useProjects from '@/hooks/useProjects';
-import PageHeader from '@/components/PageHeader';
+import PageHeader from '@/components/common/PageHeader';
 import ProjectItem from '@/components/ProjectItem';
 import { createProject } from '@/services/projects.api';
 import { DEFAULT_STAGE } from '@/utils/constants';
@@ -15,7 +15,7 @@ import loadingBlue from "../../assets/loading-blue.png";
 import ButtonWithIcon from '@/components/common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
 import { openNewProjectModal, setError } from '@/store/app/app.slice';
-import LoadingIcon from '@/components/LoadingIcon';
+import LoadingIcon from '@/components/utils/LoadingIcon';
 
 const Projects = () => {
   const {user} = useAuth();
@@ -76,18 +76,33 @@ const Projects = () => {
     <div id='projectsPage' className='p-4'>
       <div className='flex items-center justify-between w-full'>
         <PageHeader text='Projects'/>
-        <ButtonWithIcon title='New project' action={handleNewProject} icon={<BiPlus/>}/>
+
+        <ButtonWithIcon
+          title='New project'
+          action={handleNewProject}
+          icon={<BiPlus/>}
+        />
       </div>
 
       {isFetching
         ? <>
-            <Image src={loadingBlue} alt='Loading' width={50} height={50} className='aspect-square animate-spin w-fit mx-auto mt-12 mb-4'/>
+            <Image
+              src={loadingBlue}
+              alt='Loading'
+              width={50}
+              height={50}
+              className='aspect-square animate-spin w-fit mx-auto mt-12 mb-4'
+            />
             <p className='text-xl text-stone-800 text-center'>Loading projects...</p>
           </>
         : <div id='projectsContainer' className={`my-2 grid gap-2 ${projects.length ? 'hover:shadow-md' : ''}`}>
             {projects?.length
               ? projects?.map((project: IProject) =>
-                  <ProjectItem {...project} key={project.projectId}/>)
+                  <ProjectItem
+                    key={project.projectId}
+                    {...project}
+                  />
+                )
               : (
                 <>
                   <p>No projects</p>
@@ -96,7 +111,25 @@ const Projects = () => {
                       disabled={isLoading}
                       type='button'
                       onClick={handleCreateProject}
-                      className='my-5 px-4 pb-2 pt-3 rounded-bl-lg disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-60 bg-blue-400 hover:bg-blue-500 transition-all text-white font-semibold text-xl w-full mx-auto duration-75'
+                      className={`
+                        my-5
+                        px-4
+                        pb-2
+                        pt-3
+                        rounded-bl-lg
+                        bg-blue-400
+                        hover:bg-blue-500
+                        disabled:bg-blue-300
+                        disabled:opacity-60
+                        disabled:cursor-not-allowed
+                        transition-all
+                        text-white
+                        font-semibold
+                        text-xl
+                        w-full
+                        mx-auto
+                        duration-75
+                      `}
                   >
                       {isLoading
                           ? (

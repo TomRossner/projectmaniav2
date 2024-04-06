@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Label from './Label';
+import { twMerge } from 'tailwind-merge';
 
 export interface IInputProps {
     type: string;
@@ -13,6 +14,7 @@ export interface IInputProps {
     onChange: (ev: React.ChangeEvent<HTMLInputElement>) => void;
     labelAdditionalStyles?: string;
     labelText: string;
+    isOptional?: boolean;
 }
 
 const Input = (props: IInputProps) => {
@@ -26,6 +28,7 @@ const Input = (props: IInputProps) => {
     labelAdditionalStyles,
     labelText,
     onChange,
+    isOptional
   } = props;
 
   return (
@@ -33,7 +36,11 @@ const Input = (props: IInputProps) => {
         <Label
           htmlFor={id}
           labelText={labelText}
-          additionalStyles={labelAdditionalStyles ? labelAdditionalStyles : 'text-stone-800'}
+          additionalStyles={labelAdditionalStyles
+            ? labelAdditionalStyles
+            : 'text-stone-800'
+          }
+          isOptional={isOptional}
         />
 
         <input
@@ -44,8 +51,7 @@ const Input = (props: IInputProps) => {
             name={name}
             value={value}
             placeholder={placeholder}
-            className={`
-                ${additionalStyles}
+            className={twMerge(`
                 px-2
                 text-lg
                 text-stone-600
@@ -54,7 +60,9 @@ const Input = (props: IInputProps) => {
                 rounded-bl-lg
                 outline-none
                 focus:border-blue-500
-            `}
+                flex-shrink-0
+                ${additionalStyles}
+            `)}
         />
     </>
   )

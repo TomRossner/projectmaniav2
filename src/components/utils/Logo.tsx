@@ -16,8 +16,21 @@ const Logo = ({action, additionalStyles}: ILogoProps) => {
     <Link
       href={LINKS.HOME}
       id='logo'
-      className={`${additionalStyles} flex items-center gap-2 text-4xl text-blue-500 font-bold w-fit px-3 justify-center cursor-pointer select-none`}
       onClick={action}
+      className={`
+        flex
+        items-center
+        gap-2
+        text-4xl
+        text-blue-500
+        font-bold
+        w-fit
+        px-3
+        justify-center
+        cursor-pointer
+        select-none
+        ${additionalStyles}
+      `}
     >
       <span>PM</span>
       <span className='font-normal text-2xl'>v{APP_VERSION}</span>

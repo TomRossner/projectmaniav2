@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import MobileMenu from '@/components/MobileMenu';
 import ErrorModal from '@/components/modals/ErrorModal';
 import NewProjectModal from '@/components/modals/NewProjectModal';
+import '@greguintow/react-tippy/dist/tippy.css';
 
 const teko = Teko({ subsets: ['latin'] })
 
@@ -25,12 +26,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${teko.className}`}>
         <StoreProvider>
-          <ErrorModal/>
-          <NewProjectModal/>
-          <Nav/>
-          <MobileMenu/>
-          {children}
-          <Footer/>
+          <ErrorModal />
+          <NewProjectModal />
+          <Nav />
+          <MobileMenu />
+          <main>
+            {children}
+          </main>
+          <Footer />
         </StoreProvider>
       </body>
     </html>

@@ -8,10 +8,12 @@ import { IFormProps } from './SignUpForm';
 import { useAppDispatch } from '@/hooks/hooks';
 import { ILoginCredentials } from '@/utils/interfaces';
 import FormHeader from './FormHeader';
-import GoogleLogo from '../GoogleLogo';
+import GoogleLogo from '../utils/GoogleLogo';
 import { getUserFromJwt } from '@/services/localStorage';
 import useAuth from '@/hooks/useAuth';
-import LoadingIcon from '../LoadingIcon';
+import LoadingIcon from '../utils/LoadingIcon';
+import { twMerge } from 'tailwind-merge';
+import Login from "./Login";
 
 export const INITIAL_LOGIN_DATA: ILoginCredentials = {
     email: '',
@@ -79,12 +81,11 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
 
   return (
     <>
-    <form
+    {/* <form
         autoComplete='on'
         id='loginForm'
         onSubmit={handleLoginFormSubmit}
-        className={`
-            ${isNotRegistered ? '-translate-x-full opacity-0 absolute' : ''}
+        className={twMerge(`
             max-w-[500px]
             min-h-[540px]
             transition-all
@@ -100,7 +101,8 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
             border-blue-500
             rounded-bl-lg
             bg-slate-100
-        `}
+            ${isNotRegistered && '-translate-x-full opacity-0 absolute'}
+        `)}
     >
 
         <FormHeader text='Log into your account'/>
@@ -136,25 +138,45 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
             
 
         <p className='text-lg'>Don&apos;t have an account?
-            <span onClick={toggleIsNotRegistered} className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'>Sign up</span>
+            <span
+                onClick={toggleIsNotRegistered}
+                className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
+            >
+                Sign up
+            </span>
         </p>
 
         <button
             disabled={isLoading}
             type='submit'
-            className='px-4 pb-2 pt-3 rounded-bl-lg disabled:bg-blue-300 disabled:cursor-not-allowed disabled:opacity-60 bg-blue-400 hover:bg-blue-500 transition-all text-white font-semibold text-xl w-full mx-auto duration-75'
+            className={`
+                px-4
+                pb-2
+                pt-3
+                rounded-bl-lg
+                disabled:bg-blue-300
+                disabled:cursor-not-allowed
+                disabled:opacity-60
+                bg-blue-400
+                hover:bg-blue-500
+                transition-all
+                text-white
+                font-semibold
+                text-xl
+                w-full
+                mx-auto
+                duration-75
+            `}
         >
             {isLoading
                 ? (
-                    
-                    <>
                     <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
                         <LoadingIcon/>
                         Loading...
                     </span>
-                    </>
                 )
-                : 'Log in'}
+                : 'Log in'
+            }
         </button>
 
         <hr className='w-3/4 mx-auto'/>
@@ -163,7 +185,7 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
             disabled={isLoading}
             type='button' // Set back to "submit"
             onClick={handleGoogleSignIn}
-            className='
+            className={`
                 px-4
                 pb-2
                 pt-3
@@ -182,11 +204,12 @@ const LoginForm = ({toggleIsNotRegistered, isNotRegistered}: IFormProps) => {
                 w-full
                 mx-auto
                 duration-75
-            '
+            `}
         >
             Continue with <GoogleLogo/>
         </button>
-    </form>
+    </form> */}
+    {!isNotRegistered && <Login toggleIsNotRegistered={toggleIsNotRegistered} />}
     </>
   )
 }

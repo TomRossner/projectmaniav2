@@ -29,11 +29,10 @@ export interface IStage {
 }
 
 export interface ITask extends IBaseTask {
-    imgSrc?: string;
     taskId: string;
 }
 
-export type TPriority = 'low' | 'medium' | 'high';
+export type Priority = 'low' | 'medium' | 'high';
 
 export interface IProjectsState {
     projects: IProject[];

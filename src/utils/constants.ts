@@ -1,6 +1,6 @@
-import { IProject, IStage, TPriority } from "@/store/projects/projects.slice";
-import { IBaseTask } from "./interfaces";
-import { TScrollDirection } from "./types";
+import { IProject, IStage, Priority } from "@/store/projects/projects.slice";
+import { IBaseTask, IExternalLink } from "./interfaces";
+import { TLabel, ScrollDirection } from "./types";
 
 const APP_VERSION_FULL: string = process.env.NEXT_PUBLIC_APP_VERSION as string;
 
@@ -13,24 +13,26 @@ const DEFAULT_STAGE: IStage = {
 
 const DEFAULT_TASK_TITLE: string = 'New task';
 
-const PRIORITIES: TPriority[] = [
+const PRIORITIES: Priority[] = [
     "low",
     "medium",
     "high"
 ]
 
-const DEFAULT_PRIORITY: TPriority = "low";
+const DEFAULT_PRIORITY: Priority = "low";
 
 const DEFAULT_TASK_VALUES: IBaseTask = {
     title: DEFAULT_TASK_TITLE,
     dueDate: new Date(Date.now()).toJSON(),
     description: '',
-    priority: DEFAULT_PRIORITY as TPriority,
+    priority: DEFAULT_PRIORITY as Priority,
     isDone: false,
-    imgSrc: ''
+    imgSrc: '',
+    externalLinks: [],
+    labels: []
 }
 
-const SCROLL_DIRECTIONS: TScrollDirection[] = ['next', "prev"];
+const SCROLL_DIRECTIONS: ScrollDirection[] = ['next', "prev"];
 
 const DEFAULT_PROJECT_TITLE: string = 'New project';
 
@@ -41,8 +43,21 @@ const DEFAULT_PROJECT: Partial<IProject> = {
 }
 
 const TASK_MENU_OPTIONS: string[] = [
+    'Done',
     'Edit',
     'Delete'
+]
+
+const DEFAULT_EXTERNAL_LINK: IExternalLink = {
+    name: 'Link #1',
+    url: ''
+}
+
+const MAX_EXTERNAL_LINKS: number = 10;
+
+const LABELS: TLabel[] = [
+    "bug",
+    "completed",
 ]
 
 export {
@@ -56,5 +71,8 @@ export {
     SCROLL_DIRECTIONS,
     DEFAULT_PROJECT_TITLE,
     DEFAULT_PROJECT,
-    TASK_MENU_OPTIONS
+    TASK_MENU_OPTIONS,
+    DEFAULT_EXTERNAL_LINK,
+    MAX_EXTERNAL_LINKS,
+    LABELS,
 }

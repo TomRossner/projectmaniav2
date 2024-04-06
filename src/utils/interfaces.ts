@@ -1,4 +1,5 @@
-import { IProject, IStage, TPriority } from "@/store/projects/projects.slice";
+import { IStage, Priority } from "@/store/projects/projects.slice";
+import { TLabel } from "./types";
 
 interface IUserSignUpData extends ILoginCredentials {
     firstName: string;
@@ -25,16 +26,24 @@ interface IPasswordRegExp {
 interface IBaseTask {
     title: string;
     dueDate: string;
-    priority: TPriority;
+    priority: Priority;
     isDone: boolean;
     currentStage?: Partial<IStage>;
     description?: string;
     imgSrc?: string;
+    externalLinks?: IExternalLink[];
+    labels: TLabel[];
+}
+
+interface IExternalLink {
+    name: string;
+    url: string;
 }
 
 export type {
     ILoginCredentials,
     IPasswordRegExp,
     IUserSignUpData,
-    IBaseTask
+    IBaseTask,
+    IExternalLink
 }

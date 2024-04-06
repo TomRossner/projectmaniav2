@@ -13,6 +13,8 @@ interface IAppInitialState {
     editTaskModalOpen: boolean;
     deleteTaskPromptOpen: boolean;
     editProjectModalOpen: boolean;
+    backLayerOpen: boolean;
+    modalOpen: boolean;
 }
 
 const initialState: IAppInitialState = {
@@ -27,7 +29,9 @@ const initialState: IAppInitialState = {
     newProjectModalOpen: false,
     editTaskModalOpen: false,
     deleteTaskPromptOpen: false,
-    editProjectModalOpen: false
+    editProjectModalOpen: false,
+    backLayerOpen: false,
+    modalOpen: false
 }
 
 export const appSlice = createSlice({
@@ -147,6 +151,26 @@ export const appSlice = createSlice({
         openEditProjectModal: (state) => {
             state.editProjectModalOpen = true;
         },
+
+        toggleBackLayer: (state) => {
+            state.backLayerOpen = !state.backLayerOpen;
+        },
+        closeBackLayer: (state) => {
+            state.backLayerOpen = false;
+        },
+        openBackLayer: (state) => {
+            state.backLayerOpen = true;
+        },
+
+        toggleModal: (state) => {
+            state.modalOpen = !state.modalOpen;
+        },
+        closeModal: (state) => {
+            state.modalOpen = false;
+        },
+        openModal: (state) => {
+            state.modalOpen = true;
+        },
     }
 })
 
@@ -196,4 +220,12 @@ export const {
     toggleEditProjectModal,
     closeEditProjectModal,
     openEditProjectModal,
+
+    toggleBackLayer,
+    closeBackLayer,
+    openBackLayer,
+
+    toggleModal,
+    closeModal,
+    openModal,
 } = appSlice.actions;

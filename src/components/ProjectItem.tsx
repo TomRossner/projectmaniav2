@@ -1,7 +1,4 @@
 import { useAppDispatch } from '@/hooks/hooks';
-import useAuth from '@/hooks/useAuth';
-import { updateUser } from '@/services/user.api';
-import { IUser, TUser, setUser } from '@/store/auth/auth.slice';
 import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
@@ -17,8 +14,6 @@ const ProjectItem = (project: IProject) => {
         subtitle
     } = project;
 
-    const {user} = useAuth();
-
     const dispatch = useAppDispatch();
 
     const handleSelectProject = async (): Promise<void> => {
@@ -27,28 +22,38 @@ const ProjectItem = (project: IProject) => {
 
     const displayStagesCount = (): string => {
       return stages.length
-        ? `${stages.length} stage${stages.length > 1 || stages.length === 0 ? 's' : ''}`
+        ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
         : `0 stages`;
     }
 
     const displayTotalTasks = (): string => {
       const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
 
-      return `${totalTasks} task${totalTasks > 1 || totalTasks === 0 ? 's' : ''}`;
+      return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
     }
 
   return (
-    <Link href={`${LINKS['PROJECTS']}/${projectId}`} onClick={handleSelectProject}>
-        <div className='border rounded-bl-lg px-5 py-3 w-full hover:border-blue-500 hover:bg-slate-100 hover:shadow-md transition-all'>
-            <p>
-              <span className='text-2xl font-semibold text-stone-700'>{title}</span>
-            </p>
-            <p className='flex items-center gap-2 text-slate-600 font-medium italic'>
-              {displayStagesCount()}
-              <span className='flex text-[4px] pb-1 text-slate-500'><BsCircleFill/></span>
-              {displayTotalTasks()}
-            </p>
-        </div>
+    <Link
+      href={`${LINKS['PROJECTS']}/${projectId}`}
+      onClick={handleSelectProject}
+    >
+      <div className='border rounded-bl-lg px-5 py-3 w-full hover:border-blue-500 hover:bg-slate-100 hover:shadow-md transition-all'>
+          <p>
+            <span className='text-2xl font-semibold text-stone-700'>
+              {title}
+            </span>
+          </p>
+
+          <p className='flex items-center gap-2 text-slate-600 font-medium italic'>
+            {displayStagesCount()}
+
+            <span className='flex text-[4px] pb-1 text-slate-500'>
+              <BsCircleFill />
+            </span>
+
+            {displayTotalTasks()}
+          </p>
+      </div>
     </Link>
   )
 }

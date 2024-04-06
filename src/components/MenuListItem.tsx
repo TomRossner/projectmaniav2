@@ -8,25 +8,24 @@ import { LINKS } from '@/utils/links';
 import { SPACES_AND_DASHES_PATTERN } from '@/utils/regexp';
 import useAuth from '@/hooks/useAuth';
 import { usePathname } from 'next/navigation';
+import { twMerge } from 'tailwind-merge';
 
 interface IMenuListItemProps {
-    listItem: IMenuItem
+    listItem: IMenuItem;
 }
 
 const MenuListItem = ({listItem}: IMenuListItemProps) => {
   const {text, action, imageSrc, icon} = listItem;
   const {user} = useAuth();
   
-  
   const currentPath = usePathname();
-  // console.log(currentPath)
 
-  const checkActivePath = (text: string): string | null => {
+  const isActive = (text: string): boolean => {
     const formattedPath = text.replaceAll(SPACES_AND_DASHES_PATTERN, "_").toUpperCase();
+    
+    const isProjectPath: boolean = text.toLowerCase() === currentPath.split("/")[1];
 
-    if (currentPath === LINKS[formattedPath]) {
-      return 'text-blue-500 bg-slate-50';
-    } else return null;
+    return (currentPath === LINKS[formattedPath]) || isProjectPath;
   }
 
   const getLink = (text: string): string => {
@@ -46,11 +45,13 @@ const MenuListItem = ({listItem}: IMenuListItemProps) => {
     }
   }
 
+  const isSignOut: boolean = text.toLowerCase() === LINKS.SIGN_OUT.split("/")[1].replace("-", " ");
+
   return (
     <Link
       href={getLink(text)}
       onClick={action}
-      className={`
+      className={twMerge(`
         flex
         gap-4
         items-center
@@ -59,18 +60,21 @@ const MenuListItem = ({listItem}: IMenuListItemProps) => {
         py-2
         w-full
         rounded-bl-lg
-        text-slate-400
         text-2xl
         text-left
-        hover:bg-slate-50
-        hover:text-blue-500
-        ${checkActivePath(text)}
-      `}
+        text-slate-400
+        sm:hover:bg-slate-50
+        active:bg-slate-50
+        ${isActive(text) && 'bg-slate-50 border-r-4 border-r-blue-500'}
+        ${isSignOut
+          ? 'active:text-red-400 sm:hover:text-red-400'
+          : 'active:text-blue-500 sm:hover:text-blue-500'
+        }
+      `)}
     >
         {
-          icon &&
-          !imageSrc && (
-            <span className={`${checkActivePath(text)} text-md`}>
+          icon && !imageSrc && (
+            <span className='text-md'>
               {icon as ReactNode}
             </span>
           )
@@ -86,9 +90,7 @@ const MenuListItem = ({listItem}: IMenuListItemProps) => {
           />
         }
         
-        <span className={`pt-1 ${checkActivePath(text)}`}>
-          {text}
-        </span>
+        <span className='pt-1'>{text}</span>
     </Link>
   )
 }

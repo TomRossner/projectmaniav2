@@ -10,7 +10,9 @@ import InputContainer from '../common/InputContainer';
 import Input from '../common/Input';
 import FormHeader from './FormHeader';
 import { INITIAL_LOGIN_DATA } from './LoginForm';
-import { isValidPasswordPattern } from '@/utils/forms';
+// import { isValidPasswordPattern } from '@/utils/forms';
+import { twMerge } from 'tailwind-merge';
+import SignUp from './SignUp';
 
 const INITIAL_SIGN_UP_DATA: IUserSignUpData = {
     ...INITIAL_LOGIN_DATA,
@@ -32,62 +34,62 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
 
     const dispatch = useAppDispatch();
 
-    const handleSignUpFormSubmit = async (ev: React.FormEvent<HTMLFormElement>): Promise<void> => {
-        ev.preventDefault();
+    // const handleSignUpFormSubmit = async (ev: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    //     ev.preventDefault();
   
-        if (formError) setFormError(null);
+    //     if (formError) setFormError(null);
   
-        const {
-          email,
-          firstName,
-          lastName,
-          password,
-          confirmPassword
-        } = signUpData;
+    //     const {
+    //       email,
+    //       firstName,
+    //       lastName,
+    //       password,
+    //       confirmPassword
+    //     } = signUpData;
   
-        if (password !== confirmPassword) {
-            dispatch(setAuthError('Passwords do not match'));
-            return;
-        } else if (!isValidPasswordPattern(password)) {
-            dispatch(setAuthError(`Invalid password`));
-            // Make sure your password contains at least ${PASSWORD_REGEX.MIN_LENGTH} characters, 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special characters.
-            return;
-        }
+    //     if (password !== confirmPassword) {
+    //         dispatch(setAuthError('Passwords do not match'));
+    //         return;
+    //     } else if (!isValidPasswordPattern(password)) {
+    //         dispatch(setAuthError(`Invalid password`));
+    //         // Make sure your password contains at least ${PASSWORD_REGEX.MIN_LENGTH} characters, 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special characters.
+    //         return;
+    //     }
   
         
-        const userData: IUserSignUpData = {
-            firstName: capitalizeFirstLetter(firstName),
-            lastName: capitalizeFirstLetter(lastName),
-            // email: email.trim(),
-            // password: password.trim()
-            email: process.env.NEXT_PUBLIC_MOCK_EMAIL_2 as string,
-            password: process.env.NEXT_PUBLIC_MOCK_PASSWORD_2 as string
-        }
+    //     const userData: IUserSignUpData = {
+    //         firstName: capitalizeFirstLetter(firstName),
+    //         lastName: capitalizeFirstLetter(lastName),
+    //         // email: email.trim(),
+    //         // password: password.trim()
+    //         email: process.env.NEXT_PUBLIC_MOCK_EMAIL_2 as string,
+    //         password: process.env.NEXT_PUBLIC_MOCK_PASSWORD_2 as string
+    //     }
         
-        try {
-            await signUp(userData);
+    //     try {
+    //         await signUp(userData);
 
-            setIsNotRegistered(false);
-            setSignUpData({...INITIAL_SIGN_UP_DATA});
-        } catch (error: any) {
-            if (error.response) {
-                const {
-                    response: {
-                        data: {
-                            error: signUpError
-                        }
-                    }
-                } = error;
+    //         setIsNotRegistered(false);
+    //         setSignUpData({...INITIAL_SIGN_UP_DATA});
+    //     } catch (error: any) {
+    //         if (error.response) {
+    //             const {
+    //                 response: {
+    //                     data: {
+    //                         error: signUpError
+    //                     }
+    //                 }
+    //             } = error;
 
-                dispatch(setAuthError(signUpError));
-            } else {
-                console.error(error);
-                dispatch(setAuthError('Failed registering new user'));
-            }
-        } finally {
-            dispatch(setIsLoading(false));
-        }
-    }
+    //             dispatch(setAuthError(signUpError));
+    //         } else {
+    //             console.error(error);
+    //             dispatch(setAuthError('Failed registering new user'));
+    //         }
+    //     } finally {
+    //         dispatch(setIsLoading(false));
+    //     }
+    // }
 
     const handleSignUpInputChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
         if (formError) setFormError(null);
@@ -97,12 +99,11 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
 
   return (
     <>
-    <form
+    {/* <form
         autoComplete='on'
         id='signUpForm'
         onSubmit={handleSignUpFormSubmit}
-        className={`
-            ${!isNotRegistered ? 'translate-x-full opacity-0 absolute' : ''}
+        className={twMerge(`
             max-w-[500px]
             min-h-[540px]
             transition-all
@@ -118,7 +119,8 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
             border-blue-500
             rounded-bl-lg
             bg-slate-100
-        `}
+            ${!isNotRegistered && 'translate-x-full opacity-0 absolute'}
+        `)}
     >
 
         <FormHeader text='Create an account'/>
@@ -194,16 +196,36 @@ const SignUpForm = ({setIsNotRegistered, toggleIsNotRegistered, isNotRegistered}
         </div>
 
         <p className='text-lg'>Already have an account?
-            <span onClick={toggleIsNotRegistered} className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'>Log in</span>
+            <span
+                onClick={toggleIsNotRegistered}
+                className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
+            >
+                Log in
+            </span>
         </p>
 
         <button
             type='submit'
-            className='px-4 pb-2 pt-3 rounded-bl-lg bg-blue-400 hover:bg-blue-500 transition-all text-white font-semibold text-2xl w-full mx-auto duration-75'
+            className={`
+                px-4
+                pb-2
+                pt-3
+                rounded-bl-lg
+                bg-blue-400
+                hover:bg-blue-500
+                transition-all
+                text-white
+                font-semibold
+                text-2xl
+                w-full
+                mx-auto
+                duration-75
+            `}
         >
             Submit
         </button>
-    </form>
+    </form> */}
+    {isNotRegistered && <SignUp toggleIsNotRegistered={toggleIsNotRegistered}/>}
     </>
   )
 }

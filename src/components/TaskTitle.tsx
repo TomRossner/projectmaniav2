@@ -1,9 +1,19 @@
 import React from 'react';
+import { twMerge } from 'tailwind-merge';
 
-const TaskTitle = ({title}: {title: string}) => {
+const TaskTitle = ({title, additionalStyles}: {title: string, additionalStyles?: string}) => {
     
   return (
-    <p className='font-medium text-xl text-left'>{title}</p>
+    <p
+      className={twMerge(`
+        font-medium
+        text-xl
+        text-left
+        ${additionalStyles}
+      `)}
+    >
+      {title}
+    </p>
   )
 }
 

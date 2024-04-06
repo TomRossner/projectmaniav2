@@ -7,7 +7,7 @@ const nextConfig = {
             hostname: 'i.pngimg.me',
           }
         ]
-      }
+    }
 }
 
 module.exports = nextConfig

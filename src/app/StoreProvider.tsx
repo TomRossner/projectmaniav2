@@ -1,7 +1,5 @@
 'use client'
 
-import { getJwt } from '@/services/localStorage';
-import { setUser } from '@/store/auth/auth.slice';
 import { AppStore, makeStore } from '@/store/store';
 import React, { ReactNode, useRef } from 'react';
 import { Provider } from 'react-redux';

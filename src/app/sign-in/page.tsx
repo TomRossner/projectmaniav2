@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import PageHeader from '@/components/PageHeader';
+import PageHeader from '@/components/common/PageHeader';
 import SignUpForm from '@/components/forms/SignUpForm';
 import LoginForm from '@/components/forms/LoginForm';
 import { useAppDispatch } from '@/hooks/hooks';

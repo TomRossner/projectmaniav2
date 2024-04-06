@@ -1,4 +1,4 @@
-import { TUser } from "@/store/auth/auth.slice";
+import { User } from "@/store/auth/auth.slice";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
@@ -10,7 +10,7 @@ const getJwt = (): string => localStorage.getItem('token') as string;
 
 const deleteJwt = (): void => localStorage.removeItem('token');
 
-const getUserFromJwt = (): TUser => {
+const getUserFromJwt = (): User => {
     try {
         return jwtDecode((getJwt() as string));
     } catch (error) {

@@ -1,5 +1,8 @@
-type TScrollDirection = 'next' | 'prev';
+type ScrollDirection = 'next' | 'prev';
+
+type TLabel = 'completed' | 'bug';
 
 export type {
-    TScrollDirection
+    ScrollDirection,
+    TLabel,
 }

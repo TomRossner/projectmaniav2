@@ -11,6 +11,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { openDeleteProjectPrompt, openEditProjectModal, openNewStageModal } from '@/store/app/app.slice';
 import { HiOutlineTrash } from 'react-icons/hi';
 import { RiEditLine } from 'react-icons/ri';
+import { twMerge } from 'tailwind-merge';
 
 interface IDashboardTopProps {
   moveNext: () => void;
@@ -32,28 +33,68 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: IDashboardTo
       dispatch(openDeleteProjectPrompt());
     }
 
-    const disabledStyles = 'sm:hidden disabled:border-slate-200 disabled:text-slate-200 disabled:hover:border-slate-200 disabled:hover:text-slate-200 disabled:cursor-default';
+    const disabledStyles: string = twMerge(`
+      disabled:border-slate-200
+      disabled:text-slate-200
+      disabled:hover:border-slate-200
+      disabled:hover:text-slate-200
+      disabled:cursor-default
+      ${(currentProject!.stages.length <= 2) && 'sm:hidden'}
+    `);
 
-    const handleEdit = () => {
+    const handleEdit = (): void => {
       dispatch(openEditProjectModal());
     }
+    
   return (
     <>
-    <div className='flex items-center justify-between w-full'>
-        <div className='flex items-center gap-3 hover:nth group'>
-          <ProjectTitle title={currentProject?.title as string} subtitle={currentProject?.subtitle}/>
-          <ButtonWithIcon additionalStyles='group-hover:flex hidden' action={handleEdit} icon={<RiEditLine/>} title='Edit title'/>
+    <div className='flex items-center justify-between w-full group'>
+        <div className='flex items-center gap-3 hover:nth'>
+          <ProjectTitle
+            title={currentProject?.title as string}
+            subtitle={currentProject?.subtitle}
+          />
+
+          <ButtonWithIcon
+            additionalStyles='group-hover:flex sm:hidden'
+            action={handleEdit}
+            icon={<RiEditLine />}
+            title='Edit title'
+          />
         </div>
 
         <div className='flex items-center gap-1'>
-            <ButtonWithIcon action={openModal} title='Add stage' icon={<BiPlus/>}/>
-            <ButtonWithIcon action={handleDeleteProject} title='Delete project' icon={<HiOutlineTrash/>}/>
-            <ButtonWithIcon disabled={noMorePrev} disabledStyles={disabledStyles} action={movePrev} additionalStyles='py-1 px-2' title='Previous stage' icon={<HiMiniChevronLeft/>} />
-            <ButtonWithIcon disabled={noMoreNext} disabledStyles={disabledStyles} action={moveNext} additionalStyles='py-1 px-2' title='Next stage' icon={<HiMiniChevronRight/>} />
+            <ButtonWithIcon
+              action={openModal}
+              title='Add stage'
+              icon={<BiPlus/>}
+            />
+            <ButtonWithIcon
+              action={handleDeleteProject}
+              title='Delete project'
+              icon={<HiOutlineTrash />}
+            />
+
+            <ButtonWithIcon
+              disabled={noMorePrev}
+              disabledStyles={disabledStyles}
+              action={movePrev}
+              additionalStyles='py-1 px-2'
+              title='Previous stage'
+              icon={<HiMiniChevronLeft />}
+            />
+            <ButtonWithIcon
+              disabled={noMoreNext}
+              disabledStyles={disabledStyles}
+              action={moveNext}
+              additionalStyles='py-1 px-2'
+              title='Next stage'
+              icon={<HiMiniChevronRight />}
+            />
         </div>
     </div>
 
-    <Line additionalStyles='my-2'/>
+    <Line additionalStyles='my-2' />
     </>
   )
 }

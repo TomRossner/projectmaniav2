@@ -8,7 +8,9 @@ interface IPageHeaderProps {
 
 const PageHeader = ({text}: IPageHeaderProps) => {
   return (
-    <h1 className='text-stone-700 text-4xl font-semibold'>{text}</h1>
+    <h1 className='text-stone-700 text-4xl font-semibold'>
+      {text}
+    </h1>
   )
 }
 

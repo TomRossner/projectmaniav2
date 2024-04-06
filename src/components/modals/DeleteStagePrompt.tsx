@@ -9,6 +9,7 @@ import ModalTitle from './ModalTitle';
 import useProjects from '@/hooks/useProjects';
 import Line from '../common/Line';
 import { IProject, IStage, setCurrentProject, setCurrentStageIndex } from '@/store/projects/projects.slice';
+import Modal from './Modal';
 
 const DeleteStagePrompt = () => {
     const {deleteStagePromptOpen} = useDeleteStagePrompt();
@@ -51,29 +52,20 @@ const DeleteStagePrompt = () => {
     }
 
   return (
-    <>
-    {deleteStagePromptOpen && currentStage && <div id='modalBackdrop' className='w-screen h-screen absolute top-0 left-0 right-0 bottom-0 m-auto flex items-center justify-center z-50'>
-        <div className='min-w-[300px] max-w-[400px] min-h-24 m-auto border border-stone-500 bg-slate-100 py-3 px-4 rounded-bl-lg flex flex-col drop-shadow-md'>
-            <ModalTitle text={`Delete ${currentStage?.title}`}/>
-
-            <Line additionalStyles='pb-3'/>
-
-            <p className='text-center text-stone-600 text-xl font-semibold'>Are you sure?</p>
-            <p className='text-center text-red-500 pb-4'>*This action is irreversible*</p>
-            <p className='italic text-stone-500 text-center'>
-                <span className='font-semibold text-stone-500'>NOTE: </span>
-                You are deleting {currentStage?.title} and all of its contents.
-            </p>
-            
-            <Line additionalStyles='py-1'/>
-
-            <div className='flex items-center gap-1 justify-end'>
-                <Button text='Yes, delete' action={handleDeleteStage} additionalStyles='rounded-bl-lg bg-red-400 hover:bg-red-500 text-white'/>
-                <Button text='Cancel' action={closePrompt} additionalStyles='hover:bg-slate-200'/>
-            </div>
-        </div>
-    </div>}
-    </>
+    <Modal
+        title={`Delete ${currentStage?.title}`}
+        onSubmit={handleDeleteStage}
+        onClose={closePrompt}
+        isOpen={deleteStagePromptOpen}
+        optionalNote={`You are deleting ${currentStage?.title} and all of its contents.`}
+        submitBtnStyles='rounded-bl-lg bg-red-400 hover:bg-red-500 text-white'
+        closeBtnStyles='hover:bg-slate-200'
+        submitBtnText='Yes, delete'
+        noteBelowContent
+    >
+        <p className='text-center text-stone-600 text-xl font-semibold'>Are you sure?</p>
+        <p className='text-center text-red-500 pb-4'>*This action is irreversible*</p>
+    </Modal>
   )
 }
 

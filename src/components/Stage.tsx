@@ -10,12 +10,31 @@ const Stage = (stage: IStage) => {
     const dispatch = useAppDispatch();
 
   return (
-    <div onClick={() => dispatch(setCurrentStage(stage))} className='border rounded-bl-lg max-w-md w-full snap-center snap-always shrink-0 flex items-center'>
-      <div className='w-full h-full flex flex-col items-center'>
-          <StageTop {...stage}/>
-          <StageContent {...stage}/>
+      <div
+        onClick={() => dispatch(setCurrentStage(stage))}
+        className={`
+          w-full
+          h-full
+          items-start
+          snap-center
+          snap-always
+          shrink-0
+          flex
+          self-start
+          max-w-[430px]
+          border-l
+          border-r
+          border-l-slate-100
+          border-r-slate-100w-full
+          flex-col
+          min-h-full
+          relative
+          overflow-hidden
+        `}
+      >
+        <StageTop {...stage} />
+        <StageContent {...stage} />
       </div>
-    </div>
   )
 }
 

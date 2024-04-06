@@ -1,4 +1,4 @@
-import { TScrollDirection } from "./types";
+import { ScrollDirection } from "./types";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -14,7 +14,7 @@ const convertToISODate = (date: string): string | void => {
     else return new Date(date).toISOString().substring(0, 10);
 }
 
-const scrollToIndex = (index: number, direction: TScrollDirection, container: HTMLDivElement): void => {
+const scrollToIndex = (index: number, direction: ScrollDirection, container: HTMLDivElement): void => {
     const nextStageOffset = index * container.clientWidth;
     
     container.scrollTo({
@@ -25,8 +25,22 @@ const scrollToIndex = (index: number, direction: TScrollDirection, container: HT
     });
 }
 
+const formatURL = (link: string): string => {
+  link = link.trim();
+
+  const http: string = 'http://';
+  const https: string = 'https://';
+
+  if (link.startsWith(http)) return link.substring(0, 4) + 's' + link.substring(4);
+
+  if (!link.startsWith(https)) return `${https}${link}`;
+  
+  else return link;
+}
+
 export {
     capitalizeFirstLetter,
     convertToISODate,
-    scrollToIndex
+    scrollToIndex,
+    formatURL
 }

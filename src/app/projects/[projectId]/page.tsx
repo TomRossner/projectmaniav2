@@ -11,7 +11,7 @@ import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
 import { updateProject } from '@/services/projects.api';
-import { TScrollDirection } from '@/utils/types';
+import { ScrollDirection } from '@/utils/types';
 import { scrollToIndex } from '@/utils/utils';
 import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
 import { redirect } from 'next/navigation';
@@ -21,7 +21,7 @@ import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
 import EditStageModal from '@/components/modals/EditStageModal';
 import EditDashboardModal from '@/components/modals/EditDashboardModal';
 import { AxiosResponse } from 'axios';
-import { IUser, TUser, setUser } from '@/store/auth/auth.slice';
+import { IUser, setUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
 import { updateUser } from '@/services/user.api';
 import { refreshUser, saveJwt } from '@/services/localStorage';
@@ -43,7 +43,7 @@ const Project = () => {
 
   const stagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const updateCurrentStageIndex = (direction: TScrollDirection, totalStages: number): void => {
+  const updateCurrentStageIndex = (direction: ScrollDirection, totalStages: number): void => {
     if (direction === 'next' && currentStageIndex < totalStages) {
       dispatch(setCurrentStageIndex(currentStageIndex + 1));
     } else if (direction === 'prev' && currentStageIndex > 0) {
@@ -51,7 +51,7 @@ const Project = () => {
     }
   }
 
-  const handleScroll = (direction: TScrollDirection) => {
+  const handleScroll = (direction: ScrollDirection) => {
     if (stages.length === 1) return;
     
     const container = stagesContainerRef.current as HTMLDivElement;
@@ -160,6 +160,33 @@ const Project = () => {
     updateUserData(updatedUser);
   }, [])
 
+  const [isScrolledToLeft, setIsScrolledToLeft] = useState<boolean>(false);
+  const [isScrolledToRight, setIsScrolledToRight] = useState<boolean>(false);
+
+  // Handle side scroll
+  useEffect(() => {
+    const container = stagesContainerRef.current;
+
+    const handleScroll = (): void => {
+      if (container) {
+
+        const scrollLeft: number = container.scrollLeft;
+        const scrollWidth: number = container.scrollWidth;
+        const clientWidth: number = container.clientWidth;
+
+        setIsScrolledToLeft(scrollLeft === 0);
+        setIsScrolledToRight(scrollLeft + clientWidth >= scrollWidth);
+      }
+    }
+
+    if (container) container.addEventListener('scroll', handleScroll);
+  }, [])
+  
+  // Scroll boolean values
+  useEffect(() => {
+    // console.log({isScrolledToLeft, isScrolledToRight});
+  }, [isScrolledToLeft, isScrolledToRight])
+
   return (
     <>
     <EditStageModal/>
@@ -171,8 +198,21 @@ const Project = () => {
     <EditTaskModal {...currentTask as ITask}/>
     <DeleteTaskPrompt/>
     <div className='flex justify-end w-full h-[90vh]'>
-        <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full'>
-            <div className='grow self-stretch border p-4 border-stone-500 rounded-bl-lg w-full flex flex-col items-center'>
+        <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full mb-2'>
+            <div
+              className={`
+                grow
+                self-stretch
+                border
+                p-4
+                border-stone-500
+                rounded-bl-lg
+                w-full
+                flex
+                flex-col
+                items-center
+              `}
+            >
                 <DashboardTop
                   noMoreNext={noMoreNext}
                   noMorePrev={noMorePrev}
@@ -180,7 +220,23 @@ const Project = () => {
                   movePrev={movePrev}
                 />
                 
-                <div id='stagesContainer' ref={stagesContainerRef} className='w-full grow snap-x snap-mandatory flex overflow-y-hidden overflow-x-auto no-scrollbar gap-5'>
+                <div
+                  id='stagesContainer'
+                  ref={stagesContainerRef}
+                  className={`
+                    w-full
+                    rounded-bl-lg
+                    grow
+                    snap-x
+                    snap-mandatory
+                    flex
+                    overflow-x-auto
+                    gap-5
+                    border
+                    border-slate-200
+                    h-full
+                  `}
+                >
                   {currentProject?.stages.map((stage: IStage) =>
                     <Stage {...stage} key={stage.stageId}/>
                   )}

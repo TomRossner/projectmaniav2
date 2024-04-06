@@ -9,7 +9,7 @@ export interface IUser {
     lastName: string;
     email: string;
     userId?: string;
-    imgUrl?: string;
+    imgSrc?: string;
     createdAt?: Date;
     isOnline?: boolean;
     contacts?: string[];
@@ -17,13 +17,13 @@ export interface IUser {
 }
 
 export interface IAuthState {
-    user: TUser;
+    user: User;
     isAuthenticated: boolean;
     isLoading: boolean;
     authError: string | null;
 }
 
-export type TUser = IUser | null;
+export type User = IUser | null;
 
 const initialState: IAuthState = {
     user: null,
@@ -48,7 +48,7 @@ export const authSlice = createSlice({
     name: 'authSlice',
     initialState,
     reducers: {
-        setUser: (state, action: PayloadAction<TUser>) => {
+        setUser: (state, action: PayloadAction<User>) => {
             state.user = action.payload;
             state.isAuthenticated = action.payload ? true : false;
         },

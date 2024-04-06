@@ -8,7 +8,9 @@ interface IFormHeaderProps {
 
 const FormHeader = ({text}: IFormHeaderProps) => {
   return (
-    <h2 className='text-center text-2xl text-black'>{text}</h2>
+    <h2 className='text-center text-2xl text-black'>
+      {text}
+    </h2>
   )
 }
 
