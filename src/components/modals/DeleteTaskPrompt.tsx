@@ -1,12 +1,9 @@
 'use client'
 
 import React from 'react';
-import Button from '../common/Button';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeDeleteTaskPrompt, setError } from '@/store/app/app.slice';
-import ModalTitle from './ModalTitle';
 import useProjects from '@/hooks/useProjects';
-import Line from '../common/Line';
 import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from '@/store/projects/projects.slice';
 import usePrompts from '@/hooks/usePrompts';
 import { deleteTask } from '@/services/projects.api';

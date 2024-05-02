@@ -54,7 +54,7 @@ const EditTaskModal = (task: ITask) => {
           const base64EncodedFile = reader.result as string;
           setInputValues({...inputValues, imgSrc: base64EncodedFile} as ITask);
         }
-      }
+    }
 
     const closeModal = () => {
         dispatch(closeEditTaskModal());
@@ -96,8 +96,6 @@ const EditTaskModal = (task: ITask) => {
             ...updatedValues,
             externalLinks: links
         } as ITask;
-
-        console.log(updatedTask);
         
         const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
             if (stage.stageId === task.currentStage?.stageId) {
@@ -195,7 +193,6 @@ const EditTaskModal = (task: ITask) => {
     }
 
     const handleAddLink = (externalLinks: IExternalLink[]): void => {
-        console.log("Checking")
         if (externalLinks.some((l: IExternalLink) => !l.url)) {
             const emptyLinks: IExternalLink[] = externalLinks.filter((l: IExternalLink) => !l.url);
 
@@ -337,7 +334,11 @@ const EditTaskModal = (task: ITask) => {
                     <div
                         className="flex items-center w-full mt-2 mb-3 justify-between"
                     >
-                        <Label htmlFor="labels" labelText="Labels" additionalStyles="text-xl block w-1/4"/>
+                        <Label
+                            htmlFor="labels"
+                            labelText="Labels"
+                            additionalStyles="text-xl block w-1/4"
+                        />
 
                         <div className="flex flex-wrap w-fit items-center gap-2 mr-2">
                             {LABELS.map((label: TLabel, idx: number) => (
@@ -402,7 +403,7 @@ const EditTaskModal = (task: ITask) => {
                                                 }}
                                             >
                                                 <ButtonWithIcon
-                                                    icon={<RxCross2/>}
+                                                    icon={<RxCross2 />}
                                                     title="Remove"
                                                     action={() => setSelectedLabels(selectedLabels?.filter(
                                                         (l: TLabel) => l !== label
@@ -446,7 +447,11 @@ const EditTaskModal = (task: ITask) => {
                     />
 
                     <div className="flex flex-col items-start gap-4 mb-4 w-full">
-                        <Label labelText="Links" htmlFor="links" isOptional={true}/>
+                        <Label
+                            labelText="Links"
+                            htmlFor="links"
+                            isOptional
+                        />
 
                         {externalLinks?.length === 1
                             ? (
@@ -504,7 +509,7 @@ const EditTaskModal = (task: ITask) => {
                             onClick={() => handleAddLink(externalLinks)}
                         >
                             <span className="pt-1">Add link</span>
-                            <span className="text-sm"><BiPlus/></span>
+                            <span className="text-sm"><BiPlus /></span>
                         </button>
                     </div>
 

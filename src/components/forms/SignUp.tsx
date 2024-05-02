@@ -59,7 +59,7 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
                 pt-5
                 px-10
                 border
-                border-blue-500
+                border-slate-200
                 rounded-bl-lg
                 bg-slate-100
             `)}

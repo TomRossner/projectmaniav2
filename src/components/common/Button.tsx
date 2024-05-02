@@ -1,19 +1,28 @@
 'use client'
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
-interface IButtonProps {
-    text: string;
+
+type ButtonProps = {
+    children: ReactNode;
     action?: () => void;
-    type?: 'submit' | 'reset' | 'button' | undefined;
+    type?: 'submit' | 'reset' | 'button';
     additionalStyles?: string;
+    disabled?: boolean;
 }
 
-const Button = ({text, action, additionalStyles, type}: IButtonProps) => {
+const Button = ({
+  children,
+  action = () => {},
+  additionalStyles,
+  type = "button",
+  disabled = false,
+}: ButtonProps) => {
   return (
     <button
-        type={type ? type : 'button'}
+        type={type}
         onClick={action}
+        disabled={disabled}
         className={twMerge(`
           px-2
           py-1
@@ -24,10 +33,12 @@ const Button = ({text, action, additionalStyles, type}: IButtonProps) => {
           border-stone-500
           w-1/3
           self-end
+          disabled:opacity-50
+          disabled:cursor-not-allowed
           ${additionalStyles}
         `)}
     >
-        {text}
+        {children}
     </button>
   )
 }

@@ -5,12 +5,15 @@ import { closeMobileMenu, openMobileMenu, openNewProjectModal } from '@/store/ap
 import { MdMenu } from 'react-icons/md';
 import { useAppDispatch } from '@/hooks/hooks';
 import Logo from './utils/Logo';
-import Button from './common/Button';
 import { BiPlus } from 'react-icons/bi';
-import { Tooltip } from '@greguintow/react-tippy';
+import ToolTip from './common/ToolTip';
+import useAuth from '@/hooks/useAuth';
+import { LINKS } from '@/utils/links';
+import Link from 'next/link';
 
 const Nav = () => {
     const dispatch = useAppDispatch();
+    const {isAuthenticated} = useAuth();
     
     const openMenu = () => dispatch(openMobileMenu());
     const closeMenu = () => dispatch(closeMobileMenu());
@@ -22,8 +25,8 @@ const Nav = () => {
     }
 
   return (
-    <nav className='sticky top-1 left-0 flex items-center py-1 px-2 z-40'>
-      <span
+    <nav className='sticky top-1 left-0 flex items-center py-1 px-2 z-40 mb-3'>
+      <button
         onClick={openMenu}
         className={`
           flex
@@ -45,26 +48,19 @@ const Nav = () => {
         `}
       >
         <MdMenu />
-      </span>
+      </button>
       
       <Logo
         action={closeMenu}
         additionalStyles='absolute top-2 left-0 right-0 mx-auto'
       />
 
-      <Tooltip
-        arrow
-        duration={150}
-        position='top'
-        inertia
-        animation='scale'
-        title='New project'
-        className='absolute right-2'
-      >
-        <button
-          onClick={handleNewProjectClick}
-          type='button'
+      {!isAuthenticated ? (
+        <Link
+          href={LINKS.SIGN_IN}
           className={`
+            absolute
+            right-2
             max-w-1/4
             py-2
             px-3
@@ -77,23 +73,61 @@ const Nav = () => {
             rounded-bl-lg
             transition-colors
             duration-100
+            text-lg
+            font-medium
             bg-slate-100
-            text-slate-500
+            text-blue-400
             active:bg-slate-200
             sm:hover:bg-slate-200
-            active:text-stone-800
+            active:text-blue-500
             sm:hover:text-stone-800
           `}
+        >
+          Sign in
+        </Link>
+      ) : (
+        <div className='absolute right-2'>
+          <ToolTip
+            arrow
+            inertia
+            position='bottom'
+            title='New project'
           >
-            <span className='text-2xl'>
-              <BiPlus />
-            </span>
+            <button
+              onClick={handleNewProjectClick}
+              type='button'
+              className={`
+                max-w-1/4
+                py-2
+                px-3
+                sm:px-4
+                sm:pl-3
+                flex
+                gap-2
+                self-center
+                items-center
+                rounded-bl-lg
+                transition-colors
+                duration-100
+                bg-slate-100
+                text-slate-500
+                active:bg-slate-200
+                sm:hover:bg-slate-200
+                active:text-stone-800
+                sm:hover:text-stone-800
+              `}
+              >
+                <span className='text-2xl'>
+                  <BiPlus />
+                </span>
 
-            <span className='text-center hidden sm:inline-block pt-1 text-xl font-medium'>
-              New project
-            </span>
-        </button>
-      </Tooltip>
+                <span className='text-center hidden sm:inline-block pt-1 text-xl font-medium'>
+                  New project
+                </span>
+            </button>
+          </ToolTip>
+        </div>
+      )}
     </nav>
   )
 }

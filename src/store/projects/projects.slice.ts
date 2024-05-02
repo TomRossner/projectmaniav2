@@ -1,6 +1,7 @@
 import { createProject, getAllProjects } from "@/services/projects.api";
 import { IBaseTask } from "@/utils/interfaces";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { AxiosError } from "axios";
 
 export interface IProject extends IBaseProject {
     stages: IStage[];
@@ -58,7 +59,14 @@ const initialState: IProjectsState = {
 
 const handleError = (error: any) => {
     if (error.response) {
-        const {response: {data: {error: errorMsg}}} = error;
+        const {
+            response: {
+                data: {
+                    error: errorMsg
+                }
+            }
+        } = error;
+        
         throw errorMsg;
     } else throw error;
 }
@@ -67,17 +75,16 @@ export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsA
     try {
         const {data} = await getAllProjects(userId);
         return data;
-    } catch (error: any) {
-        handleError(error);   
+    } catch (error) {
+        handleError(error);
     }
 })
 
 export const createProjectAsync = createAsyncThunk('projectsSlice/createProjectAsync', async (newProjectData: Partial<IProject>) => {
     try {
         const {data} = await createProject(newProjectData);
-        console.log({data});
         return data; 
-    } catch (error: any) {
+    } catch (error) {
         handleError(error);
     }
 })

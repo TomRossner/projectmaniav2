@@ -10,7 +10,7 @@ import { closeModal } from '@/store/app/app.slice';
 import BackLayer from '../common/BackLayer';
 import { twMerge } from 'tailwind-merge';
 
-interface ModalProps {
+type ModalProps = {
     title: string;
     children: ReactNode;
     onSubmit?: (...args: any) => void;
@@ -90,8 +90,7 @@ const Modal = ({
                     <div
                         ref={modalRef}
                         className={`
-                            min-w-[350px]
-                            max-w-[400px]
+                            max-w-[350px]
                             min-h-24
                             max-h-[95vh]
                             m-auto
@@ -124,7 +123,6 @@ const Modal = ({
                         <div className='flex items-center gap-1 justify-end'>
                             {showSubmitBtn && (
                                 <Button
-                                    text={submitBtnText}
                                     action={onSubmit}
                                     additionalStyles={twMerge(`
                                         text-white
@@ -133,18 +131,21 @@ const Modal = ({
                                         hover:bg-blue-500
                                         ${submitBtnStyles}
                                     `)}
-                                />
+                                >
+                                    {submitBtnText}
+                                </Button>
                             )}
                             
                             <Button
-                                text={closeBtnText}
                                 action={onClose || close}
                                 additionalStyles={twMerge(`
                                     text-stone-700
                                     hover:bg-slate-200
                                     ${closeBtnStyles}
                                 `)}
-                            />
+                            >
+                                <span className='pt-1'>{closeBtnText}</span>
+                            </Button>
                         </div>
 
                         {!noteBelowContent && optionalNote && (

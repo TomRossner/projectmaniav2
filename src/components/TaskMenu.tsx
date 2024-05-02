@@ -1,7 +1,7 @@
 'use client'
 
 import { TASK_MENU_OPTIONS } from '@/utils/constants';
-import React, { ForwardedRef, RefObject, forwardRef, useRef } from 'react';
+import React, { RefObject, useRef } from 'react';
 import TaskMenuOption from './TaskMenuOption';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeEditTaskModal, openBackLayer, openDeleteTaskPrompt, openEditTaskModal } from '@/store/app/app.slice';
@@ -21,7 +21,6 @@ const TaskMenu = (props: ITaskMenuProps) => {
     const {
         setIsMenuOpen,
         menuOpen,
-        closeOnClickOutside = true,
         toggleMenu,
     } = props;
     

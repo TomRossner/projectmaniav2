@@ -13,6 +13,7 @@ import { fetchUserAsync, setAuthError, setUser } from '@/store/auth/auth.slice';
 import { useAppDispatch } from '@/hooks/hooks';
 import { getUserFromJwt } from '@/services/localStorage';
 import LoadingIcon from '../utils/LoadingIcon';
+import Button from '../common/Button';
 
 const signUpSchema = z.object({
     firstName: z.string().min(NAME_MIN_LENGTH, `Names must be at least ${NAME_MIN_LENGTH} characters`),
@@ -68,7 +69,7 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
   return (
     <>
         <form
-            id='signUp'
+            id='signIn'
             onSubmit={handleSubmit(onSubmit)}
             className={twMerge(`
                 max-w-[500px]
@@ -83,12 +84,12 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
                 pt-5
                 px-10
                 border
-                border-blue-500
+                border-slate-200
                 rounded-bl-lg
                 bg-slate-100
             `)}
         >
-            <FormHeader text='Create an account'/>
+            <FormHeader text='Login'/>
 
             <hr className='w-3/4 mx-auto'/>
 
@@ -153,34 +154,31 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
 
             <hr className='w-3/4 mx-auto'/>
 
-            <button
+            <Button
                 disabled={isSubmitting}
                 type='button' // Set back to "submit"
-                onClick={handleGoogleSignIn}
-                className={`
-                    px-4
-                    pb-2
-                    pt-3
-                    disabled:bg-slate-300
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60
-                    rounded-bl-lg
-                    bg-white
-                    hover:bg-slate-50
-                    transition-all
-                    text-blue-500
-                    font-semibold
+                action={handleGoogleSignIn}
+                additionalStyles={`
+                    flex
+                    w-full
                     border
                     border-slate-200
+                    items-center
+                    justify-center
+                    gap-2
+                    bg-slate-50
+                    sm:hover:bg-white
+                    active:bg-white
+                    rounded-bl-lg
+                    text-blue-400
                     text-xl
-                    w-full
-                    mx-auto
-                    duration-75
-                    max-h-[55px]
+                    sm:hover:text-blue-500
+                    active:text-blue-500
                 `}
             >
-                Continue with <GoogleLogo />
-            </button>
+                <GoogleLogo width='w-5' />
+                <span className='pt-1'>Continue with Google</span>
+            </Button>
         </form>
     </>
   )

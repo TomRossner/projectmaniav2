@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import PageHeader from '@/components/common/PageHeader';
+import Header from '@/components/common/Header';
 import SignUpForm from '@/components/forms/SignUpForm';
 import LoginForm from '@/components/forms/LoginForm';
 import { useAppDispatch } from '@/hooks/hooks';
@@ -9,6 +9,7 @@ import useAuth from '@/hooks/useAuth';
 import { setIsAuthenticated } from '@/store/auth/auth.slice';
 import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
+import Container from '@/components/common/Container';
 
 const SignIn = () => {
   const [isNotRegistered, setIsNotRegistered] = useState<boolean>(false);
@@ -28,8 +29,8 @@ const SignIn = () => {
   }, [user, isAuthenticated])
 
   return (
-    <div id='signInPage' className='my-auto w-full p-10 flex flex-col gap-10'>
-      <PageHeader text='Sign in'/>
+    <Container id='signInPage' className='my-auto w-full flex flex-col gap-5'>
+      <Header text='Sign in'/>
       
       <div className='flex items-center justify-center w-full overflow-x-hidden'>
         <SignUpForm
@@ -44,7 +45,7 @@ const SignIn = () => {
           toggleIsNotRegistered={toggleIsNotRegistered}
         />
       </div>
-    </div>
+    </Container>
   )
 }
 

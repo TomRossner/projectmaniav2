@@ -1,10 +1,11 @@
 'use client'
 
+import Container from '@/components/common/Container';
 import React from 'react';
 
 const About = () => {
   return (
-    <div id='aboutPage'>About</div>
+    <Container id='aboutPage'>About</Container>
   )
 }
 

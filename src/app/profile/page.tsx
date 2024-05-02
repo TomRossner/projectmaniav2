@@ -2,10 +2,11 @@
 
 import React from 'react';
 import isAuth from '../ProtectedRoute';
+import Container from '@/components/common/Container';
 
 const Profile = () => {
   return (
-    <div id='profilePage'>Profile</div>
+    <Container id='profilePage'>Profile</Container>
   )
 }
 

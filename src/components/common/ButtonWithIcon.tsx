@@ -1,10 +1,11 @@
 'use client'
 
 import React, { ReactNode } from 'react';
-import { Tooltip, TooltipProps } from '@greguintow/react-tippy';
+import { TooltipProps } from '@greguintow/react-tippy';
 import { twMerge } from 'tailwind-merge';
+import ToolTip from './ToolTip';
 
-interface ButtonWithIconProps {
+type ButtonWithIconProps = {
     icon: ReactNode;
     title?: string;
     action?: () => void;
@@ -46,7 +47,7 @@ const ButtonWithIcon = ({
   } = tooltipProps;
 
   return (
-    <Tooltip
+    <ToolTip
       arrow={arrow}
       inertia={inertia}
       position={position}
@@ -63,17 +64,20 @@ const ButtonWithIcon = ({
           className={twMerge(`
               flex
               items-center
-              cursor-pointer
               rounded-sm
               p-1
               border
               text-lg
+              cursor-pointer
+              disabled:cursor-not-allowed
               text-slate-400
               border-slate-300
               active:border-slate-600
               active:text-slate-600
               sm:hover:border-slate-600
               sm:hover:text-slate-600
+              disabled:border-slate-200
+              disabled:text-slate-300
               ${disabledStyles}
               ${additionalStyles}
               ${state && additionalStylesForState}
@@ -81,7 +85,7 @@ const ButtonWithIcon = ({
       >
         {icon as ReactNode}
       </button>
-    </Tooltip>
+    </ToolTip>
   )
 }
 

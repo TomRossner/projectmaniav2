@@ -1,7 +1,7 @@
 import { IBaseProject, IProject, IStage, ITask } from "@/store/projects/projects.slice";
 import axios, { AxiosResponse } from "axios";
 
-axios.defaults.baseURL = 'http://localhost:3001';
+axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL as string;
 
 const createProject = async (project: IBaseProject | Partial<IProject>): Promise<AxiosResponse> =>
     await axios.post('/projects/new-project', project);

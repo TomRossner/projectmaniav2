@@ -1,10 +1,11 @@
 'use client'
 
+import Container from '@/components/common/Container';
 import React from 'react';
 
 const NotFound = () => {
   return (
-    <div>not-found</div>
+    <Container>not-found</Container>
   )
 }
 

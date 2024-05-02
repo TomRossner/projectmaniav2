@@ -3,45 +3,34 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import isAuth from '../ProtectedRoute';
 import { useAppDispatch } from '@/hooks/hooks';
-import { IProject, ITeamMember, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
+import { ITeamMember, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
 import useAuth from '@/hooks/useAuth';
-import useProjects from '@/hooks/useProjects';
-import PageHeader from '@/components/common/PageHeader';
-import ProjectItem from '@/components/ProjectItem';
+import Header from '@/components/common/Header';
 import { createProject } from '@/services/projects.api';
 import { DEFAULT_STAGE } from '@/utils/constants';
-import Image from 'next/image';
-import loadingBlue from "../../assets/loading-blue.png";
 import ButtonWithIcon from '@/components/common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
 import { openNewProjectModal, setError } from '@/store/app/app.slice';
 import LoadingIcon from '@/components/utils/LoadingIcon';
+import ProjectsList from '@/components/ProjectsList';
+import Container from '@/components/common/Container';
+import { AxiosError } from 'axios';
+import Loading from '@/components/common/Loading';
+import useProjects from '@/hooks/useProjects';
 
 const Projects = () => {
   const {user} = useAuth();
+  const {projects} = useProjects();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const {projects, isFetching} = useProjects();
 
   const dispatch = useAppDispatch();
 
-  const handleError = (error: any): void => {
+  const handleError = (error: AxiosError): void => {
     if (error.code === 'ERR_NETWORK') {
-      dispatch(setError(`Failed handling HTTP request - ${error.message.toLowerCase()}`));
-      return;
-    } else dispatch(setError('Failed fetching projects from API'));
+        dispatch(setError(`Failed handling HTTP request - ${error.message.toLowerCase()}`));
+        return;
+    } else dispatch(setError('An error occurred while loading projects'));
   }
-
-  const getProjects = async () => {
-    return await dispatch(fetchProjectsAsync(user?.userId as string))
-      .unwrap()
-      .catch((error) => handleError(error));
-  }
-
-  useEffect(() => {
-    dispatch(setCurrentProject(null));
-    getProjects();
-  }, [])
 
   const handleCreateProject = async () => {
     setIsLoading(true);
@@ -61,8 +50,8 @@ const Projects = () => {
       }
   
       return await createProject(newProject);
-    } catch (error) {
-      handleError(error);
+    } catch (error: unknown) {
+      handleError(error as AxiosError);
     } finally {
       setIsLoading(false);
     }
@@ -72,19 +61,30 @@ const Projects = () => {
     dispatch(openNewProjectModal());
   }
 
+  const getProjects = async () => {
+      return await dispatch(fetchProjectsAsync(user?.userId as string))
+          .unwrap()
+          .catch((error) => handleError(error));
+  }
+
+  useEffect(() => {
+      dispatch(setCurrentProject(null));
+      getProjects();
+  }, [])
+
   return (
-    <div id='projectsPage' className='p-4'>
+    <Container id='projectsPage'>
       <div className='flex items-center justify-between w-full'>
-        <PageHeader text='Projects'/>
+        <Header text='Projects' />
 
         <ButtonWithIcon
           title='New project'
           action={handleNewProject}
-          icon={<BiPlus/>}
+          icon={<BiPlus />}
         />
       </div>
 
-      {isFetching
+      {/* {isFetching
         ? <>
             <Image
               src={loadingBlue}
@@ -95,57 +95,50 @@ const Projects = () => {
             />
             <p className='text-xl text-stone-800 text-center'>Loading projects...</p>
           </>
-        : <div id='projectsContainer' className={`my-2 grid gap-2 ${projects.length ? 'hover:shadow-md' : ''}`}>
-            {projects?.length
-              ? projects?.map((project: IProject) =>
-                  <ProjectItem
-                    key={project.projectId}
-                    {...project}
-                  />
-                )
-              : (
-                <>
-                  <p>No projects</p>
+        : 
+      } */}
+      <>
+        <ProjectsList projects={projects} />
 
-                  <button
-                      disabled={isLoading}
-                      type='button'
-                      onClick={handleCreateProject}
-                      className={`
-                        my-5
-                        px-4
-                        pb-2
-                        pt-3
-                        rounded-bl-lg
-                        bg-blue-400
-                        hover:bg-blue-500
-                        disabled:bg-blue-300
-                        disabled:opacity-60
-                        disabled:cursor-not-allowed
-                        transition-all
-                        text-white
-                        font-semibold
-                        text-xl
-                        w-full
-                        mx-auto
-                        duration-75
-                      `}
-                  >
-                      {isLoading
-                          ? (
-                              <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
-                                  <LoadingIcon/>
-                                  Loading...
-                              </span>
-                            )
-                          : 'Create project'}
-                  </button>
-                </>
-              )
-            }
-          </div>
-      }
-    </div>
+        {!projects.length && (
+          <p className='text-center w-full font-medium text-gray-400'>No projects</p>
+        )}
+
+        {/* <button
+          disabled={isLoading}
+          type='button'
+          onClick={handleCreateProject}
+          className={`
+            my-5
+            px-4
+            pb-2
+            pt-3
+            rounded-bl-lg
+            bg-blue-400
+            hover:bg-blue-500
+            disabled:bg-blue-300
+            disabled:opacity-60
+            disabled:cursor-not-allowed
+            transition-all
+            text-white
+            font-semibold
+            text-xl
+            w-full
+            mx-auto
+            duration-75
+          `}
+      >
+          {isLoading
+              ? (
+                  <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
+                      <LoadingIcon />
+                      Loading...
+                  </span>
+                )
+              : 'Create project'}
+        </button> */}
+      </>
+    </Container>
   )
 }
 

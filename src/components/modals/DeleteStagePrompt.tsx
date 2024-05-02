@@ -1,13 +1,10 @@
 'use client'
 
 import React from 'react';
-import Button from '../common/Button';
 import useDeleteStagePrompt from '@/hooks/usePrompts';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeDeleteStagePrompt, setError } from '@/store/app/app.slice';
-import ModalTitle from './ModalTitle';
 import useProjects from '@/hooks/useProjects';
-import Line from '../common/Line';
 import { IProject, IStage, setCurrentProject, setCurrentStageIndex } from '@/store/projects/projects.slice';
 import Modal from './Modal';
 
