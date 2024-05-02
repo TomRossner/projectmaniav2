@@ -1,3 +1,4 @@
+import { IStage } from "@/store/projects/projects.slice";
 import { ScrollDirection } from "./types";
 
 const capitalizeFirstLetter = (string: string): string => {
@@ -38,9 +39,23 @@ const formatURL = (link: string): string => {
   else return link;
 }
 
+const displayTotalTasks = (stages: IStage[]): string => {
+  const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
+
+  return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
+}
+
+const displayStagesCount = (stages: IStage[]): string => {
+  return stages.length
+    ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
+    : `0 stages`;
+}
+
 export {
     capitalizeFirstLetter,
     convertToISODate,
     scrollToIndex,
-    formatURL
+    formatURL,
+    displayTotalTasks,
+    displayStagesCount,
 }

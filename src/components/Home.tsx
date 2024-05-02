@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
 import useProjects from '@/hooks/useProjects';
 import { getProjectById } from '@/services/projects.api';
-import { IProject, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
+import { IProject, IStage, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
 import { APP_VERSION } from '@/utils/constants';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
@@ -15,6 +15,8 @@ import Header from './common/Header';
 import Image from 'next/image';
 import { IUser } from '@/store/auth/auth.slice';
 import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
+import { BsCircleFill } from 'react-icons/bs';
+import { displayStagesCount, displayTotalTasks } from '@/utils/utils';
 
 const Home = () => {
   const {isAuthenticated, user} = useAuth();
@@ -45,6 +47,12 @@ const Home = () => {
     if (idx > 0) return `absolute right-[${increment}px] z-[${increment}]`;
     return '';
   }
+
+  // const displayTotalTasks = (stages: IStage[]): string => {
+  //   const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
+
+  //   return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
+  // }
 
   useEffect(() => {
     const getMostRecentProject = async (): Promise<void> => {
@@ -91,7 +99,11 @@ const Home = () => {
                     <h4 className='text-2xl font-medium text-blue-500'>{mostRecentProject?.title}</h4>
                     <div className='grow' />
 
-                    <p className='text-md text-blue-400 px-1'>{mostRecentProject.stages.length} stage{mostRecentProject.stages.length === 1 ? "" : "s"}</p>
+                    <p className='text-md text-blue-400 px-1 pt-1 flex items-center gap-2'>
+                      {displayStagesCount(mostRecentProject.stages)}
+                      <BsCircleFill className='w-1 pb-1'/>
+                      {displayTotalTasks(mostRecentProject.stages)}
+                    </p>
                     
                     <p className='text-md text-blue-400 px-1'>
                       {mostRecentProject.team.map(

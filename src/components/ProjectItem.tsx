@@ -1,6 +1,7 @@
 import { useAppDispatch } from '@/hooks/hooks';
 import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
+import { displayStagesCount, displayTotalTasks } from '@/utils/utils';
 import Link from 'next/link';
 import React from 'react';
 import { BsCircleFill } from 'react-icons/bs';
@@ -20,17 +21,17 @@ const ProjectItem = (project: IProject) => {
       dispatch(setCurrentProject(project));
     }
 
-    const displayStagesCount = (): string => {
-      return stages.length
-        ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
-        : `0 stages`;
-    }
+    // const displayStagesCount = (): string => {
+    //   return stages.length
+    //     ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
+    //     : `0 stages`;
+    // }
 
-    const displayTotalTasks = (): string => {
-      const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
+    // const displayTotalTasks = (): string => {
+    //   const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
 
-      return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
-    }
+    //   return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
+    // }
 
   return (
     <Link
@@ -45,13 +46,13 @@ const ProjectItem = (project: IProject) => {
           </p>
 
           <p className='flex items-center gap-2 text-slate-600 font-medium italic'>
-            {displayStagesCount()}
+            {displayStagesCount(stages)}
 
             <span className='flex text-[4px] pb-1 text-slate-500'>
               <BsCircleFill />
             </span>
 
-            {displayTotalTasks()}
+            {displayTotalTasks(stages)}
           </p>
       </div>
     </Link>
