@@ -31,11 +31,11 @@ interface IBaseTask {
     currentStage?: Partial<IStage>;
     description?: string;
     imgSrc?: string;
-    externalLinks?: IExternalLink[];
+    externalLinks?: ExternalLink[];
     labels: TLabel[];
 }
 
-interface IExternalLink {
+type ExternalLink = {
     name: string;
     url: string;
 }
@@ -45,5 +45,5 @@ export type {
     IPasswordRegExp,
     IUserSignUpData,
     IBaseTask,
-    IExternalLink
+    ExternalLink,
 }

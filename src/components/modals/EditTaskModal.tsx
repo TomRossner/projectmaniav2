@@ -15,7 +15,7 @@ import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, LABELS, MAX_EXTERNAL_LINKS, PR
 import Label from "../common/Label";
 import ButtonWithIcon from "../common/ButtonWithIcon";
 import { BiPlus, BiTrash } from "react-icons/bi";
-import { IExternalLink } from "@/utils/interfaces";
+import { ExternalLink } from "@/utils/interfaces";
 import { URL_REGEX } from "@/utils/regexp";
 import { RxCross2 } from "react-icons/rx";
 import { TLabel } from "@/utils/types";
@@ -37,7 +37,7 @@ const EditTaskModal = (task: ITask) => {
 
     const [inputValues, setInputValues] = useState<ITask | null>(null);
 
-    const [externalLinks, setExternalLinks] = useState<IExternalLink[]>([DEFAULT_EXTERNAL_LINK]);
+    const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([DEFAULT_EXTERNAL_LINK]);
 
     const [linksError, setLinksError] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ const EditTaskModal = (task: ITask) => {
         setInputValues(DEFAULT_VALUES);
     }
 
-    const handleSave = (ev: FormEvent<HTMLFormElement>, updatedValues: ITask, externalLinks: IExternalLink[]): void => {
+    const handleSave = (ev: FormEvent<HTMLFormElement>, updatedValues: ITask, externalLinks: ExternalLink[]): void => {
         ev.preventDefault();
 
         if (linksError) {
@@ -69,9 +69,9 @@ const EditTaskModal = (task: ITask) => {
             return;
         }
 
-        const links: IExternalLink[] = externalLinks
-            .filter((link: IExternalLink) => link.url)
-            .map((l: IExternalLink) => (
+        const links: ExternalLink[] = externalLinks
+            .filter((link: ExternalLink) => link.url)
+            .map((l: ExternalLink) => (
                 {
                     ...l,
                     url: l.url.trim()
@@ -79,9 +79,9 @@ const EditTaskModal = (task: ITask) => {
             ));
 
         if (links[0]?.url && !areValid(links)) {
-            const invalidLinks: IExternalLink[] = getInvalidLinks(links);
+            const invalidLinks: ExternalLink[] = getInvalidLinks(links);
             
-            setLinksError(`${invalidLinks.map((l: IExternalLink) => l.name)
+            setLinksError(`${invalidLinks.map((l: ExternalLink) => l.name)
                 .join(", ")} ${invalidLinks.length > 1
                     ? "are not valid links"
                     : "is not a valid link"
@@ -165,18 +165,18 @@ const EditTaskModal = (task: ITask) => {
         setInputValues({...inputValues, imgSrc: ""} as ITask);
     }
     
-    const areValid = (links: IExternalLink[]): boolean => {
-            return links.some((l: IExternalLink) => URL_REGEX.test(l.url));
+    const areValid = (links: ExternalLink[]): boolean => {
+            return links.some((l: ExternalLink) => URL_REGEX.test(l.url));
     }
 
-    const getInvalidLinks = (links: IExternalLink[]): IExternalLink[] => {
-        return links.filter((l: IExternalLink) => !URL_REGEX.test(l.url));
+    const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
+        return links.filter((l: ExternalLink) => !URL_REGEX.test(l.url));
     }
 
     const handleLinksChange = ({target: {value}}: React.ChangeEvent<HTMLInputElement>, index: number = 0): void => {
         setExternalLinks(
             [
-                ...externalLinks.map((link: IExternalLink, i: number) =>
+                ...externalLinks.map((link: ExternalLink, i: number) =>
                     i === index
                         ?   {
                                 ...link,
@@ -184,20 +184,20 @@ const EditTaskModal = (task: ITask) => {
                             }
                         : link
                     )
-            ] as IExternalLink[]);
+            ] as ExternalLink[]);
     }
 
     const handleRemoveLink = (linkIndex: number): void => {
-        setExternalLinks([...externalLinks.filter((extLink: IExternalLink) =>
+        setExternalLinks([...externalLinks.filter((extLink: ExternalLink) =>
                 externalLinks.indexOf(extLink) !== linkIndex)]);
     }
 
-    const handleAddLink = (externalLinks: IExternalLink[]): void => {
-        if (externalLinks.some((l: IExternalLink) => !l.url)) {
-            const emptyLinks: IExternalLink[] = externalLinks.filter((l: IExternalLink) => !l.url);
-
+    const handleAddLink = (externalLinks: ExternalLink[]): void => {
+        if (externalLinks.some((l: ExternalLink) => !l.url)) {
+            const emptyLinks: ExternalLink[] = externalLinks.filter((l: ExternalLink) => !l.url);
+            console.log(emptyLinks)
             setLinksError(`You must fill ${emptyLinks.length > 1
-                ? emptyLinks.map((l: IExternalLink) => l.name).join(", ")
+                ? emptyLinks.map((l: ExternalLink) => l.name).join(", ")
                 : emptyLinks[0].name} before adding a new one`
             );
 
@@ -215,7 +215,7 @@ const EditTaskModal = (task: ITask) => {
                 {
                     name: `Link #${externalLinks.length + 1}`,
                     url: ""
-                } as IExternalLink
+                } as ExternalLink
             ]
         );
     }
@@ -238,7 +238,7 @@ const EditTaskModal = (task: ITask) => {
     useEffect(() => {
         setInputValues(DEFAULT_VALUES);
         setSelectedPriority(currentTask?.priority as Priority);
-        setExternalLinks(currentTask?.externalLinks as IExternalLink[]);
+        setExternalLinks(currentTask?.externalLinks as ExternalLink[]);
         setSelectedLabels(currentTask?.labels as TLabel[]);
     }, [currentTask])
 
@@ -248,6 +248,7 @@ const EditTaskModal = (task: ITask) => {
 
     // SetError with linksError
     useEffect(() => {
+        console.log({linksError})
         if (linksError) dispatch(setError(linksError));
     }, [linksError])
 
@@ -468,7 +469,7 @@ const EditTaskModal = (task: ITask) => {
                                         labelAdditionalStyles="mr-3 text-sm font-thin"
                                     />
                                 </div>
-                            ) : externalLinks?.map((l: IExternalLink, index: number) => (
+                            ) : externalLinks?.map((l: ExternalLink, index: number) => (
                                     <div key={index} className="flex items-center pl-4 gap-1 w-full">
                                         <Input
                                             key={index}
@@ -484,7 +485,7 @@ const EditTaskModal = (task: ITask) => {
                                         />
 
                                         <ButtonWithIcon
-                                            icon={<BiTrash/>}
+                                            icon={<BiTrash />}
                                             action={() => handleRemoveLink(index)}
                                             title="Remove link"
                                             additionalStyles="sm:hover-text-red-500 active:text-red-500 sm:hover:border-red-500 active:border-red-500"

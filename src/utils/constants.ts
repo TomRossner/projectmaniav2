@@ -1,5 +1,5 @@
 import { IProject, IStage, Priority } from "@/store/projects/projects.slice";
-import { IBaseTask, IExternalLink } from "./interfaces";
+import { IBaseTask, ExternalLink } from "./interfaces";
 import { TLabel, ScrollDirection } from "./types";
 import { TooltipProps } from "@greguintow/react-tippy";
 
@@ -49,7 +49,7 @@ const TASK_MENU_OPTIONS: string[] = [
     'Delete'
 ]
 
-const DEFAULT_EXTERNAL_LINK: IExternalLink = {
+const DEFAULT_EXTERNAL_LINK: ExternalLink = {
     name: 'Link #1',
     url: ''
 }

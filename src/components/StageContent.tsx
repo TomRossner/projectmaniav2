@@ -22,7 +22,7 @@ const StageContent = (stage: IStage) => {
           </div>
         ) : (
           <span className='flex items-center justify-center h-1/3 my-auto w-full'>
-            <BigPlus/>
+            <BigPlus />
           </span>
         )}
     </div>

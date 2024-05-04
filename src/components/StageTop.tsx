@@ -204,10 +204,10 @@ const StageTop = (stage: IStage) => {
 
         {inputVisible &&
             <div className='flex flex-col px-2 py-1 absolute top-14 right-0 z-10 w-5/6 bg-white border border-stone-800 rounded-bl-lg'>
-                {searchResults.length
+                {!!searchResults.length
                     && (
                         <p className='text-right w-full px-1'>
-                            {searchResults.length} result{searchResults.length === 1 ? '' : 'results'} found
+                            {searchResults.length} result{searchResults.length === 1 ? '' : 's'} found
                         </p>
                     )
                 }

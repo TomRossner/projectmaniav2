@@ -7,7 +7,7 @@ import Image from 'next/image';
 import useProjects from '@/hooks/useProjects';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BiLink, BiLinkExternal } from 'react-icons/bi';
-import { IExternalLink } from '@/utils/interfaces';
+import { ExternalLink } from '@/utils/interfaces';
 import Link from 'next/link';
 import { formatURL } from '@/utils/utils';
 import TaskLabel from './TaskLabel';
@@ -84,8 +84,7 @@ const Task = (task: ITask) => {
         h-auto
         flex
         flex-col
-        px-3
-        py-2
+        p-3
         gap-3
         rounded-bl-lg
         border
@@ -211,14 +210,13 @@ const Task = (task: ITask) => {
                     z-40
                   `}
                 >
-                  {currentTask?.externalLinks?.map((link: IExternalLink, index: number) => {
+                  {currentTask?.externalLinks?.map((link: ExternalLink, index: number) => {
                     return (
                         <Link
                           key={index}
                           href={formatURL(link.url) as string}
                           target='_blank'
-                          passHref
-                          referrerPolicy='no-referrer'
+                          rel='noreferrer noopener'
                           className={`
                             cursor-pointer
                             flex

@@ -1,6 +1,6 @@
 'use client'
 
-import { useAppDispatch } from '@/hooks/hooks';
+import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import useNewTaskModal from '@/hooks/useModals';
 import { closeNewTaskModal, setError } from '@/store/app/app.slice';
 import React, { useEffect, useState } from 'react';
@@ -9,7 +9,7 @@ import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, LABELS, M
 import { IProject, IStage, ITask, Priority, setCurrentProject } from '@/store/projects/projects.slice';
 import { capitalizeFirstLetter, convertToISODate } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
-import { IBaseTask, IExternalLink } from '@/utils/interfaces';
+import { IBaseTask, ExternalLink } from '@/utils/interfaces';
 import { createNewTask } from '@/services/projects.api';
 import Image from 'next/image';
 import { BiPlus, BiTrash } from 'react-icons/bi';
@@ -20,6 +20,8 @@ import Label from '../common/Label';
 import { RxCross2 } from 'react-icons/rx';
 import { Tooltip } from '@greguintow/react-tippy';
 import Modal from './Modal';
+import { twMerge } from 'tailwind-merge';
+import { selectError } from '@/store/app/app.selectors';
 
 const NewTaskModal = () => {
     const {newTaskModalOpen} = useNewTaskModal();
@@ -30,44 +32,37 @@ const NewTaskModal = () => {
 
     const [inputValues, setInputValues] = useState<IBaseTask>(DEFAULT_TASK_VALUES);
 
-    const [externalLinks, setExternalLinks] = useState<IExternalLink[]>([DEFAULT_EXTERNAL_LINK]);
+    const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([DEFAULT_EXTERNAL_LINK]);
 
-    const [linksError, setLinksError] = useState<string | null>(null);
+    const error = useAppSelector(selectError);
 
     const dispatch = useAppDispatch();
 
-    const areValid = (links: IExternalLink[]): boolean => {
-        return links.some((l: IExternalLink) => URL_REGEX.test(l.url));
+    const areValid = (links: ExternalLink[]): boolean => {
+        return links.some((l: ExternalLink) => URL_REGEX.test(l.url));
     }
 
-    const getInvalidLinks = (links: IExternalLink[]): IExternalLink[] => {
-        return links.filter((l: IExternalLink) => !URL_REGEX.test(l.url));
+    const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
+        return links.filter((l: ExternalLink) => !URL_REGEX.test(l.url));
     }
 
-    const handleCreate = async (newTaskData: IBaseTask, externalLinks: IExternalLink[]): Promise<void> => {
+    const handleCreate = async (newTaskData: IBaseTask): Promise<void> => {
         if (!currentStage) {
             dispatch(setError('Failed creating task'));
             return;
         }
 
-        const links: IExternalLink[] = externalLinks
-            .filter((link: IExternalLink) => link.url)
-            .map((l: IExternalLink) => (
-                {
-                    ...l,
-                    url: l.url.trim()
-                }
-            ));
+        const links: ExternalLink[] = inputValues.externalLinks as ExternalLink[];
 
-        if (links[0]?.url && !areValid(links)) {
-            const invalidLinks: IExternalLink[] = getInvalidLinks(links);
+        if (links?.length && links[0]?.url && !areValid(links)) {
+            const invalidLinks: ExternalLink[] = getInvalidLinks(links);
             
-            setLinksError(`${invalidLinks.map((l: IExternalLink) => l.name)
+            dispatch(setError(`${invalidLinks.map((l: ExternalLink) => l.name)
                 .join(", ")} ${invalidLinks.length > 1
                     ? 'are not valid links'
                     : 'is not a valid link'
                 }`
-            );
+            ));
 
             return;
         }
@@ -81,7 +76,6 @@ const NewTaskModal = () => {
                 stageId: currentStage?.stageId,
                 title: currentStage?.title
             },
-            externalLinks: links
         }
 
         const {data: task} = await createNewTask(newTask);
@@ -181,7 +175,7 @@ const NewTaskModal = () => {
     const handleLinksChange = ({target: {value}}: React.ChangeEvent<HTMLInputElement>, index: number = 0): void => {
         setExternalLinks(
             [
-                ...externalLinks.map((link: IExternalLink, i: number) =>
+                ...externalLinks.map((link: ExternalLink, i: number) =>
                     i === index
                         ?   {
                                 ...link,
@@ -189,28 +183,30 @@ const NewTaskModal = () => {
                             }
                         : link
                     )
-            ] as IExternalLink[]);
+            ] as ExternalLink[]);
     }
 
     const handleRemoveLink = (linkIndex: number): void => {
-        setExternalLinks([...externalLinks.filter((extLink: IExternalLink) =>
+        setExternalLinks([...externalLinks.filter((extLink: ExternalLink) =>
                 externalLinks.indexOf(extLink) !== linkIndex)]);
     }
 
     const handleAddLink = (): void => {
-        if (externalLinks.some((l: IExternalLink) => !l.url)) {
-            const emptyLinks: IExternalLink[] = externalLinks.filter((l: IExternalLink) => !l.url);
+        if (error) dispatch(setError(null));
 
-            setLinksError(`You must fill ${emptyLinks.length > 1
-                ? emptyLinks.map((l: IExternalLink) => l.name).join(", ")
-                : emptyLinks[0].name} before adding a new one`
+        if (externalLinks.some((l: ExternalLink) => !l.url)) {
+            const emptyLinks: ExternalLink[] = externalLinks.filter((l: ExternalLink) => !l.url);
+
+            dispatch(setError(`You must fill ${emptyLinks.length > 1
+                ? emptyLinks.map((l: ExternalLink) => l.name).join(", ")
+                : emptyLinks[0].name} before adding a new one`)
             );
 
             return;
         }
 
         if (externalLinks.length === MAX_EXTERNAL_LINKS) {
-            setLinksError(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`);
+            dispatch(setError(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`));
             return;
         }
         
@@ -229,6 +225,26 @@ const NewTaskModal = () => {
         setSelectedLabels([...selectedLabels, label]);
     }
 
+    // Add links to inputValues
+    useEffect(() => {
+        if (externalLinks.length) {
+            const links: ExternalLink[] = externalLinks
+                .filter((link: ExternalLink) => link.url)
+                .map((l: ExternalLink) => (
+                    {
+                        ...l,
+                        url: l.url.trim()
+                    }
+            ));
+
+            setInputValues(inputValues => ({
+                ...inputValues,
+                externalLinks: links
+            }));
+        }
+    }, [externalLinks])
+
+    // Add priority to inputValues
     useEffect(() => {
         setInputValues(inputValues => ({
             ...inputValues,
@@ -236,6 +252,7 @@ const NewTaskModal = () => {
         }));
     }, [selectedPriority])
     
+    // Add labels to inputValues
     useEffect(() => {
         setInputValues(inputValues => ({
             ...inputValues,
@@ -247,21 +264,11 @@ const NewTaskModal = () => {
     useEffect(() => {
         if (!externalLinks.length) setExternalLinks([DEFAULT_EXTERNAL_LINK]);
     }, [externalLinks])
-
-    // SetError with linksError
-    useEffect(() => {
-        if (linksError) dispatch(setError(linksError));
-    }, [linksError])
-
-    // Clear linksError when externalLinks change
-    useEffect(() => {
-        if (linksError) setLinksError(null);
-    }, [externalLinks])
     
   return (
     <Modal
         title='Create a task'
-        onSubmit={() => handleCreate(inputValues, externalLinks)}
+        onSubmit={() => handleCreate(inputValues)}
         onClose={handleClose}
         optionalNote={`This task will be added to ${currentProject?.title} in ${currentStage?.title}`}
         submitBtnText='Create'
@@ -281,7 +288,11 @@ const NewTaskModal = () => {
             <div
                 className='flex items-center w-full mt-2 mb-3 justify-between'
             >
-                <Label htmlFor="labels" labelText='Labels' additionalStyles='text-xl block w-1/4'/>
+                <Label
+                    htmlFor="labels"
+                    labelText='Labels'
+                    additionalStyles='text-xl block w-1/4'
+                />
 
                 <div className='flex flex-wrap w-fit items-center gap-2 mr-2'>
                     {LABELS.map((label: TLabel, idx: number) => (
@@ -297,7 +308,7 @@ const NewTaskModal = () => {
                             <Label
                                 htmlFor={label}
                                 labelText={label.toUpperCase()}
-                                additionalStyles={`
+                                additionalStyles={twMerge(`
                                     opacity-70
                                     sm:hover:opacity-100
                                     active:opacity-100
@@ -316,7 +327,7 @@ const NewTaskModal = () => {
                                     ${label === 'bug' && 'bg-orange-400 border-orange-600'}
                                     ${label === 'completed' && 'bg-green-500 border-green-600'}
                                     ${selectedLabels?.some(l => l === label) && 'opacity-100'}
-                                `}
+                                `)}
                             />
                             {selectedLabels.some((l: TLabel) => l === label) && (
                                 <Tooltip
@@ -352,7 +363,7 @@ const NewTaskModal = () => {
                                             active:bg-gray-500
                                         `}
                                     >
-                                    <RxCross2/>
+                                    <RxCross2 />
                                     </span>
                                 </Tooltip>
                             )}
@@ -374,7 +385,11 @@ const NewTaskModal = () => {
             />
 
             <div className='flex flex-col items-start gap-4 mb-4 w-full'>
-                <Label labelText='Links' htmlFor='links' isOptional={true}/>
+                <Label
+                    labelText='Links'
+                    htmlFor='links'
+                    isOptional
+                />
 
                 {externalLinks.length === 1
                     ? (
@@ -388,10 +403,10 @@ const NewTaskModal = () => {
                                 placeholder='Add a link...'
                                 value={externalLinks[0]?.url}
                                 additionalStyles='grow'
-                                labelAdditionalStyles='mr-3 text-sm font-thin'
+                                labelAdditionalStyles='mr-3 text-md font-thin'
                             />
                         </div>
-                    ) : externalLinks.map((l: IExternalLink, index: number) => (
+                    ) : externalLinks.map((l: ExternalLink, index: number) => (
                             <div key={index} className='flex items-center pl-4 gap-1 w-full'>
                                 <Input
                                     key={index}
@@ -403,11 +418,11 @@ const NewTaskModal = () => {
                                     placeholder='Add a link...'
                                     value={l.url}
                                     additionalStyles='grow'
-                                    labelAdditionalStyles='mr-3 text-sm font-thin'
+                                    labelAdditionalStyles='mr-3 text-md font-thin'
                                 />
 
                                 <ButtonWithIcon
-                                    icon={<BiTrash/>}
+                                    icon={<BiTrash />}
                                     action={() => handleRemoveLink(index)}
                                     title='Remove link'
                                     additionalStyles='sm:hover-text-red-500 active:text-red-500 sm:hover:border-red-500 active:border-red-500'
@@ -432,7 +447,7 @@ const NewTaskModal = () => {
                     onClick={handleAddLink}
                 >
                     <span className='pt-1'>Add link</span>
-                    <span className='text-sm'><BiPlus/></span>
+                    <span className='text-sm'><BiPlus /></span>
                 </button>
             </div>
 
@@ -447,7 +462,11 @@ const NewTaskModal = () => {
             />
 
             <div className='flex gap-1 items-center w-full py-4'>
-                <Label htmlFor="taskPriority" labelText='Priority' additionalStyles='text-xl block w-1/4'/>
+                <Label
+                    htmlFor="taskPriority"
+                    labelText='Priority'
+                    additionalStyles='text-xl block w-1/4'
+                />
 
                 <div className='w-full flex items-center gap-1'>
                     {PRIORITIES.map((priority: Priority) => {
@@ -468,7 +487,10 @@ const NewTaskModal = () => {
                                     labelText={capitalizeFirstLetter(priority)}
                                     title={capitalizeFirstLetter(priority)}
                                     additionalStyles={`
-                                        ${priority === selectedPriority ? isSelected(priority) : 'bg-slate-300'}
+                                        ${priority === selectedPriority
+                                            ? isSelected(priority)
+                                            : 'bg-slate-300'
+                                        }
                                         ${setPriorityColor(priority)}
                                         w-full
                                         border
