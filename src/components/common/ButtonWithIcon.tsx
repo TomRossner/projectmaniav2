@@ -4,6 +4,7 @@ import React, { ReactNode } from 'react';
 import { TooltipProps } from '@greguintow/react-tippy';
 import { twMerge } from 'tailwind-merge';
 import ToolTip from './ToolTip';
+import { DEFAULT_TOOLTIP_PROPS } from '@/utils/constants';
 
 type ButtonWithIconProps = {
     icon: ReactNode;
@@ -26,15 +27,7 @@ const ButtonWithIcon = ({
   additionalStyles,
   disabled,
   disabledStyles,
-  tooltipProps = {
-    arrow: true,
-    position: 'top',
-    animation: 'scale',
-    duration: 150,
-    disabled,
-    theme: 'dark',
-    inertia: true,
-  }
+  tooltipProps = DEFAULT_TOOLTIP_PROPS
 }: ButtonWithIconProps) => {
   
   const {

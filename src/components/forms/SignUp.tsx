@@ -42,103 +42,101 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
     }
 
   return (
-    <>
-        <form
-            id='signUp'
-            onSubmit={handleSubmit(onSubmit)}
+    <form
+        id='signUp'
+        onSubmit={handleSubmit(onSubmit)}
+        className={twMerge(`
+            max-w-[500px]
+            min-h-[450px]
+            transition-all
+            duration-100
+            w-full
+            grid
+            grid-cols-1
+            gap-5
+            pb-12
+            pt-5
+            px-10
+            border
+            border-slate-200
+            rounded-bl-lg
+            bg-slate-100
+        `)}
+    >
+        <FormHeader text='Create an account' />
+
+        <hr className='w-3/4 mx-auto' />
+
+        <div className='grid grid-cols-2 w-full gap-2'>
+            <input
+                {...register("firstName")}
+                type="text"
+                placeholder='First name'
+                className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+            />
+            <input
+                {...register("lastName")}
+                type="text"
+                placeholder='Last name'
+                className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 mb-2 last:mb-0'
+            />
+
+            <input
+                {...register("email")}
+                type="email"
+                placeholder='Email'
+                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+            />
+
+            <input
+                {...register("password")}
+                type="password"
+                placeholder='Password'
+                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+            />
+            <input
+                {...register("confirmPassword")}
+                type="password"
+                placeholder='Confirm password'
+                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg'
+            />
+        </div>
+
+        <p className='text-lg'>Already have an account?
+            <span
+                onClick={toggleIsNotRegistered}
+                className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
+            >
+                Log in
+            </span>
+        </p>
+
+        <button
+            type='submit'
+            disabled={isSubmitting}
             className={twMerge(`
-                max-w-[500px]
-                min-h-[450px]
-                transition-all
-                duration-100
-                w-full
-                grid
-                grid-cols-1
-                gap-5
-                pb-12
-                pt-5
-                px-10
-                border
-                border-slate-200
+                px-4
+                pb-2
+                pt-3
                 rounded-bl-lg
-                bg-slate-100
+                bg-blue-400
+                hover:bg-blue-500
+                transition-all
+                text-white
+                font-semibold
+                text-2xl
+                w-full
+                mx-auto
+                duration-75
+                max-h-[55px]
+                disabled:bg-slate-300
+                disabled:cursor-not-allowed
+                disabled:opacity-60
             `)}
         >
-            <FormHeader text='Create an account'/>
-
-            <hr className='w-3/4 mx-auto'/>
-
-            <div className='grid grid-cols-2 w-full gap-2'>
-                <input
-                    {...register("firstName")}
-                    type="text"
-                    placeholder='First name'
-                    className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
-                />
-                <input
-                    {...register("lastName")}
-                    type="text"
-                    placeholder='Last name'
-                    className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 mb-2 last:mb-0'
-                />
-
-                <input
-                    {...register("email")}
-                    type="email"
-                    placeholder='Email'
-                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
-                />
-
-                <input
-                    {...register("password")}
-                    type="password"
-                    placeholder='Password'
-                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
-                />
-                <input
-                    {...register("confirmPassword")}
-                    type="password"
-                    placeholder='Confirm password'
-                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg'
-                />
-            </div>
-
-            <p className='text-lg'>Already have an account?
-                <span
-                    onClick={toggleIsNotRegistered}
-                    className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
-                >
-                    Log in
-                </span>
-            </p>
-
-            <button
-                type='submit'
-                disabled={isSubmitting}
-                className={twMerge(`
-                    px-4
-                    pb-2
-                    pt-3
-                    rounded-bl-lg
-                    bg-blue-400
-                    hover:bg-blue-500
-                    transition-all
-                    text-white
-                    font-semibold
-                    text-2xl
-                    w-full
-                    mx-auto
-                    duration-75
-                    max-h-[55px]
-                    disabled:bg-slate-300
-                    disabled:cursor-not-allowed
-                    disabled:opacity-60
-                `)}
-            >
-                {isSubmitting ? 'Loading...' : 'Submit'}
-            </button>
-        </form>
-    </>
+            {isSubmitting ? 'Loading...' : 'Submit'}
+        </button>
+    </form>
   )
 }
 

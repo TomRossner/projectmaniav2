@@ -8,7 +8,7 @@ import TaskMenu from './TaskMenu';
 import { ITask, setCurrentTask } from '@/store/projects/projects.slice';
 import { useAppDispatch } from '@/hooks/hooks';
 
-interface TaskTopProps {
+type TaskTopProps = {
   title: string;
   task: ITask;
   additionalStyles?: string;

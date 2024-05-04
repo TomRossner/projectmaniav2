@@ -119,7 +119,8 @@ const Modal = ({
                             </p>
                         )}
 
-                        <Line additionalStyles='pb-1' /> 
+                        <Line additionalStyles='pb-1' />
+                        
                         <div className='flex items-center gap-1 justify-end'>
                             {showSubmitBtn && (
                                 <Button

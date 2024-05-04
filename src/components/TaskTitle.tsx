@@ -1,7 +1,12 @@
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
-const TaskTitle = ({title, additionalStyles}: {title: string, additionalStyles?: string}) => {
+type TaskTitleProps = {
+  title: string;
+  additionalStyles?: string;
+}
+
+const TaskTitle = ({title, additionalStyles}: TaskTitleProps) => {
     
   return (
     <p

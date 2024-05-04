@@ -2,14 +2,15 @@
 
 import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
-interface ITaskMenuOption {
+
+type TaskMenuOption = {
     option: string;
     action: () => void;
     icon?: ReactNode;
     additionalStyles?: string;
 }
 
-const TaskMenuOption = ({option, action, icon, additionalStyles}: ITaskMenuOption) => {
+const TaskMenuOption = ({option, action, icon, additionalStyles}: TaskMenuOption) => {
   return (
     <li
       onClick={action}

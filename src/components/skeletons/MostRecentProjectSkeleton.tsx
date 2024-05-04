@@ -19,7 +19,7 @@ const MostRecentProjectSkeleton = () => {
 
         <div className='flex items-center gap-1 w-full'>
             <p className='bg-blue-200 animate-pulse p-2 w-1/3 rounded-lg sm:w-1/3' />
-            <BsCircleFill className='w-1 h-1 text-blue-200 animate-pulse'/>
+            <BsCircleFill className='w-1 h-1 text-blue-200 animate-pulse' />
             <p className='bg-blue-200 animate-pulse p-2 w-1/3 rounded-lg sm:w-1/3' />
         </div>
         

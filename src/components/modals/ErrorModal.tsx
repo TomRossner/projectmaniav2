@@ -8,7 +8,7 @@ import React from 'react';
 import { selectError } from '@/store/app/app.selectors';
 import Modal from './Modal';
 
-interface ErrorModalProps {
+type ErrorModalProps = {
   action?: () => void;
 }
 

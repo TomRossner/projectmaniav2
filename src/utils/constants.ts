@@ -1,6 +1,7 @@
 import { IProject, IStage, Priority } from "@/store/projects/projects.slice";
 import { IBaseTask, IExternalLink } from "./interfaces";
 import { TLabel, ScrollDirection } from "./types";
+import { TooltipProps } from "@greguintow/react-tippy";
 
 const APP_VERSION_FULL: string = process.env.NEXT_PUBLIC_APP_VERSION as string;
 
@@ -60,6 +61,16 @@ const LABELS: TLabel[] = [
     "completed",
 ]
 
+const DEFAULT_TOOLTIP_PROPS: TooltipProps = {
+    arrow: true,
+    position: 'top',
+    animation: 'scale',
+    duration: 150,
+    disabled: false,
+    theme: 'dark',
+    inertia: true,
+}
+
 export {
     APP_VERSION,
     APP_VERSION_FULL,
@@ -75,4 +86,5 @@ export {
     DEFAULT_EXTERNAL_LINK,
     MAX_EXTERNAL_LINKS,
     LABELS,
+    DEFAULT_TOOLTIP_PROPS,
 }

@@ -1,15 +1,13 @@
 'use client'
 
-import { useAppDispatch } from '@/hooks/hooks';
-import useBackLayer from '@/hooks/useBackLayer';
 import React, { ReactNode } from 'react';
 
-interface IBackLayerProps {
+type BackLayerProps = {
   title: string;
   children: ReactNode;
 }
 
-const BackLayer = ({title, children}: IBackLayerProps) => {
+const BackLayer = ({title, children}: BackLayerProps) => {
   return (
     <div
       id='modal_back_layer'

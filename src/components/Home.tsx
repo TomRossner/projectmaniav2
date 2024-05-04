@@ -48,12 +48,6 @@ const Home = () => {
     return '';
   }
 
-  // const displayTotalTasks = (stages: IStage[]): string => {
-  //   const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
-
-  //   return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
-  // }
-
   useEffect(() => {
     const getMostRecentProject = async (): Promise<void> => {
       if (user?.mostRecentProject) {

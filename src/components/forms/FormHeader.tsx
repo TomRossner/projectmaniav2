@@ -2,11 +2,11 @@
 
 import React from 'react';
 
-interface IFormHeaderProps {
+type FormHeaderProps = {
     text: string;
 }
 
-const FormHeader = ({text}: IFormHeaderProps) => {
+const FormHeader = ({text}: FormHeaderProps) => {
   return (
     <h2 className='text-center text-2xl text-black'>
       {text}
