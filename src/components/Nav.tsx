@@ -25,7 +25,7 @@ const Nav = () => {
     }
 
   return (
-    <nav className='sticky top-1 left-0 flex items-center py-1 px-2 z-40 mb-3'>
+    <nav className='sticky top-1 left-0 flex items-center py-1 px-2 z-30 mb-3'>
       <button
         onClick={openMenu}
         className={`

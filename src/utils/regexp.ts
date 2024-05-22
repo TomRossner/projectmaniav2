@@ -23,5 +23,5 @@ export {
     NAME_REGEX,
     EMAIL_REGEX,
     PASSWORD_REGEX,
-    URL_REGEX
+    URL_REGEX,
 }

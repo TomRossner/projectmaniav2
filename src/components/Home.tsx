@@ -16,7 +16,7 @@ import Image from 'next/image';
 import { IUser } from '@/store/auth/auth.slice';
 import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
 import { BsCircleFill } from 'react-icons/bs';
-import { displayStagesCount, displayTotalTasks } from '@/utils/utils';
+import { getStagesCount, getTotalTasks } from '@/utils/utils';
 
 const Home = () => {
   const {isAuthenticated, user} = useAuth();
@@ -68,7 +68,7 @@ const Home = () => {
         <div className='gap-10 py-20 flex items-center flex-col w-full'>
           <Header
             text={`Welcome to ProjectMania v${APP_VERSION} !`}
-            additionalStyles='text-center max-w-[90%]'
+            additionalStyles='text-5xl w-[95%]'
           />
 
           <Button type='button' additionalStyles='border border-slate-200 bg-blue-400 sm:hover:bg-blue-500 active:bg-blue-500 text-white rounded-bl-lg mx-auto'>
@@ -94,18 +94,18 @@ const Home = () => {
                     <div className='grow' />
 
                     <p className='text-md text-blue-400 px-1 pt-1 flex items-center gap-2'>
-                      {displayStagesCount(mostRecentProject.stages)}
+                      {getStagesCount(mostRecentProject.stages)}
                       <BsCircleFill className='w-1 pb-1'/>
-                      {displayTotalTasks(mostRecentProject.stages)}
+                      {getTotalTasks(mostRecentProject.stages)}
                     </p>
                     
                     <p className='text-md text-blue-400 px-1'>
                       {mostRecentProject.team.map(
                         (u: IUser, idx: number) => (
                           <span key={u.userId} className='relative'>
-                            {u.imgSrc ? (
+                            {u.thumbnailSrc ? (
                                 <Image
-                                  src={u.imgSrc}
+                                  src={u.thumbnailSrc}
                                   alt={u.firstName}
                                   className={`rounded-full w-8 h-8 bg-white ${className(idx)}`}
                                 />

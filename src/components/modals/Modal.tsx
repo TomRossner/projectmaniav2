@@ -9,6 +9,9 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { closeModal } from '@/store/app/app.slice';
 import BackLayer from '../common/BackLayer';
 import { twMerge } from 'tailwind-merge';
+import ModalNote from './ModalNote';
+import { RxCross2 } from 'react-icons/rx';
+import ButtonWithIcon from '../common/ButtonWithIcon';
 
 type ModalProps = {
     title: string;
@@ -17,13 +20,15 @@ type ModalProps = {
     onClose: () => void;
     submitBtnText?: string;
     closeBtnText?: string;
-    showSubmitBtn?: boolean;
+    withSubmitBtn?: boolean;
     optionalNote?: string;
     isOpen: boolean;
     submitBtnStyles?: string;
     closeBtnStyles?: string;
     noteBelowContent?: boolean;
     closeOnClickOutside?: boolean;
+    withCrossIcon?: boolean;
+    withCloseBtn?: boolean;
 }
 
 const Modal = ({
@@ -33,13 +38,15 @@ const Modal = ({
     onClose,
     submitBtnText = 'Submit',
     closeBtnText = 'Cancel',
-    showSubmitBtn = true,
+    withSubmitBtn = true,
     optionalNote,
     isOpen,
     submitBtnStyles,
     closeBtnStyles,
     noteBelowContent = false,
     closeOnClickOutside = false,
+    withCrossIcon = false,
+    withCloseBtn = true,
 } : ModalProps) => {
     const dispatch = useAppDispatch();
     const close = () => dispatch(closeModal());
@@ -62,15 +69,31 @@ const Modal = ({
     <AnimatePresence>
         {isOpen && (
             <BackLayer title={title}>
-                <motion.div 
+                <motion.div
+                    className={twMerge(`
+                        w-[95%]
+                        xs:max-w-sm
+                        min-h-24
+                        max-h-[95vh]
+                        m-auto
+                        border
+                        border-stone-500
+                        bg-slate-100
+                        py-3
+                        px-4
+                        rounded-bl-lg
+                        flex
+                        flex-col
+                        gap-1
+                        drop-shadow-md
+                        overflow-y-hidden
+                        relative
+                        ${title === 'Error' ? "z-40" : "z-30"}
+                    `)}
+                    ref={modalRef}
                     initial={{
                         scale: 0.7,
                         opacity: 0,
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        zIndex: title === 'Error' ? 40 : 30,
-                        marginBlock: "auto"
                     }}
                     animate={{
                         scale: 1,
@@ -87,75 +110,65 @@ const Modal = ({
                         }
                     }}
                 >
-                    <div
-                        ref={modalRef}
-                        className={`
-                            max-w-[350px]
-                            min-h-24
-                            max-h-[95vh]
-                            m-auto
-                            border
-                            border-stone-500
-                            bg-slate-100
-                            py-3
-                            px-4
-                            rounded-bl-lg
-                            flex
-                            flex-col
-                            gap-1
-                            drop-shadow-md
-                            overflow-y-hidden
-                        `}
-                    >
-                        <ModalTitle text={title} />
-                        <Line additionalStyles='pb-2' />
+                    <ModalTitle text={title} />
 
-                        {children}
+                    {withCrossIcon && (
+                        <ButtonWithIcon
+                            action={onClose || close}
+                            icon={<RxCross2 />}
+                            additionalStyles='absolute end-2 top-2 bg-white'
+                        />
+                    )}
 
-                        {noteBelowContent && optionalNote && (
-                            <p className='italic text-thin text-left pt-2 text-stone-500 w-full'>
-                            <span className='font-semibold'>NOTE: </span>
-                                {optionalNote}
-                            </p>
-                        )}
+                    <Line additionalStyles='pb-2' />
 
+                    {children}
+
+                    {noteBelowContent && optionalNote && (
+                        <ModalNote note={optionalNote} />
+                    )}
+
+                    {withSubmitBtn && withCloseBtn && (
                         <Line additionalStyles='pb-1' />
+                    )}
+                    
+                    <div className='flex items-center gap-1 w-full'>
+                        {withSubmitBtn && (
+                            <Button
+                                action={onSubmit}
+                                additionalStyles={twMerge(`
+                                    text-white
+                                    bg-blue-400
+                                    rounded-bl-lg
+                                    hover:bg-blue-500
+                                    w-full
+                                    ${submitBtnStyles}
+                                `)}
+                            >
+                                {submitBtnText}
+                            </Button>
+                        )}
                         
-                        <div className='flex items-center gap-1 justify-end'>
-                            {showSubmitBtn && (
-                                <Button
-                                    action={onSubmit}
-                                    additionalStyles={twMerge(`
-                                        text-white
-                                        bg-blue-400
-                                        rounded-bl-lg
-                                        hover:bg-blue-500
-                                        ${submitBtnStyles}
-                                    `)}
-                                >
-                                    {submitBtnText}
-                                </Button>
-                            )}
-                            
+                        {withCloseBtn && (
                             <Button
                                 action={onClose || close}
                                 additionalStyles={twMerge(`
                                     text-stone-700
                                     hover:bg-slate-200
+                                    w-full
+                                    bg-white
+                                    ${!withSubmitBtn && "rounded-bl-lg"}
                                     ${closeBtnStyles}
                                 `)}
                             >
                                 <span className='pt-1'>{closeBtnText}</span>
                             </Button>
-                        </div>
-
-                        {!noteBelowContent && optionalNote && (
-                            <p className='italic text-thin text-left pt-2 text-stone-500 w-full'>
-                                <span className='font-semibold'>NOTE: </span>
-                                {optionalNote}
-                            </p>
                         )}
                     </div>
+
+                    {!noteBelowContent && optionalNote && (
+                        <ModalNote note={optionalNote} />
+                    )}
                 </motion.div>
             </BackLayer>
         )}

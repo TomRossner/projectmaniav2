@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ReactNode } from 'react';
+import React from 'react';
 import Cross from './utils/Cross';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeMobileMenu } from '@/store/app/app.slice';
@@ -16,13 +16,7 @@ import { TbLogout2 } from "react-icons/tb";
 import { IoSettingsOutline } from "react-icons/io5";
 import { IUser } from '@/store/auth/auth.slice';
 import { twMerge } from 'tailwind-merge';
-
-export interface IMenuItem {
-    text: string;
-    action: () => void;
-    icon?: ReactNode;
-    imageSrc?: Partial<IUser> & string;
-}
+import { MenuItem } from '@/utils/types';
 
 const MobileMenu = () => {
     const {mobileMenu} = useMobileMenu();
@@ -33,7 +27,7 @@ const MobileMenu = () => {
     const closeMenu = () => dispatch(closeMobileMenu());
 
 
-    const ul1: IMenuItem[] = [
+    const ul1: MenuItem[] = [
         {
             text: "Home",
             action: () => {
@@ -64,7 +58,7 @@ const MobileMenu = () => {
         },
     ]
 
-    const ul2: IMenuItem[] = [
+    const ul2: MenuItem[] = [
         {
             text: "Settings",
             action: () => {
@@ -80,7 +74,7 @@ const MobileMenu = () => {
                 closeMenu();
             },
             icon: <CgProfile />,
-            imageSrc: user?.imgSrc
+            imageSrc: user?.thumbnailSrc
         },
         {
             text: "Sign in",
@@ -124,7 +118,7 @@ const MobileMenu = () => {
         <Logo action={closeMenu} additionalStyles='absolute top-2 left-0 right-0 mx-auto z-50'/>
 
         <div id='mobileMenu' className='flex flex-col w-full h-full fixed top-0 left-0'>
-            {menuLists.map((list: IMenuItem[], listIdx: number) =>
+            {menuLists.map((list: MenuItem[], listIdx: number) =>
                 <MenuList
                     key={listIdx}
                     list={list}

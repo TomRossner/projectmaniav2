@@ -1,5 +1,7 @@
 import { IStage } from "@/store/projects/projects.slice";
-import { ScrollDirection } from "./types";
+import { ScrollDirection, Priority, TOption } from "./types";
+import { ExternalLink } from "./types";
+import { URL_REGEX } from "./regexp";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -39,16 +41,73 @@ const formatURL = (link: string): string => {
   else return link;
 }
 
-const displayTotalTasks = (stages: IStage[]): string => {
+const getTotalTasks = (stages: IStage[]): string => {
   const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
 
   return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
 }
 
-const displayStagesCount = (stages: IStage[]): string => {
+const getStagesCount = (stages: IStage[]): string => {
   return stages.length
     ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
     : `0 stages`;
+}
+
+const validateUrls = (links: ExternalLink[]): boolean => {
+  const urls: string[] = links.map(l => l.url);
+
+  const areAllValid: boolean = urls.every(url => {
+      const matches = url.match(URL_REGEX);
+      return matches !== null && matches.length > 0;
+  });
+
+  return areAllValid;
+}
+
+const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
+  return links.filter((l: ExternalLink) => !l.url.match(URL_REGEX));
+}
+
+const setPriorityColor = (priority: Priority): string => {
+  switch (priority.toLowerCase()) {
+      case 'low':
+          return 'bg-green-400';
+      case 'medium':
+          return 'bg-yellow-400';
+      case 'high':
+          return 'bg-red-400';
+      default:
+          return 'bg-slate-300';
+  }
+}
+
+// const getBlurData = async (url: string): Promise<string> => {
+//   try {
+//     const res = await fetch(url);
+
+//     if (!res.ok) {
+//       throw new Error('Failed to fetch image');
+//     }
+
+//     const buffer = await res.arrayBuffer();
+//     const {base64} = await getPlaiceholder(Buffer.from(buffer));
+ 
+//     return base64;
+//   } catch (error) {
+//     console.error(error);
+//     return "";
+//   }
+// }
+
+const createOption = (opt: string): TOption => {
+  return {
+    text: opt,
+    disabled: false,
+  }
+}
+
+const createSearchRegExp = (query: string): RegExp => {
+  return new RegExp(`(${query})`, 'gi');
 }
 
 export {
@@ -56,6 +115,12 @@ export {
     convertToISODate,
     scrollToIndex,
     formatURL,
-    displayTotalTasks,
-    displayStagesCount,
+    getTotalTasks,
+    getStagesCount,
+    validateUrls,
+    getInvalidLinks,
+    setPriorityColor,
+    // getBlurData,
+    createOption,
+    createSearchRegExp,
 }

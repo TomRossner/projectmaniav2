@@ -1,29 +1,28 @@
 'use client'
 
 import { TASK_MENU_OPTIONS } from '@/utils/constants';
-import React, { RefObject, useRef } from 'react';
-import TaskMenuOption from './TaskMenuOption';
+import React, { useRef } from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeEditTaskModal, openBackLayer, openDeleteTaskPrompt, openEditTaskModal } from '@/store/app/app.slice';
 import { IProject, IStage, ITask, setCurrentProject } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
-import { motion, AnimatePresence } from 'framer-motion';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
+import MoreOptions from './common/MoreOptions';
+import { TOption } from '@/utils/types';
 
-interface ITaskMenuProps {
+type TaskMenuProps = {
     setIsMenuOpen: (bool: boolean) => void;
     menuOpen: boolean;
     closeOnClickOutside?: boolean;
     toggleMenu: () => void;
 }
 
-const TaskMenu = (props: ITaskMenuProps) => {
+const TaskMenu = (props: TaskMenuProps) => {
     const {
         setIsMenuOpen,
         menuOpen,
         toggleMenu,
     } = props;
-    
     
     const menuRef = useRef(null);
 
@@ -76,10 +75,10 @@ const TaskMenu = (props: ITaskMenuProps) => {
         dispatch(setCurrentProject(updatedProject));
     }
     
-    const handleOptionClick = (opt: string): void => {
+    const handleOptionClick = (opt: TOption): void => {
         setIsMenuOpen(false);
 
-        switch (opt.toLowerCase()) {
+        switch (opt.text.toLowerCase()) {
             case 'done':
                 return handleIsDone(currentTask as ITask);
             case 'reset':
@@ -94,51 +93,12 @@ const TaskMenu = (props: ITaskMenuProps) => {
     }
     
   return (
-    
-    <AnimatePresence>
-        {menuOpen && (
-            <motion.div
-                initial={{
-                    scale: 0.7,
-                    opacity: 0,
-                    position: "absolute",
-                    right: "5%",
-                    zIndex: 20,
-                    marginBlock: "auto"
-                }}
-                animate={{
-                    scale: 1,
-                    opacity: 1,
-                    transition: {
-                        duration: 0.07
-                    }
-                }}
-                exit={{
-                    opacity: 0,
-                    scale: 0.8,
-                    transition: {
-                        duration: 0.1
-                    }
-                }}
-            >
-                <ul
-                    ref={menuRef as RefObject<HTMLUListElement>}
-                    className='w-[100px] absolute top-[50%] right-[5%] bg-white border border-slate-300 rounded-bl-lg flex flex-col p-1 shadow-md'
-                >
-                    {TASK_MENU_OPTIONS.map((option: string) => 
-                        <TaskMenuOption
-                            key={option}
-                            action={() => handleOptionClick(option)}
-                            option={option.toLowerCase() === 'done' && currentTask?.isDone
-                                ? 'Reset'
-                                : option   
-                            }
-                        />
-                    )}
-                </ul>
-            </motion.div>
-        )}
-    </AnimatePresence>
+    <MoreOptions
+        isOpen={menuOpen}
+        setIsOpen={setIsMenuOpen}
+        options={TASK_MENU_OPTIONS}
+        action={handleOptionClick}
+    />
   )
 }
 

@@ -1,23 +1,29 @@
 'use client'
 
-import React from 'react';
-import Label from './Label';
+import React, { ForwardedRef, ReactNode, forwardRef } from 'react';
+import InputLabel from './InputLabel';
 import { twMerge } from 'tailwind-merge';
 
-export interface IInputProps {
+type InputProps = {
     type: string;
     id: string;
     name: string;
-    value?: any;
+    value?: string | number | readonly string[] | undefined;
     placeholder?: string;
     additionalStyles?: string;
     onChange: (ev: React.ChangeEvent<HTMLInputElement>) => void;
     labelAdditionalStyles?: string;
-    labelText: string;
+    labelText?: string;
     isOptional?: boolean;
+    inputIcon?: ReactNode;
+    iconInsideInput?: boolean;
+    isRequired?: boolean;
+    onBlur?: () => void;
+    hidden?: boolean;
+    searchIcon?: ReactNode;
 }
 
-const Input = (props: IInputProps) => {
+const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTMLInputElement>) {
   const {
     type,
     id,
@@ -28,26 +34,71 @@ const Input = (props: IInputProps) => {
     labelAdditionalStyles,
     labelText,
     onChange,
-    isOptional
+    isOptional,
+    inputIcon,
+    iconInsideInput = false,
+    isRequired = false,
+    onBlur,
+    hidden = false,
+    searchIcon,
   } = props;
 
   return (
     <>
-        <Label
+        <InputLabel
           htmlFor={id}
-          labelText={labelText}
-          additionalStyles={labelAdditionalStyles
-            ? labelAdditionalStyles
-            : 'text-stone-800'
-          }
+          text={labelText as string}
+          additionalStyles={labelAdditionalStyles}
           isOptional={isOptional}
+          isRequired={isRequired}
         />
 
-        <input
-            autoComplete='on'
+        {iconInsideInput ? (
+          <div className='flex items-center relative grow bg-white border border-slate-300 rounded-bl-lg'>
+            {searchIcon && (
+              <span className='flex items-center justify-center px-1 inset-y-0 start-0 text-stone-400'>
+                {searchIcon}
+              </span>
+            )}
+            <input
+                autoComplete='off'
+                onChange={onChange}
+                onBlur={onBlur}
+                type={type}
+                id={id}
+                name={name}
+                value={value}
+                ref={ref}
+                hidden={hidden}
+                placeholder={placeholder}
+                className={twMerge(`
+                  text-lg
+                  text-stone-600
+                  autofill:bg-white
+                  outline-none
+                  focus:border-blue-500
+                  flex-shrink-0
+                  pt-1
+                  bg-white
+                  ${additionalStyles}
+              `)}
+            />
+
+            {iconInsideInput && (
+              <span className='flex items-center justify-center absolute inset-y-0 end-0 bg-white'>
+                {inputIcon}
+              </span>
+            )}
+
+          </div>
+        ) : (
+          <input
+            autoComplete='off'
             onChange={onChange}
             type={type}
             id={id}
+            ref={ref}
+            hidden={hidden}
             name={name}
             value={value}
             placeholder={placeholder}
@@ -56,16 +107,20 @@ const Input = (props: IInputProps) => {
                 text-lg
                 text-stone-600
                 border-slate-300
-                border
-                rounded-bl-lg
+                autofill:bg-white
                 outline-none
                 focus:border-blue-500
                 flex-shrink-0
+                grow
+                border
+                rounded-bl-lg
+                bg-white
                 ${additionalStyles}
             `)}
-        />
+          />
+        )}
     </>
   )
-}
+});
 
 export default Input;

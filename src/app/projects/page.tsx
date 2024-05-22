@@ -78,66 +78,48 @@ const Projects = () => {
         <Header text='Projects' />
 
         <ButtonWithIcon
+          withTooltip
           title='New project'
           action={handleNewProject}
           icon={<BiPlus />}
         />
       </div>
 
-      {/* {isFetching
-        ? <>
-            <Image
-              src={loadingBlue}
-              alt='Loading'
-              width={50}
-              height={50}
-              className='aspect-square animate-spin w-fit mx-auto mt-12 mb-4'
-            />
-            <p className='text-xl text-stone-800 text-center'>Loading projects...</p>
-          </>
-        : 
-      } */}
-      <>
-        <ProjectsList projects={projects} />
+      <ProjectsList projects={projects} />
 
-        {!projects.length && (
-          <p className='text-center w-full font-medium text-gray-400'>No projects</p>
-        )}
-
-        {/* <button
-          disabled={isLoading}
-          type='button'
-          onClick={handleCreateProject}
-          className={`
-            my-5
-            px-4
-            pb-2
-            pt-3
-            rounded-bl-lg
-            bg-blue-400
-            hover:bg-blue-500
-            disabled:bg-blue-300
-            disabled:opacity-60
-            disabled:cursor-not-allowed
-            transition-all
-            text-white
-            font-semibold
-            text-xl
-            w-full
-            mx-auto
-            duration-75
-          `}
-      >
-          {isLoading
-              ? (
-                  <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
-                      <LoadingIcon />
-                      Loading...
-                  </span>
-                )
-              : 'Create project'}
-        </button> */}
-      </>
+      {/* <button
+        disabled={isLoading}
+        type='button'
+        onClick={handleCreateProject}
+        className={`
+          my-5
+          px-4
+          pb-2
+          pt-3
+          rounded-bl-lg
+          bg-blue-400
+          hover:bg-blue-500
+          disabled:bg-blue-300
+          disabled:opacity-60
+          disabled:cursor-not-allowed
+          transition-all
+          text-white
+          font-semibold
+          text-xl
+          w-full
+          mx-auto
+          duration-75
+        `}
+    >
+        {isLoading
+            ? (
+                <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
+                    <LoadingIcon />
+                    Loading...
+                </span>
+              )
+            : 'Create project'}
+      </button> */}
     </Container>
   )
 }

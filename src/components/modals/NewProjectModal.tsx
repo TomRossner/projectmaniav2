@@ -17,17 +17,11 @@ const NewProjectModal = () => {
 
     const { projects} = useProjects();
 
-    const {user, isAuthenticated} = useAuth();
+    const {user} = useAuth();
 
     const [inputValues, setInputValues] = useState<IBaseProject | Partial<IProject>>(DEFAULT_PROJECT);
 
     const dispatch = useAppDispatch();
-
-    if (!isAuthenticated) {
-        dispatch(closeNewProjectModal());
-
-        return;
-    }
 
     const handleCreate = async (newProjectData: IBaseProject | Partial<IProject>): Promise<void> => {
        try {

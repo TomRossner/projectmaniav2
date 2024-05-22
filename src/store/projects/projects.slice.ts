@@ -1,5 +1,6 @@
 import { createProject, getAllProjects } from "@/services/projects.api";
 import { IBaseTask } from "@/utils/interfaces";
+import { ErrorData, Filter } from "@/utils/types";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 
@@ -20,7 +21,7 @@ export interface ITeamMember {
     userId: string;
     firstName: string;
     lastName: string;
-    imgSrc: string;
+    thumbnailSrc: string;
 }
 
 export interface IStage {
@@ -33,8 +34,6 @@ export interface ITask extends IBaseTask {
     taskId: string;
 }
 
-export type Priority = 'low' | 'medium' | 'high';
-
 export interface IProjectsState {
     projects: IProject[];
     currentProject: IProject | null;
@@ -44,6 +43,7 @@ export interface IProjectsState {
     stages: IStage[];
     tasks: ITask[];
     currentStageIndex: number;
+    filters: Filter[];
 }
 
 const initialState: IProjectsState = {
@@ -55,9 +55,10 @@ const initialState: IProjectsState = {
     stages: [],
     tasks: [],
     currentStageIndex: 0,
+    filters: [],
 }
 
-const handleError = (error: any) => {
+const handleError = (error: AxiosError<ErrorData>) => {
     if (error.response) {
         const {
             response: {
@@ -76,7 +77,7 @@ export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsA
         const {data} = await getAllProjects(userId);
         return data;
     } catch (error) {
-        handleError(error);
+        handleError(error as AxiosError<ErrorData>);
     }
 })
 
@@ -85,7 +86,7 @@ export const createProjectAsync = createAsyncThunk('projectsSlice/createProjectA
         const {data} = await createProject(newProjectData);
         return data; 
     } catch (error) {
-        handleError(error);
+        handleError(error as AxiosError<ErrorData>);
     }
 })
 
@@ -117,6 +118,9 @@ export const projectsSlice = createSlice({
         setCurrentStageIndex: (state, action: PayloadAction<number>) => {
             state.currentStageIndex = action.payload;
         },
+        setFilters: (state, action: PayloadAction<Filter[]>) => {
+            state.filters = action.payload;
+        } 
     },
     extraReducers: (builder) => {
         builder
@@ -141,5 +145,6 @@ export const {
     setIsFetching,
     setStages,
     setTasks,
-    setCurrentStageIndex
+    setCurrentStageIndex,
+    setFilters,
 } = projectsSlice.actions;

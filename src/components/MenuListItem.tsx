@@ -1,7 +1,6 @@
 'use client'
 
 import React, { ReactNode } from 'react';
-import { IMenuItem } from './MobileMenu';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LINKS } from '@/utils/links';
@@ -9,9 +8,10 @@ import { SPACES_AND_DASHES_PATTERN } from '@/utils/regexp';
 import useAuth from '@/hooks/useAuth';
 import { usePathname } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
+import { MenuItem } from '@/utils/types';
 
 interface IMenuListItemProps {
-    listItem: IMenuItem;
+    listItem: MenuItem;
 }
 
 const MenuListItem = ({listItem}: IMenuListItemProps) => {

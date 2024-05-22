@@ -1,13 +1,18 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import StageTop from './StageTop';
 import StageContent from './StageContent';
 import { useAppDispatch } from '@/hooks/hooks';
-import { IStage, setCurrentStage } from '@/store/projects/projects.slice';
+import { IStage, ITask, setCurrentStage } from '@/store/projects/projects.slice';
 
 const Stage = (stage: IStage) => {
     const dispatch = useAppDispatch();
+    const [tasks, setTasks] = useState<ITask[]>([]);
+
+    useEffect(() => {
+      setTasks(stage.tasks);
+    }, [stage.tasks]);
 
   return (
       <div
@@ -32,8 +37,16 @@ const Stage = (stage: IStage) => {
           overflow-hidden
         `}
       >
-        <StageTop {...stage} />
-        <StageContent {...stage} />
+        <StageTop
+          stage={stage}
+          tasks={tasks}
+          setTasks={setTasks}
+        />
+        <StageContent
+          stage={stage}
+          tasks={tasks}
+          setTasks={setTasks}
+        />
       </div>
   )
 }

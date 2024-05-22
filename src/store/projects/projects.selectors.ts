@@ -1,3 +1,4 @@
+import { Filter } from "@/utils/types";
 import { RootState } from "../store";
 import { IProject, IProjectsState, IStage, ITask } from "./projects.slice";
 
@@ -18,3 +19,5 @@ export const selectStages = (state: RootState): IStage[] => state.projects.stage
 export const selectTasks = (state: RootState): ITask[] => state.projects.tasks;
 
 export const selectCurrentStageIndex = (state: RootState): number => state.projects.currentStageIndex;
+
+export const selectFilters = (state: RootState): Filter[] => state.projects.filters;

@@ -9,7 +9,7 @@ export interface IUser {
     lastName: string;
     email: string;
     userId?: string;
-    imgSrc?: string;
+    thumbnailSrc?: string;
     createdAt?: Date;
     isOnline?: boolean;
     contacts?: string[];

@@ -15,6 +15,7 @@ interface IAppInitialState {
     editProjectModalOpen: boolean;
     backLayerOpen: boolean;
     modalOpen: boolean;
+    sortByTabOpen: boolean;
 }
 
 const initialState: IAppInitialState = {
@@ -31,7 +32,8 @@ const initialState: IAppInitialState = {
     deleteTaskPromptOpen: false,
     editProjectModalOpen: false,
     backLayerOpen: false,
-    modalOpen: false
+    modalOpen: false,
+    sortByTabOpen: false,
 }
 
 export const appSlice = createSlice({
@@ -171,6 +173,16 @@ export const appSlice = createSlice({
         openModal: (state) => {
             state.modalOpen = true;
         },
+
+        toggleSortByTab: (state) => {
+            state.sortByTabOpen = !state.sortByTabOpen;
+        },
+        closeSortByTab: (state) => {
+            state.sortByTabOpen = false;
+        },
+        openSortByTab: (state) => {
+            state.sortByTabOpen = true;
+        },
     }
 })
 
@@ -228,4 +240,8 @@ export const {
     toggleModal,
     closeModal,
     openModal,
+
+    toggleSortByTab,
+    closeSortByTab,
+    openSortByTab,
 } = appSlice.actions;

@@ -1,17 +1,17 @@
 'use client'
 
 import React from 'react';
-import { IMenuItem } from './MobileMenu';
 import MenuListItem from './MenuListItem';
 import useAuth from '@/hooks/useAuth';
 import { twMerge } from 'tailwind-merge';
+import { MenuItem } from '@/utils/types';
 
-interface IMenuListProps {
-    list: IMenuItem[];
+type MenuListProps = {
+    list: MenuItem[];
     listIdx: number;
 }
 
-const MenuList = ({list, listIdx}: IMenuListProps) => {
+const MenuList = ({list, listIdx}: MenuListProps) => {
   const {isAuthenticated} = useAuth();
 
   return (
@@ -28,14 +28,14 @@ const MenuList = ({list, listIdx}: IMenuListProps) => {
         ${listIdx === 1 && 'grow justify-end'}
       `)}
     >
-      {list.map((opt: IMenuItem, optIdx: number) => {
+      {list.map((opt: MenuItem, optIdx: number) => {
         if (!isAuthenticated && opt.text === 'Profile') return;
         if (isAuthenticated && opt.text === 'Sign in') return;
         if (!isAuthenticated && opt.text === 'Sign out') return;
 
-        else return <MenuListItem key={optIdx} listItem={opt}/>
+        else return <MenuListItem key={optIdx} listItem={opt} />
       })}
-</ul>
+    </ul>
   )
 }
 

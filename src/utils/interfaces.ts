@@ -1,5 +1,5 @@
-import { IStage, Priority } from "@/store/projects/projects.slice";
-import { TLabel } from "./types";
+import { IStage } from "@/store/projects/projects.slice";
+import { ExternalLink, Priority, SelectedStage, TagName } from "./types";
 
 interface IUserSignUpData extends ILoginCredentials {
     firstName: string;
@@ -28,16 +28,12 @@ interface IBaseTask {
     dueDate: string;
     priority: Priority;
     isDone: boolean;
-    currentStage?: Partial<IStage>;
+    currentStage?: SelectedStage;
     description?: string;
-    imgSrc?: string;
+    thumbnailSrc?: string;
     externalLinks?: ExternalLink[];
-    labels: TLabel[];
-}
-
-type ExternalLink = {
-    name: string;
-    url: string;
+    tags: TagName[];
+    // attachedFiles: Media[];
 }
 
 export type {
@@ -45,5 +41,4 @@ export type {
     IPasswordRegExp,
     IUserSignUpData,
     IBaseTask,
-    ExternalLink,
 }

@@ -5,18 +5,17 @@ import useNewTaskModal from '@/hooks/useModals';
 import { closeNewTaskModal, setError } from '@/store/app/app.slice';
 import React, { useEffect, useState } from 'react';
 import Input from '../common/Input';
-import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, LABELS, MAX_EXTERNAL_LINKS, PRIORITIES } from '@/utils/constants';
-import { IProject, IStage, ITask, Priority, setCurrentProject } from '@/store/projects/projects.slice';
-import { capitalizeFirstLetter, convertToISODate } from '@/utils/utils';
+import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, TAGS, MAX_EXTERNAL_LINKS, PRIORITIES } from '@/utils/constants';
+import { IProject, IStage, ITask, setCurrentProject } from '@/store/projects/projects.slice';
+import { capitalizeFirstLetter, convertToISODate, getInvalidLinks, validateUrls } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
-import { IBaseTask, ExternalLink } from '@/utils/interfaces';
+import { IBaseTask } from '@/utils/interfaces';
 import { createNewTask } from '@/services/projects.api';
 import Image from 'next/image';
 import { BiPlus, BiTrash } from 'react-icons/bi';
 import ButtonWithIcon from '../common/ButtonWithIcon';
-import { URL_REGEX } from '@/utils/regexp';
-import { TLabel } from '@/utils/types';
-import Label from '../common/Label';
+import { ExternalLink, Tag, TagName, Priority } from '@/utils/types';
+import InputLabel from '../common/InputLabel';
 import { RxCross2 } from 'react-icons/rx';
 import { Tooltip } from '@greguintow/react-tippy';
 import Modal from './Modal';
@@ -28,7 +27,7 @@ const NewTaskModal = () => {
     const {currentProject, currentStage} = useProjects();
 
     const [selectedPriority, setSelectedPriority] = useState<Priority>(DEFAULT_PRIORITY);
-    const [selectedLabels, setSelectedLabels] = useState<TLabel[]>([]);
+    const [selectedTags, setSelectedTags] = useState<TagName[]>([]);
 
     const [inputValues, setInputValues] = useState<IBaseTask>(DEFAULT_TASK_VALUES);
 
@@ -38,14 +37,6 @@ const NewTaskModal = () => {
 
     const dispatch = useAppDispatch();
 
-    const areValid = (links: ExternalLink[]): boolean => {
-        return links.some((l: ExternalLink) => URL_REGEX.test(l.url));
-    }
-
-    const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
-        return links.filter((l: ExternalLink) => !URL_REGEX.test(l.url));
-    }
-
     const handleCreate = async (newTaskData: IBaseTask): Promise<void> => {
         if (!currentStage) {
             dispatch(setError('Failed creating task'));
@@ -54,7 +45,9 @@ const NewTaskModal = () => {
 
         const links: ExternalLink[] = inputValues.externalLinks as ExternalLink[];
 
-        if (links?.length && links[0]?.url && !areValid(links)) {
+        const linksValid: boolean = validateUrls(links);
+
+        if (!!links[0]?.url && !linksValid) {
             const invalidLinks: ExternalLink[] = getInvalidLinks(links);
             
             dispatch(setError(`${invalidLinks.map((l: ExternalLink) => l.name)
@@ -115,7 +108,7 @@ const NewTaskModal = () => {
         dispatch(closeNewTaskModal());
         setSelectedPriority(DEFAULT_PRIORITY);
         setInputValues(DEFAULT_TASK_VALUES);
-        setSelectedLabels([]);
+        setSelectedTags([]);
     }
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -164,12 +157,12 @@ const NewTaskModal = () => {
 
         reader.onload = async () => {
           const base64EncodedFile = reader.result as string;
-          setInputValues({...inputValues, imgSrc: base64EncodedFile} as IBaseTask);
+          setInputValues({...inputValues, thumbnailSrc: base64EncodedFile} as IBaseTask);
         }
     }
 
     const handleRemoveThumbnail = (): void => {
-        setInputValues({...inputValues, imgSrc: ''} as IBaseTask);
+        setInputValues({...inputValues, thumbnailSrc: ''} as IBaseTask);
     }
 
     const handleLinksChange = ({target: {value}}: React.ChangeEvent<HTMLInputElement>, index: number = 0): void => {
@@ -221,8 +214,8 @@ const NewTaskModal = () => {
         );
     }
 
-    const handleLabelChange = (label: TLabel) => {
-        setSelectedLabels([...selectedLabels, label]);
+    const handleLabelChange = (tag: TagName) => {
+        setSelectedTags([...selectedTags, tag]);
     }
 
     // Add links to inputValues
@@ -256,9 +249,9 @@ const NewTaskModal = () => {
     useEffect(() => {
         setInputValues(inputValues => ({
             ...inputValues,
-            labels: selectedLabels
+            tags: selectedTags
         }));
-    }, [selectedLabels])
+    }, [selectedTags])
 
     // Make sure externalLinks is never empty
     useEffect(() => {
@@ -286,95 +279,96 @@ const NewTaskModal = () => {
             />
 
             <div
-                className='flex items-center w-full mt-2 mb-3 justify-between'
+                className='flex items-center w-full mt-2 mb-3 justify-between flex-wrap'
             >
-                <Label
-                    htmlFor="labels"
-                    labelText='Labels'
-                    additionalStyles='text-xl block w-1/4'
+                <InputLabel
+                    text='Tags'
+                    additionalStyles='text-xl block w-full'
                 />
 
-                <div className='flex flex-wrap w-fit items-center gap-2 mr-2'>
-                    {LABELS.map((label: TLabel, idx: number) => (
-                        <div key={idx} className='relative inline-flex overflow-visible'>
-                            <input
-                                hidden
-                                type="radio"
-                                name='taskLabels'
-                                id={label}
-                                value={label}
-                                onClick={() => handleLabelChange(label)}
-                            />
-                            <Label
-                                htmlFor={label}
-                                labelText={label.toUpperCase()}
-                                additionalStyles={twMerge(`
-                                    opacity-70
-                                    sm:hover:opacity-100
-                                    active:opacity-100
-                                    min-w-[100px]
-                                    rounded-bl-lg
-                                    text-white
-                                    border
-                                    shadow-sm
-                                    text-center
-                                    self-stretch
-                                    pt-1
-                                    cursor-default
-                                    select-none
-                                    text-base
-                                    cursor-pointer
-                                    ${label === 'bug' && 'bg-orange-400 border-orange-600'}
-                                    ${label === 'completed' && 'bg-green-500 border-green-600'}
-                                    ${selectedLabels?.some(l => l === label) && 'opacity-100'}
-                                `)}
-                            />
-                            {selectedLabels.some((l: TLabel) => l === label) && (
-                                <Tooltip
-                                    title='Remove'
-                                    arrow
-                                    inertia
-                                    duration={150}
-                                    animation='scale'
-                                    position='top'
-                                    size='small'
-                                >
-                                    <span
-                                        onClick={() => setSelectedLabels(selectedLabels.filter((l: TLabel) => l !== label))}
-                                        className={`
-                                            rounded-full
-                                            bg-gray-400
-                                            text-white
-                                            text-center
-                                            w-4
-                                            flex
-                                            items-center
-                                            justify-center
-                                            text-xs
-                                            aspect-square
-                                            absolute
-                                            -top-1.5
-                                            -right-1.5
-                                            shadow-gray-700
-                                            shadow-sm
-                                            z-50
-                                            cursor-pointer
-                                            sm:hover:bg-gray-500
-                                            active:bg-gray-500
-                                        `}
+                <div className='flex flex-wrap w-fit items-center gap-2'>
+                    {TAGS.map((t: Tag, idx: number) => {
+                        const {tag, tagColor} = t;
+                        return (
+                            <div key={idx} className='relative inline-flex overflow-visible'>
+                                <input
+                                    hidden
+                                    type="radio"
+                                    name='taskLabels'
+                                    id={tag}
+                                    value={tag}
+                                    onClick={() => handleLabelChange(tag)}
+                                />
+                                <InputLabel
+                                    htmlFor={tag}
+                                    text={tag?.toUpperCase()}
+                                    additionalStyles={twMerge(`
+                                        opacity-70
+                                        sm:hover:opacity-100
+                                        active:opacity-100
+                                        min-w-[40px]
+                                        px-4
+                                        text-white
+                                        border
+                                        shadow-sm
+                                        text-center
+                                        self-stretch
+                                        pt-1
+                                        cursor-default
+                                        select-none
+                                        text-base
+                                        cursor-pointer
+                                        ${idx === 0 && "rounded-bl-lg"}
+                                        ${selectedTags?.some(t => t === tag) && 'opacity-100'}
+                                    `)}
+                                />
+                                {selectedTags.some((t: TagName) => t === tag) && (
+                                    <Tooltip
+                                        title='Remove'
+                                        arrow
+                                        inertia
+                                        duration={150}
+                                        animation='scale'
+                                        position='top'
+                                        size='small'
                                     >
-                                    <RxCross2 />
-                                    </span>
-                                </Tooltip>
-                            )}
-                        </div>
-                    ))}
+                                        <span
+                                            onClick={() => setSelectedTags(selectedTags.filter((t: TagName) => t !== tag))}
+                                            className={twMerge(`
+                                                rounded-full
+                                                bg-gray-400
+                                                text-white
+                                                text-center
+                                                w-4
+                                                flex
+                                                items-center
+                                                justify-center
+                                                text-xs
+                                                aspect-square
+                                                absolute
+                                                -top-1.5
+                                                -right-1.5
+                                                shadow-gray-700
+                                                shadow-sm
+                                                z-50
+                                                cursor-pointer
+                                                sm:hover:bg-gray-500
+                                                active:bg-gray-500
+                                            `)}
+                                        >
+                                        <RxCross2 />
+                                        </span>
+                                    </Tooltip>
+                                )}
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
 
-            <Label
+            <InputLabel
                 htmlFor="description"
-                labelText='Description'
+                text='Description'
                 additionalStyles='text-xl block w-full'
             />
             <textarea
@@ -385,19 +379,20 @@ const NewTaskModal = () => {
             />
 
             <div className='flex flex-col items-start gap-4 mb-4 w-full'>
-                <Label
-                    labelText='Links'
+                <InputLabel
+                    text='Links'
                     htmlFor='links'
                     isOptional
+                    isTitle
                 />
 
                 {externalLinks.length === 1
                     ? (
                         <div className='flex items-center pl-4 gap-1 w-full'>
                             <Input
-                                id='externalLinks'
+                                id={externalLinks[0].name}
                                 type='text'
-                                name='externalLinks'
+                                name='links'
                                 onChange={handleLinksChange}
                                 labelText={`Link #${externalLinks.length}`}
                                 placeholder='Add a link...'
@@ -410,9 +405,9 @@ const NewTaskModal = () => {
                             <div key={index} className='flex items-center pl-4 gap-1 w-full'>
                                 <Input
                                     key={index}
-                                    id='externalLinks'
+                                    id={l.name}
                                     type='text'
-                                    name='externalLinks'
+                                    name='links'
                                     onChange={(ev) => handleLinksChange(ev, index)}
                                     labelText={`Link #${index + 1}`}
                                     placeholder='Add a link...'
@@ -456,16 +451,16 @@ const NewTaskModal = () => {
                 type='date'
                 name='dueDate'
                 onChange={handleInputChange}
-                value={convertToISODate(inputValues.dueDate)}
+                value={convertToISODate(inputValues.dueDate) as string}
                 labelText='Due date'
                 additionalStyles='mb-4'
             />
 
-            <div className='flex gap-1 items-center w-full py-4'>
-                <Label
+            <div className='flex gap-1 items-center w-full py-4 flex-wrap'>
+                <InputLabel
                     htmlFor="taskPriority"
-                    labelText='Priority'
-                    additionalStyles='text-xl block w-1/4'
+                    text='Priority'
+                    additionalStyles='text-xl block w-full'
                 />
 
                 <div className='w-full flex items-center gap-1'>
@@ -482,24 +477,22 @@ const NewTaskModal = () => {
                                     onChange={handleSelectedPriorityChange}
                                 />
 
-                                <Label
+                                <InputLabel
                                     htmlFor={priority}
-                                    labelText={capitalizeFirstLetter(priority)}
+                                    text={capitalizeFirstLetter(priority)}
                                     title={capitalizeFirstLetter(priority)}
                                     additionalStyles={`
                                         ${priority === selectedPriority
                                             ? isSelected(priority)
-                                            : 'bg-slate-300'
+                                            : 'bg-gray-300'
                                         }
                                         ${setPriorityColor(priority)}
                                         w-full
                                         border
                                         border-stone-500
-                                        py-1
                                         px-2
                                         text-white
                                         text-lg
-                                        drop-shadow-md
                                         text-center
                                         transition-colors
                                         cursor-pointer
@@ -515,7 +508,7 @@ const NewTaskModal = () => {
             <div className='flex w-full items-center justify-between'>
                 <p className='text-stone-800 text-xl'>Thumbnail</p>
                 {
-                    inputValues.imgSrc
+                    inputValues.thumbnailSrc
                         ?   <button
                                 type='button'
                                 onClick={handleRemoveThumbnail}
@@ -530,9 +523,9 @@ const NewTaskModal = () => {
                             </button>
                         :   <Input
                                 type='file'
-                                id='imgSrc'
+                                id='thumbnailSrc'
                                 labelText='Upload from my device'
-                                name='imgSrc'
+                                name='thumbnailSrc'
                                 onChange={handleUploadChange}
                                 additionalStyles='hidden'
                                 labelAdditionalStyles='cursor-pointer text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
@@ -540,9 +533,9 @@ const NewTaskModal = () => {
                 }
             </div>
             {
-                inputValues.imgSrc && (
+                inputValues.thumbnailSrc && (
                     <Image
-                        src={inputValues.imgSrc}
+                        src={inputValues.thumbnailSrc}
                         width={100} height={60}
                         alt='Thumbnail'
                         className='w-full border border-black rounded-bl-lg'

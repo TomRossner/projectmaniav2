@@ -23,6 +23,9 @@ const TaskMenuOption = ({option, action, icon, additionalStyles}: TaskMenuOption
         flex
         gap-2
         items-center
+        text-stone-500
+        active:text-stone-800
+        sm:hover:text-stone-800
         ${additionalStyles}
       `)}
     >

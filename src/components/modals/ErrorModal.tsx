@@ -28,7 +28,7 @@ const ErrorModal = ({action}: ErrorModalProps) => {
     <Modal
       title='Error'
       onClose={closeModal}
-      showSubmitBtn={false}
+      withSubmitBtn={false}
       closeBtnText='Close'
       isOpen={(authError || error)
         ? true

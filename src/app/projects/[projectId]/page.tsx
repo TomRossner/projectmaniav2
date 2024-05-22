@@ -6,7 +6,7 @@ import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
 import { useAppDispatch } from '@/hooks/hooks';
-import { IProject, IStage, ITask, setCurrentStage, setCurrentStageIndex, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentStage, setCurrentStageIndex, setCurrentTask, setStages } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
@@ -189,14 +189,14 @@ const Project = () => {
 
   return (
     <>
-    <EditStageModal/>
-    <EditDashboardModal/>
-    <NewTaskModal/>
-    <NewStageModal/>
-    <DeleteStagePrompt/>
-    <DeleteProjectPrompt/>
-    <EditTaskModal {...currentTask as ITask}/>
-    <DeleteTaskPrompt/>
+    <EditStageModal />
+    <EditDashboardModal />
+    <NewTaskModal />
+    <NewStageModal />
+    <DeleteStagePrompt />
+    <DeleteProjectPrompt />
+    <EditTaskModal task={currentTask as ITask} />
+    <DeleteTaskPrompt />
     <div className='flex justify-end w-full h-[90vh]'>
         <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full mb-2'>
             <div
@@ -238,7 +238,7 @@ const Project = () => {
                   `}
                 >
                   {currentProject?.stages.map((stage: IStage) =>
-                    <Stage {...stage} key={stage.stageId}/>
+                    <Stage {...stage} key={stage.stageId} />
                   )}
                 </div>
             </div>
