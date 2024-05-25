@@ -21,6 +21,10 @@ const PRIORITIES: Priority[] = [
     "high"
 ]
 
+enum Priorities {
+    
+}
+
 const DEFAULT_PRIORITY: Priority = "low";
 
 const DEFAULT_TASK_VALUES: IBaseTask = {
@@ -38,7 +42,7 @@ const SCROLL_DIRECTIONS: ScrollDirection[] = ['next', 'prev'];
 
 const DEFAULT_PROJECT_TITLE: string = 'New project';
 
-const DEFAULT_PROJECT: Partial<IProject> = {
+const DEFAULT_PROJECT: Pick<IProject, "title" | "stages" | "team"> = {
     title: DEFAULT_PROJECT_TITLE,
     stages: [DEFAULT_STAGE],
     team: []
@@ -60,6 +64,10 @@ const TAGS: Tag[] = [
     {
         tag: "hotfix",
         tagColor: "bg-orange-400 border-orange-600",
+    },
+    {
+        tag: "backend",
+        tagColor: "bg-sky-400 border-sky-600",
     },
 ]
 

@@ -21,18 +21,6 @@ const ProjectItem = (project: IProject) => {
       dispatch(setCurrentProject(project));
     }
 
-    // const getStagesCount = (): string => {
-    //   return stages.length
-    //     ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
-    //     : `0 stages`;
-    // }
-
-    // const getTotalTasks = (): string => {
-    //   const totalTasks = stages.reduce((total, stage) => total + stage.tasks.length, 0);
-
-    //   return `${totalTasks} task${(totalTasks > 1) || (totalTasks === 0) ? 's' : ''}`;
-    // }
-
   return (
     <Link
       href={`${LINKS['PROJECTS']}/${projectId}`}

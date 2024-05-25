@@ -62,6 +62,7 @@ const InputLabel = ({
             ${(text?.toLowerCase() === "feature") && "bg-violet-400 border-violet-600"}
             ${(text?.toLowerCase() === "ui") && "bg-teal-400 border-teal-600"}
             ${(text?.toLowerCase() === "hotfix") && "bg-orange-400 border-orange-600"}
+            ${(text?.toLowerCase() === "backend") && "bg-sky-400 border-sky-600"}
             ${isSelectable && "bg-opacity-70 active:bg-opacity-100 sm:hover:bg-opacity-100"}
             ${additionalStyles}
             ${isOptional || isRequired && 'flex items-center gap-1'}

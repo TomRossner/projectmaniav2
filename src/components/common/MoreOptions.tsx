@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from "framer-motion";
 import Option from '../Option';
 import { TOption } from '@/utils/types';
 import { createOption } from '@/utils/utils';
 import { twMerge } from 'tailwind-merge';
+import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 type MoreOptionsProps = {
     isOpen: boolean;
@@ -13,25 +14,33 @@ type MoreOptionsProps = {
     additionalStyles?: string;
 }
 
-const MoreOptions = ({
-    isOpen,
-    setIsOpen,
-    options,
-    action = () => {},
-    additionalStyles,
-}: MoreOptionsProps) => {
+const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref) {
+    const {
+        isOpen,
+        setIsOpen,
+        options,
+        action = () => {},
+        additionalStyles,
+    } = props;
+
+    const moreOptionsRef = useRef<HTMLElement>(null);
+
     const createOptions = (opts: string[]): TOption[] => {
         return opts.map(opt => createOption(opt));
     }
 
     const opts = useMemo(() => createOptions(options), [options]);
+
+    useOnClickOutside(moreOptionsRef, () => setIsOpen(false));
+
   return (
     <AnimatePresence>
         {isOpen && (
             <motion.ul
+                ref={moreOptionsRef as RefObject<HTMLUListElement>}
                 className={twMerge(`
                     w-[100px]
-                    z-30
+                    z-50
                     absolute
                     right-3
                     top-8
@@ -78,6 +87,6 @@ const MoreOptions = ({
         )}
     </AnimatePresence>
   )
-}
+});
 
 export default MoreOptions;

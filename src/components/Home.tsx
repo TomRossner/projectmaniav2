@@ -67,7 +67,7 @@ const Home = () => {
       {!isAuthenticated ? (
         <div className='gap-10 py-20 flex items-center flex-col w-full'>
           <Header
-            text={`Welcome to ProjectMania v${APP_VERSION} !`}
+            text={`Welcome to ProJem!`}
             additionalStyles='text-5xl w-[95%]'
           />
 

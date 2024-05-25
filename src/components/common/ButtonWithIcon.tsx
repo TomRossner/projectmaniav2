@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ReactNode } from 'react';
+import React, { MouseEvent, ReactNode } from 'react';
 import { TooltipProps } from '@greguintow/react-tippy';
 import { twMerge } from 'tailwind-merge';
 import ToolTip from './ToolTip';
@@ -47,6 +47,14 @@ const ButtonWithIcon = ({
     ...rest
   } = tooltipProps;
 
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+
+    if (action) {
+      action();
+    }
+  }
+
   return (
     <>
     {withTooltip ? (
@@ -63,7 +71,7 @@ const ButtonWithIcon = ({
         <button
           type='button'
           disabled={disabled}
-          onClick={action}
+          onClick={handleClick}
           className={twMerge(`
             flex
             items-center
@@ -95,7 +103,7 @@ const ButtonWithIcon = ({
       <button
         type='button'
         disabled={disabled}
-        onClick={action}
+        onClick={handleClick}
         className={twMerge(`
           flex
           items-center

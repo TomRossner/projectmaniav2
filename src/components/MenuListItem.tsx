@@ -10,11 +10,11 @@ import { usePathname } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
 
-interface IMenuListItemProps {
-    listItem: MenuItem;
+type MenuListItemProps = {
+  listItem: MenuItem;
 }
 
-const MenuListItem = ({listItem}: IMenuListItemProps) => {
+const MenuListItem = ({listItem}: MenuListItemProps) => {
   const {text, action, imageSrc, icon} = listItem;
   const {user} = useAuth();
   

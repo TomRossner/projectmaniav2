@@ -1,7 +1,5 @@
 import { StageOptions, TOption } from '@/utils/types';
-import { AnimatePresence, motion } from 'framer-motion';
-import React, { useState } from 'react';
-import { BsChevronRight } from 'react-icons/bs';
+import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
 type OptionProps = {
@@ -21,7 +19,6 @@ const Option = ({
     isStageOption = false,
     stageOpt,
 }: OptionProps) => {
-    const [subMenuOpen, setSubMenuOpen] = useState<boolean>(false);
   return (
     <>
         <button
@@ -47,58 +44,7 @@ const Option = ({
             disabled={isDisabled}
         >
             {!isStageOption ? opt?.text : stageOpt?.option}
-            {/* {!!opt.subOptions?.length && (
-                <span className='py-1'>
-                    <BsChevronRight className='w-3 h-3' />
-                </span>
-            )} */}
-
         </button>
-        {/* {!!opt.subOptions?.length && (
-            <AnimatePresence>
-                {state &&
-                    <motion.div
-                        initial={{
-                            scale: 0.7,
-                            opacity: 0,
-                            zIndex: 20,
-                            position: "absolute",
-                            top: 0,
-                            left: -105,
-                            marginBlock: "auto",
-                        }}
-                        animate={{
-                            scale: 1,
-                            opacity: 1,
-                            transition: {
-                                duration: 0.07
-                            }
-                        }}
-                        exit={{
-                            opacity: 0,
-                            scale: 0.8,
-                            transition: {
-                                duration: 0.1
-                            }
-                        }}
-                    >
-                        <div className='w-[100px] flex flex-col p-1 border border-slate-300 bg-white rounded-bl-lg'>
-                            {opt.subOptions?.map(opt => {
-                                return (
-                                    // <Option
-                                    //     key={opt.option}
-                                    //     opt={opt}
-                                    //     action={() => setSubMenuOpen(!subMenuOpen)}
-                                    //     state={subMenuOpen}
-                                    // />
-                                    <li key={opt.option}>{opt.option}</li>
-                                )
-                            })}
-                        </div>
-                    </motion.div>
-                }
-            </AnimatePresence>
-        )} */}
     </>
   )
 }

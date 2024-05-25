@@ -5,6 +5,7 @@ import BigPlus from './utils/BigPlus';
 import { IStage, ITask } from '@/store/projects/projects.slice';
 import Task from './Task';
 import Button from './common/Button';
+import { Reorder } from 'framer-motion';
 
 type StageContentProps = {
   stage: IStage;
@@ -13,19 +14,25 @@ type StageContentProps = {
 }
 
 const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
+
   return (
     <div className='w-full flex justify-center grow overflow-hidden relative'>
         {tasks.length ? (
-            <div className='w-full flex flex-col px-4 gap-3 items-start py-5 overflow-y-scroll'>
-              {tasks.map((task: ITask, index: number) =>
-                  <Task
-                    key={index}
-                    task={task}
-                    idx={index}
-                    setTasks={setTasks}
-                  />
-              )}
-            </div>
+            <Reorder.Group values={tasks} onReorder={setTasks} className='w-full flex flex-col px-4 gap-3 items-start py-5 overflow-y-scroll'>
+                {tasks.map((task: ITask, index: number) =>
+                  <Reorder.Item
+                    value={task}
+                    key={task.taskId}
+                    className='w-full'
+                  >
+                    <Task
+                      task={task}
+                      idx={index}
+                      setTasks={setTasks}
+                    />
+                  </Reorder.Item>
+                )}
+            </Reorder.Group>
         ) : (
           <>
             {!!stage.tasks.length && !tasks.length ? (

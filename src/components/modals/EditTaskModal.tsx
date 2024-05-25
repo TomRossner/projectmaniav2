@@ -245,7 +245,9 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }, [selectedStage])
 
     useEffect(() => {
-        setSelectedStage(task.currentStage as SelectedStage);
+        if (task) {
+            setSelectedStage(task.currentStage as SelectedStage);
+        }
     }, [task])
 
     // Add links to inputValues

@@ -18,14 +18,14 @@ import { GoSearch } from "react-icons/go";
 import { ITask } from '@/store/projects/projects.slice';
 import SearchModal from './modals/SearchModal';
 
-interface IDashboardTopProps {
+type DashboardTopProps = {
   moveNext: () => void;
   movePrev: () => void;
   noMoreNext: boolean;
   noMorePrev: boolean;
 }
 
-const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: IDashboardTopProps) => {
+const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTopProps) => {
     const {currentProject} = useProjects();
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
 

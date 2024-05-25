@@ -4,20 +4,21 @@ import React from 'react';
 import Link from 'next/link';
 import { APP_VERSION } from '@/utils/constants';
 import { LINKS } from '@/utils/links';
+import { twMerge } from 'tailwind-merge';
 
-interface ILogoProps {
+type LogoProps = {
     action: () => void;
     additionalStyles?: string;
 }
 
-const Logo = ({action, additionalStyles}: ILogoProps) => {
+const Logo = ({action, additionalStyles}: LogoProps) => {
 
   return (
     <Link
       href={LINKS.HOME}
       id='logo'
       onClick={action}
-      className={`
+      className={twMerge(`
         flex
         items-center
         gap-2
@@ -30,10 +31,10 @@ const Logo = ({action, additionalStyles}: ILogoProps) => {
         cursor-pointer
         select-none
         ${additionalStyles}
-      `}
+      `)}
     >
-      <span>PM</span>
-      <span className='font-normal text-2xl'>v{APP_VERSION}</span>
+      <span>Projem</span>
+      {/* <span className='font-normal text-2xl'>v{APP_VERSION}</span> */}
     </Link>
   )
 }

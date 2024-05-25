@@ -29,6 +29,7 @@ const Tag = ({tag, additionalStyles}: TagProps) => {
             ${(tag.toLowerCase() === "feature") && "bg-violet-400 border-violet-600"}
             ${(tag.toLowerCase() === "ui") && "bg-teal-400 border-teal-600"}
             ${(tag.toLowerCase() === "hotfix") && "bg-orange-400 border-orange-600"}
+            ${(tag.toLowerCase() === "backend") && "bg-cyan-400 border-sky-600"}
             ${additionalStyles}
           `)}
         >

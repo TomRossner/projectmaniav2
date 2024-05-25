@@ -1,7 +1,7 @@
 'use client'
 
 import { TASK_MENU_OPTIONS } from '@/utils/constants';
-import React, { useRef } from 'react';
+import React, { ForwardedRef, forwardRef, useRef } from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeEditTaskModal, openBackLayer, openDeleteTaskPrompt, openEditTaskModal } from '@/store/app/app.slice';
 import { IProject, IStage, ITask, setCurrentProject } from '@/store/projects/projects.slice';
@@ -17,16 +17,14 @@ type TaskMenuProps = {
     toggleMenu: () => void;
 }
 
-const TaskMenu = (props: TaskMenuProps) => {
+const TaskMenu = forwardRef(function TaskMenu(props: TaskMenuProps, ref: ForwardedRef<HTMLElement>) {
     const {
         setIsMenuOpen,
         menuOpen,
         toggleMenu,
     } = props;
-    
-    const menuRef = useRef(null);
 
-    useOnClickOutside([menuRef], (toggleMenu));
+    // useOnClickOutside([menuRef], (toggleMenu));
 
     const dispatch = useAppDispatch();
     const {currentTask, currentStage, currentProject} = useProjects();
@@ -100,6 +98,6 @@ const TaskMenu = (props: TaskMenuProps) => {
         action={handleOptionClick}
     />
   )
-}
+})
 
 export default TaskMenu;

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { ForwardedRef, forwardRef, useState } from 'react';
 import TaskTitle from './TaskTitle';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BsThreeDots } from 'react-icons/bs';
@@ -14,7 +14,7 @@ type TaskTopProps = {
   additionalStyles?: string;
 }
 
-const TaskTop = ({title, task, additionalStyles}: TaskTopProps) => {
+const TaskTop = forwardRef(function TaskTop({title, task, additionalStyles}: TaskTopProps, ref: ForwardedRef<HTMLElement>) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const dispatch = useAppDispatch();
 
@@ -41,9 +41,10 @@ const TaskTop = ({title, task, additionalStyles}: TaskTopProps) => {
           setIsMenuOpen={setIsMenuOpen}
           menuOpen={isMenuOpen}
           toggleMenu={toggleMenu}
+          ref={ref}
         />
     </div>
   )
-}
+});
 
 export default TaskTop;

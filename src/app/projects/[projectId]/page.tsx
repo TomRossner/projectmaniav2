@@ -25,6 +25,7 @@ import { IUser, setUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
 import { updateUser } from '@/services/user.api';
 import { refreshUser, saveJwt } from '@/services/localStorage';
+import { DndContext } from '@dnd-kit/core';
 
 const Project = () => {
   const {user} = useAuth();
@@ -85,6 +86,18 @@ const Project = () => {
 
     if (index !== stagesLength && noMoreNext) setNoMoreNext(false);
     if (index > 0 && noMorePrev) setNoMorePrev(false);
+  }
+
+  const onDragStart = () => {
+
+  }
+
+  const onDragEnd = (result: any) => {
+
+  }
+
+  const onDragUpdate = () => {
+
   }
 
   // Set currentStageIndex to 0
@@ -219,7 +232,7 @@ const Project = () => {
                   moveNext={moveNext}
                   movePrev={movePrev}
                 />
-                
+
                 <div
                   id='stagesContainer'
                   ref={stagesContainerRef}

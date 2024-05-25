@@ -14,7 +14,6 @@ import useMobileMenu from '@/hooks/useMobileMenu';
 import useAuth from '@/hooks/useAuth';
 import { TbLogout2 } from "react-icons/tb";
 import { IoSettingsOutline } from "react-icons/io5";
-import { IUser } from '@/store/auth/auth.slice';
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
 
@@ -26,34 +25,21 @@ const MobileMenu = () => {
 
     const closeMenu = () => dispatch(closeMobileMenu());
 
-
     const ul1: MenuItem[] = [
         {
             text: "Home",
-            action: () => {
-                closeMenu();
-            },
             icon: <BiHome />
         },
         {
             text: "About",
-            action: () => {
-                closeMenu();
-            },
             icon: <LuInfo />
         },
         {
             text: "Projects",
-            action: () => {
-                closeMenu();
-            },
             icon: <LuFolderClosed />
         },
         {
             text: "Messages",
-            action: () => {
-                closeMenu();
-            },
             icon: <HiOutlineChatAlt />
         },
     ]
@@ -61,40 +47,28 @@ const MobileMenu = () => {
     const ul2: MenuItem[] = [
         {
             text: "Settings",
-            action: () => {
-                closeMenu();
-            },
             icon: <IoSettingsOutline />
         },
         {
             text: user
                 ? `${user.firstName} ${user.lastName}`
                 : "Profile",
-            action: () => {
-                closeMenu();
-            },
             icon: <CgProfile />,
             imageSrc: user?.thumbnailSrc
         },
         {
             text: "Sign in",
-            action: () => {
-                closeMenu();
-            },
             icon: <CgProfile />
         },
         {
             text: "Sign out",
-            action: () => {
-                closeMenu();
-            },
             icon: <TbLogout2 />
         },
     ]
 
     const menuLists = [
-        ul1,
-        ul2
+        ul1.map(i => ({...i, action: closeMenu})),
+        ul2.map(i => ({...i, action: closeMenu}))
     ]
 
   return (
@@ -114,8 +88,8 @@ const MobileMenu = () => {
             ${!mobileMenu && '-translate-x-full'}
         `)}
     >
-        <Cross action={closeMenu} additionalStyles='absolute left-2'/>
-        <Logo action={closeMenu} additionalStyles='absolute top-2 left-0 right-0 mx-auto z-50'/>
+        <Cross action={closeMenu} additionalStyles='absolute left-2' />
+        <Logo action={closeMenu} additionalStyles='absolute top-2 left-0 right-0 mx-auto z-50' />
 
         <div id='mobileMenu' className='flex flex-col w-full h-full fixed top-0 left-0'>
             {menuLists.map((list: MenuItem[], listIdx: number) =>

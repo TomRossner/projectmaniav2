@@ -11,6 +11,12 @@ type Tag = {
     tagColor: string;
 }
 
+enum SocialLinks {
+    Portfolio = "https://tomrossner.dev/",
+    Github = "https://github.com/TomRossner/",
+    LinkedIn = "https://linkedin.com/in/tom-rossner/",
+}
+
 type ScreenSize = "xs" | "sm" | "md" | "lg" | "xl";
 
 type ScreenWidth = 540 | 640 | 768 | 1024 | 1280;
@@ -19,7 +25,7 @@ type Screen = {
     [key in ScreenSize]: ScreenWidth;
 }
 
-type TagName = 'feature' | 'bug' | 'ui' | 'hotfix';
+type TagName = 'feature' | 'bug' | 'ui' | 'hotfix' | 'backend';
 
 type ExternalLink = {
     name: string;
@@ -28,9 +34,9 @@ type ExternalLink = {
 
 type MenuItem = {
     text: string;
-    action: () => void;
+    action?: () => void;
     icon?: ReactNode;
-    imageSrc?: Partial<IUser> & string;
+    imageSrc?: Pick<IUser, "thumbnailSrc"> & string;
 }
 
 type TOption = {
@@ -82,5 +88,9 @@ export type {
     Filter,
     Status,
     TOption,
-    SelectedStage
+    SelectedStage,
+}
+
+export {
+    SocialLinks
 }
