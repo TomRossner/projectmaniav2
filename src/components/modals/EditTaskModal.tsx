@@ -7,7 +7,7 @@ import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from "@/st
 import { LINKS } from "@/utils/links";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import React, { FormEvent, Fragment, useEffect, useState } from "react";
+import React, { FormEvent, Fragment, useCallback, useEffect, useState } from "react";
 import Input from "../common/Input";
 import useModals from "@/hooks/useModals";
 import { capitalizeFirstLetter, convertToISODate, getInvalidLinks, validateUrls } from "@/utils/utils";
@@ -69,6 +69,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const handleSave = (ev: FormEvent<HTMLFormElement>, updatedValues: ITask): void => {
         ev.preventDefault();
 
+        if (!updatedValues) return;
+
         dispatch(setError(null));
 
         const links: ExternalLink[] = updatedValues.externalLinks as ExternalLink[];
@@ -88,33 +90,9 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             return;
         }
         
-        const updatedTask: ITask = {
-            ...task,
-            ...updatedValues,
-            externalLinks: links
-        } as ITask;
+        const updatedStages = getUpdatedStages(updatedValues as ITask, currentProject as IProject);
 
-        dispatch(setCurrentTask(updatedTask));
-        
-        const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
-            if (stage.stageId === task.currentStage?.stageId) {
-
-                const updatedTasks: ITask[] = stage.tasks.map(
-                    (t: ITask) => {
-                        if (t.taskId === task.taskId) {
-                            return updatedTask;
-                        } else return t;
-                    }
-                );
-
-                return {
-                    ...stage,
-                    tasks: updatedTasks
-                };
-            } else return stage;
-        }) as IStage[];
-
-        const updatedCurrentProject: IProject = {
+        const updatedCurrentProject = {
             ...currentProject,
             stages: updatedStages
         } as IProject;
@@ -122,6 +100,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         dispatch(setCurrentProject(updatedCurrentProject));
 
         closeModal();
+        return;
     }
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -225,7 +204,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
 
     const handleStageChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
         const stage = currentProject?.stages.find(s => s.stageId === ev.target.value);
-        dispatch(setError("This should update tasks on save"))
+
         if (stage) {
             const selectedStage: SelectedStage = {
                 stageId: stage.stageId,
@@ -235,6 +214,73 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             setSelectedStage(selectedStage);
         }
     }
+
+    const getUpdatedStages = useCallback((inputValues: ITask, project: IProject): IStage[] | void => {
+        if (!project || !inputValues) {
+            dispatch(setError('Failed to update project'));
+            return;
+        }
+
+        const updatedTask: ITask = {
+            ...task,
+            ...inputValues,
+            externalLinks: inputValues.externalLinks,
+            currentStage: inputValues.currentStage
+        } as ITask;
+
+        if (inputValues.currentStage?.stageId !== task.currentStage?.stageId) {
+            const stageToRemoveTaskFrom: IStage | undefined = project?.stages.find(s => s.tasks.some(t => t.taskId === task.taskId));
+            const stageToAddTaskTo: IStage | undefined = project?.stages.find(s => s.stageId === selectedStage?.stageId);
+
+            if (stageToRemoveTaskFrom && stageToAddTaskTo) {
+                const filteredStage = {
+                    ...stageToRemoveTaskFrom,
+                    tasks: stageToRemoveTaskFrom.tasks.filter(t => t.taskId !== task.taskId)
+                } as IStage;
+
+                const updatedSelectedStage = {
+                    ...stageToAddTaskTo,
+                    tasks: [
+                        ...stageToAddTaskTo.tasks,
+                        updatedTask
+                    ]
+                } as IStage;
+
+                const updatedStages: IStage[] = project?.stages.map(s => {
+                    if (s.stageId === filteredStage.stageId) {
+                        return filteredStage;
+                    } else if (s.stageId === updatedSelectedStage.stageId) {
+                        return updatedSelectedStage;
+                    } else return s;
+                }) as IStage[];
+
+                return updatedStages;
+            }
+        } else {
+            const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
+                if (stage.stageId === task.currentStage?.stageId) {
+    
+                    const updatedTasks: ITask[] = stage.tasks.map(
+                        (t: ITask) => {
+                            if (t.taskId === task.taskId) {
+                                return updatedTask;
+                            } else return t;
+                        }
+                    );
+    
+                    return {
+                        ...stage,
+                        tasks: updatedTasks
+                    };
+                } else return stage;
+            }) as IStage[];
+
+            return updatedStages;
+        }
+
+        dispatch(setError('Failed to update project'));
+        return project.stages;
+    }, [task, currentProject?.stages, selectedStage?.stageId]);
 
     // Update selected stage in inputValues
     useEffect(() => {
@@ -352,6 +398,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                                             bg-slate-300
                                             border
                                             border-slate-500
+                                            cursor-pointer
                                             ${s.stageId === selectedStage?.stageId && "bg-blue-400"}
                                             ${(idx === 0) && "rounded-bl-lg"}
                                         `)}

@@ -1,7 +1,7 @@
 'use client'
 
 import isAuth from '@/app/ProtectedRoute';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
@@ -25,7 +25,8 @@ import { IUser, setUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
 import { updateUser } from '@/services/user.api';
 import { refreshUser, saveJwt } from '@/services/localStorage';
-import { DndContext } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 
 const Project = () => {
   const {user} = useAuth();
@@ -68,6 +69,8 @@ const Project = () => {
   const moveNext = () => handleScroll('next');
   const movePrev = () => handleScroll('prev');
 
+  const [activeStage, setActiveStage] = useState<IStage | null>(null);
+
   const handleUpdateProject = async (project: IProject): Promise<AxiosResponse> =>
     await updateProject(project);
 
@@ -88,17 +91,33 @@ const Project = () => {
     if (index > 0 && noMorePrev) setNoMorePrev(false);
   }
 
-  const onDragStart = () => {
-
+  const onDragStart = (ev: DragStartEvent) => {
+    if (ev.active.data.current?.type === "stage") {
+      setActiveStage(ev.active.data.current.stage);
+      return;
+    }
   }
 
-  const onDragEnd = (result: any) => {
+  const onDragEnd = (ev: DragEndEvent) => {
+    const {active, over} = ev;
 
+    if (!over) return;
+
+    const oldIndex = stages.findIndex(s => s.stageId === active.id);
+    const newIndex = stages.findIndex(s => s.stageId === over.id);
+
+    const newTasks = arrayMove(stages, oldIndex, newIndex);
+
+    if (oldIndex === newIndex) return;
+
+    dispatch(setStages(newTasks));
   }
 
-  const onDragUpdate = () => {
-
-  }
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: {
+      distance: 5
+    },
+  })
 
   // Set currentStageIndex to 0
   useEffect(() => {
@@ -250,9 +269,27 @@ const Project = () => {
                     h-full
                   `}
                 >
-                  {currentProject?.stages.map((stage: IStage) =>
-                    <Stage {...stage} key={stage.stageId} />
-                  )}
+                  <DndContext
+                    collisionDetection={closestCorners}
+                    sensors={[mouseSensor]}
+                    onDragEnd={onDragEnd}
+                    onDragStart={onDragStart}
+                  >
+                    <SortableContext
+                      strategy={horizontalListSortingStrategy}
+                      items={stages.map(s => ({id: s.stageId as string}))}
+                    >
+                      {currentProject?.stages.map((stage: IStage) =>
+                        <Stage {...stage} key={stage.stageId} />
+                      )}
+
+                      <DragOverlay>
+                        {activeStage && (
+                          <Stage {...activeStage} /> 
+                        )}
+                      </DragOverlay>
+                    </SortableContext>
+                  </DndContext>
                 </div>
             </div>
         </div>

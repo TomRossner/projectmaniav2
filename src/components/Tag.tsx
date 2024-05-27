@@ -22,7 +22,6 @@ const Tag = ({tag, additionalStyles}: TagProps) => {
             text-center
             self-stretch
             pt-1
-            cursor-default
             select-none
             text-sm
             ${(tag.toLowerCase() === "bug") && "bg-yellow-400 border-yellow-600"}
