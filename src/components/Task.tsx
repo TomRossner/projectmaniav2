@@ -1,5 +1,5 @@
 import { ITask, setCurrentTask } from '@/store/projects/projects.slice';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import TaskTop from './TaskTop';
 import TaskPriority from './TaskPriority';
 import { useDispatch } from 'react-redux';
@@ -105,6 +105,8 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
       }
     }
 
+    const externalLinksCount = useMemo(() => task.externalLinks?.length || 0, [task.externalLinks]);
+
     const taskContent = <AnimatePresence>
       <motion.div
         onClick={handleClick}
@@ -159,20 +161,21 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
           </p>
 
           <div className='flex items-center justify-between w-full gap-1'>
-            <div className='grow flex items-center gap-1 relative self-end'>
+            {externalLinksCount > 0 && (
+              <div className='grow flex items-center gap-1 relative self-end'>
                 <ButtonWithIcon
                   icon={<BiLink />}
                   additionalStyles='bg-slate-50 rounded-bl-lg'
                   action={toggleLinksDropdown}
                   title={`
-                    ${task?.externalLinks!.length}
-                    ${task?.externalLinks!.length === 1
+                    ${externalLinksCount}
+                    ${externalLinksCount === 1
                       ? 'link'
                       : 'links'
                     }
                   `}
                   withCount
-                  itemCount={task?.externalLinks!.length}
+                  itemCount={externalLinksCount}
                 />
 
                 <TaskLinks
@@ -180,7 +183,8 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
                   isOpen={linksDropdownActive}
                   setIsOpen={() => setLinksDropdownActive(!linksDropdownActive)}
                 />
-            </div>
+              </div>
+            )}
 
             <div className='w-full flex items-center justify-end gap-2 flex-wrap-reverse min-w-'>
               {task.tags?.map((t: TagName, i: number) =>
