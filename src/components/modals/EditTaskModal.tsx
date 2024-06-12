@@ -7,10 +7,10 @@ import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from "@/st
 import { LINKS } from "@/utils/links";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import React, { FormEvent, Fragment, useCallback, useEffect, useState } from "react";
+import React, { FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Input from "../common/Input";
 import useModals from "@/hooks/useModals";
-import { capitalizeFirstLetter, convertToISODate, getInvalidLinks, validateUrls } from "@/utils/utils";
+import { capitalizeFirstLetter, convertToISODate, getDuplicatedLinks, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from "@/utils/utils";
 import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, MAX_EXTERNAL_LINKS, PRIORITIES, TAGS } from "@/utils/constants";
 import InputLabel from "../common/InputLabel";
 import ButtonWithIcon from "../common/ButtonWithIcon";
@@ -45,6 +45,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
 
     const [selectedStage, setSelectedStage] = useState<SelectedStage | null>(null);
 
+    // Must change ANY type to correct type
     const handleUploadChange = (e: any) => {
         if (!e.target.files.length) return;
         handleUpload(e.target.files[0]);
@@ -72,22 +73,29 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         if (!updatedValues) return;
 
         dispatch(setError(null));
+        
+        if (updatedValues.externalLinks && updatedValues.externalLinks.length) {
+            const updatedLinks: ExternalLink[] = renameLinks(getUniqueLinks(updatedValues.externalLinks));
 
-        const links: ExternalLink[] = updatedValues.externalLinks as ExternalLink[];
+            updatedValues = {
+                ...updatedValues,
+                externalLinks: updatedLinks
+            } as ITask;
 
-        const linksValid: boolean = validateUrls(links);
-
-        if (!!links[0]?.url && !linksValid) {
-            const invalidLinks: ExternalLink[] = getInvalidLinks(links);
-
-            dispatch(setError(`${invalidLinks.map((l: ExternalLink) => l.name)
-                .join(", ")} ${invalidLinks.length > 1
-                    ? "are not valid links"
-                    : "is not a valid link"
-                }`
-            ));
-
-            return;
+            const linksValid: boolean = validateUrls(updatedLinks);
+    
+            if (!!updatedLinks[0]?.url && !linksValid) {
+                const invalidLinks: ExternalLink[] = getInvalidLinks(updatedLinks);
+    
+                dispatch(setError(`${invalidLinks.map((l: ExternalLink) => l.name)
+                    .join(", ")} ${invalidLinks.length > 1
+                        ? "are not valid links"
+                        : "is not a valid link"
+                    }`
+                ));
+    
+                return;
+            }
         }
         
         const updatedStages = getUpdatedStages(updatedValues as ITask, currentProject as IProject);
@@ -97,6 +105,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             stages: updatedStages
         } as IProject;
 
+        console.log(updatedValues)
+        // dispatch(setCurrentTask(updatedValues));
         dispatch(setCurrentProject(updatedCurrentProject));
 
         closeModal();
@@ -337,9 +347,28 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         setInputValues({...inputValues, priority: selectedPriority as string} as ITask);
     }, [selectedPriority])
 
+    const removeDuplicates = (links: ExternalLink[]) => {
+        setExternalLinks(renameLinks(getUniqueLinks(links)));
+        dispatch(setError(null));
+    }
+
+    const duplicatedLinks = useMemo(() => {
+        if (inputValues?.externalLinks) {
+            return !!getDuplicatedLinks(inputValues?.externalLinks as ExternalLink[]).length;
+        } else return false;
+    }, [inputValues?.externalLinks]);
+
   return (
     <>
-        <ErrorModal action={() => dispatch(setError(null))} />
+        {duplicatedLinks
+            ? <ErrorModal
+                withSubmitBtn
+                submitBtnText="Remove duplicates and continue"
+                onSubmit={() => removeDuplicates(inputValues?.externalLinks as ExternalLink[])}
+                action={() => dispatch(setError(null))}
+            />
+            : <ErrorModal action={() => dispatch(setError(null))} />
+        }
         
         {inputValues && (
             <Modal

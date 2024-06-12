@@ -10,9 +10,17 @@ import Modal from './Modal';
 
 type ErrorModalProps = {
   action?: () => void;
+  withSubmitBtn?: boolean;
+  onSubmit?: () => void;
+  submitBtnText?: string;
 }
 
-const ErrorModal = ({action}: ErrorModalProps) => {
+const ErrorModal = ({
+  action,
+  onSubmit,
+  withSubmitBtn = false,
+  submitBtnText,
+}: ErrorModalProps) => {
     const dispatch = useAppDispatch();
 
     const {authError} = useAuth();
@@ -28,8 +36,10 @@ const ErrorModal = ({action}: ErrorModalProps) => {
     <Modal
       title='Error'
       onClose={closeModal}
-      withSubmitBtn={false}
       closeBtnText='Close'
+      withSubmitBtn={withSubmitBtn}
+      submitBtnText={submitBtnText}
+      onSubmit={onSubmit}
       isOpen={(authError || error)
         ? true
         : false

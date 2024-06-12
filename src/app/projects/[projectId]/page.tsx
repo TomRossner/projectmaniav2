@@ -99,6 +99,7 @@ const Project = () => {
   }
 
   const onDragEnd = (ev: DragEndEvent) => {
+    setActiveStage(null);
     const {active, over} = ev;
 
     if (!over) return;
@@ -219,6 +220,10 @@ const Project = () => {
     // console.log({isScrolledToLeft, isScrolledToRight});
   }, [isScrolledToLeft, isScrolledToRight])
 
+  const stagesIds = useMemo(() => stages.map(s => ({
+    id: s.stageId as string
+  })), [stages]);
+
   return (
     <>
     <EditStageModal />
@@ -277,7 +282,7 @@ const Project = () => {
                   >
                     <SortableContext
                       strategy={horizontalListSortingStrategy}
-                      items={stages.map(s => ({id: s.stageId as string}))}
+                      items={stagesIds}
                     >
                       {currentProject?.stages.map((stage: IStage) =>
                         <Stage {...stage} key={stage.stageId} />

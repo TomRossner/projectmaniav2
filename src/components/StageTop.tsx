@@ -156,7 +156,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     }, [searchInputValue, inputVisible])
 
   return (
-    <div className='w-full flex flex-col z-20 relative'>
+    <div className='w-full flex flex-col z-20 relative shadow-white shadow-xl'>
         <div
             className={`
                 flex

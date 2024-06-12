@@ -5,7 +5,6 @@ import useAuth from '@/hooks/useAuth';
 import useProjects from '@/hooks/useProjects';
 import { getProjectById } from '@/services/projects.api';
 import { IProject, IStage, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
-import { APP_VERSION } from '@/utils/constants';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -16,7 +15,7 @@ import Image from 'next/image';
 import { IUser } from '@/store/auth/auth.slice';
 import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
 import { BsCircleFill } from 'react-icons/bs';
-import { getStagesCount, getTotalTasks } from '@/utils/utils';
+import { getAvatarPosition, getStagesCount, getTotalTasks, setProjectLink, userInitials } from '@/utils/utils';
 
 const Home = () => {
   const {isAuthenticated, user} = useAuth();
@@ -31,21 +30,6 @@ const Home = () => {
 
   const getUserProjects = async (userId: string) => {
     dispatch(fetchProjectsAsync(userId));
-  }
-
-  const setProjectLink = (projectId: string): string => {
-    return `${LINKS.PROJECTS}/${projectId}`;
-  }
-
-  const userInitials = (user: IUser): string => {
-    const {firstName, lastName} = user;
-    return `${firstName.slice(0, 1).toUpperCase()}${lastName.slice(0, 1).toUpperCase()}`;
-  }
-
-  const className = (idx: number): string => {
-    const increment = idx * 5;
-    if (idx > 0) return `absolute right-[${increment}px] z-[${increment}]`;
-    return '';
   }
 
   useEffect(() => {
@@ -107,7 +91,7 @@ const Home = () => {
                                 <Image
                                   src={u.thumbnailSrc}
                                   alt={u.firstName}
-                                  className={`rounded-full w-8 h-8 bg-white ${className(idx)}`}
+                                  className={`rounded-full w-8 h-8 bg-white ${getAvatarPosition(idx)}`}
                                 />
                             ) : (
                               <span
@@ -123,7 +107,7 @@ const Home = () => {
                                   border
                                   bg-white
                                   text-stone-300
-                                  ${className(idx)}
+                                  ${getAvatarPosition(idx)}
                                 `}
                               >
                                 {userInitials(u)}

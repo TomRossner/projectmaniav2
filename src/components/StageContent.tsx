@@ -5,7 +5,7 @@ import BigPlus from './utils/BigPlus';
 import { IStage, ITask } from '@/store/projects/projects.slice';
 import Task from './Task';
 import Button from './common/Button';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 type StageContentProps = {
@@ -27,6 +27,7 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
   const [activeTask, setActiveTask] = useState<ITask | null>(null);
 
   const onDragEnd = (ev: DragEndEvent) => {
+    setActiveTask(null);
     const {active, over} = ev;
 
     if (!over) return;
@@ -34,9 +35,9 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
     const oldIndex = tasks.findIndex(t => t.taskId === active.id);
     const newIndex = tasks.findIndex(t => t.taskId === over.id);
 
-    const newTasks = arrayMove(tasks, oldIndex, newIndex);
-
     if (oldIndex === newIndex) return;
+
+    const newTasks = arrayMove(tasks, oldIndex, newIndex);
 
     setTasks(newTasks);
   }
@@ -46,6 +47,61 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
       setActiveTask(ev.active.data.current.task);
       return;
     }
+  }
+
+  const onDragOver = (ev: DragOverEvent) => {
+    const {active, over} = ev;
+
+    if (!over) return;
+
+    const oldIndex = tasks.findIndex(t => t.taskId === active.id);
+    const newIndex = tasks.findIndex(t => t.taskId === over.id);
+
+    if (oldIndex === newIndex) return;
+
+    const isActiveATask = active.data.current?.type === "task";
+    const isOverATask = over.data.current?.type === "task";
+
+    if (!isActiveATask) return;
+
+    if (isActiveATask && isOverATask) {
+      const updateTasks = (tasks: ITask[]): ITask[] => {
+        const activeIndex = tasks.findIndex(t => t.taskId === active.id);
+        const overIndex = tasks.findIndex(t => t.taskId === over.id);
+
+        tasks = tasks.map(t => {
+          if (t.taskId === active.id) {
+            return {
+              ...tasks[activeIndex],
+              currentStage: tasks[oldIndex].currentStage
+            }
+          } else return t;
+        }) as ITask[];
+
+        return arrayMove(tasks, activeIndex, overIndex);
+      }
+
+      setTasks(updateTasks(tasks));
+      return
+    }
+
+    const isOverAStage = active.data.current?.type === "stage";
+    if (isOverAStage) {
+      console.log("Stage", over);
+    }
+
+    if (isActiveATask && isOverAStage) {
+      const updateTasks = (tasks: ITask[]): ITask[] => {
+        const activeIndex = tasks.findIndex(t => t.taskId === active.id);
+        console.log(over)
+        // tasks[activeIndex].currentStage = tasks[oldIndex].currentStage;
+
+        return arrayMove(tasks, activeIndex, activeIndex);
+      }
+
+      setTasks(updateTasks(tasks));
+    }
+
   }
 
   return (
@@ -59,6 +115,7 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
                 sensors={[mouseSensor]}
                 onDragEnd={onDragEnd}
                 onDragStart={onDragStart}
+                onDragOver={onDragOver}
               >
                 <SortableContext
                   items={tasksIds}
@@ -79,7 +136,7 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
                         task={activeTask}
                         setTasks={setTasks}
                         idx={tasks.findIndex(t => t.taskId === activeTask.taskId)}
-                      /> 
+                      />
                     )}
                   </DragOverlay>
                 </SortableContext>

@@ -55,14 +55,12 @@ const Stage = (stage: IStage) => {
             max-w-[430px]
             border-dashed
             border-2
-            border-l-slate-100
-            border-r-slate-100
+            border-slate-200
             flex-col
             min-h-full
             relative
             overflow-hidden
             bg-white
-            border-slate-300
           `}
         >
           <span className='opacity-0'>
@@ -98,10 +96,6 @@ const Stage = (stage: IStage) => {
           flex
           self-start
           max-w-[430px]
-          border-l
-          border-r
-          border-l-slate-100
-          border-r-slate-100w-full
           flex-col
           min-h-full
           relative

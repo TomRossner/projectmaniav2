@@ -5,7 +5,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { STAGE_MENU } from '@/utils/constants';
 import InputLabel from './common/InputLabel';
 import Line from './common/Line';
-import { setPriorityColor } from '@/utils/utils';
+import { getFilters, getStatus, setPriorityColor } from '@/utils/utils';
 import { Filter, Priority, StageOptions, Status } from '@/utils/types';
 import { IStage, ITask, setFilters } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
@@ -56,32 +56,21 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     const applyFilters = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const priority = selectedFilters.find(f => f.category.toLowerCase() === "priority");
-        const tag = selectedFilters.find(f => f.category.toLowerCase() === "tag");
-        const status = selectedFilters.find(f => f.category.toLowerCase() === "status");
-        const date = selectedFilters.find(f => f.category.toLowerCase() === "date");
-
-        const getStatus = (isDone: boolean, status: Status): boolean => {
-            if (!status) return isDone as boolean;
-
-            status = status.toLowerCase() as Status;
-
-            return status === 'completed';
-        }
-
-        const filters = [priority, tag, status, date].filter(Boolean);
+        const filters = getFilters(["priority", "tag", "status", "date"], selectedFilters);
 
         let filteredTasks: ITask[] = currentStage?.tasks as ITask[];
 
         for (const filter of filters) {
-            switch (filter?.category) {
-                case "Priority":
+            const category = filter.category.toLowerCase();
+
+            switch (category) {
+                case "priority":
                     filteredTasks = filteredTasks.filter(t => t.priority === filter.value.toLowerCase()) as ITask[];
                     break;
-                case "Tag":
+                case "tag":
                     filteredTasks = filteredTasks.filter(t => t.tags.some(t => t.toLowerCase() === filter.value.toLowerCase())) as ITask[];
                     break;
-                case "Status":
+                case "status":
                     filteredTasks = filteredTasks.filter(t => t.isDone === getStatus(t.isDone, filter.value as Status)) as ITask[];
                     break;
                 

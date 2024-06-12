@@ -110,10 +110,7 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
         onClick={handleClick}
         variants={variants}
         initial={variants.initial}
-        animate={animate
-          ? variants.animate
-          : variants.initial
-        }
+        animate={animate && variants.animate}
         className={twMerge(`
           w-full
           max-w-[400px]

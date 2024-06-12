@@ -1,7 +1,9 @@
 import { IStage } from "@/store/projects/projects.slice";
-import { ScrollDirection, Priority, TOption } from "./types";
+import { ScrollDirection, Priority, TOption, Filter, Status } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
+import { LINKS } from "./links";
+import { IUser } from "@/store/auth/auth.slice";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -68,6 +70,47 @@ const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
   return links.filter((l: ExternalLink) => !l.url.match(URL_REGEX));
 }
 
+const getUniqueLinks = (links: ExternalLink[]): ExternalLink[] => {
+  const linksIds = new Set();
+  const uniqueLinks: ExternalLink[] = [];
+
+  for (const link of links) {
+      if (!linksIds.has(link.url)) {
+          linksIds.add(link.url);
+          uniqueLinks.push(link);
+      }
+
+  }
+
+  return uniqueLinks;
+}
+
+const getDuplicatedLinks = (links: ExternalLink[]): ExternalLink[] => {
+  const linksIds = new Set();
+  const duplicates: ExternalLink[] = [];
+
+  for (const link of links) {
+      if (linksIds.has(link.url)) {
+          linksIds.add(link.url);
+          duplicates.push(link);
+      }
+
+  }
+
+  return duplicates;
+}
+
+const renameLinks = (links: ExternalLink[]): ExternalLink[] => {
+  links = links.map((link, index) => {
+      return {
+          name: `Link #${index + 1}`,
+          url: link.url,
+      } as ExternalLink;
+  });
+  
+  return links;
+}
+
 const setPriorityColor = (priority: Priority): string => {
   switch (priority.toLowerCase()) {
       case 'low':
@@ -110,6 +153,45 @@ const createSearchRegExp = (query: string): RegExp => {
   return new RegExp(`(${query})`, 'gi');
 }
 
+const setProjectLink = (projectId: string): string => {
+  return `${LINKS.PROJECTS}/${projectId}`;
+}
+
+const userInitials = (user: IUser): string => {
+  const {firstName, lastName} = user;
+  return `${firstName.slice(0, 1).toUpperCase()}${lastName.slice(0, 1).toUpperCase()}`;
+}
+
+const getAvatarPosition = (idx: number): string => {
+  const increment = idx * 5;
+  return idx > 0
+    ? `absolute right-[${increment}px] z-[${increment}]`
+    : '';
+}
+
+const getFilters = (queries: string[], filtersArr: Filter[]): Filter[] => {
+  let filters: Filter[] = [];
+
+  if (!filtersArr.length) return filters;
+
+  for (const query of queries) {
+      filters = [
+          ...filters,
+          filtersArr.find(f => f.category.toLowerCase() === query)
+      ] as Filter[];
+  }
+
+  return filters.filter(Boolean);
+}
+
+const getStatus = (isDone: boolean, status: Status): boolean => {
+  if (!status) return isDone as boolean;
+
+  status = status.toLowerCase() as Status;
+
+  return status === 'completed';
+}
+
 export {
     capitalizeFirstLetter,
     convertToISODate,
@@ -123,4 +205,12 @@ export {
     // getBlurData,
     createOption,
     createSearchRegExp,
+    renameLinks,
+    getUniqueLinks,
+    getDuplicatedLinks,
+    getAvatarPosition,
+    userInitials,
+    setProjectLink,
+    getFilters,
+    getStatus,
 }
