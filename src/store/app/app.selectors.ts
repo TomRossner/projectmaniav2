@@ -27,3 +27,5 @@ export const selectEditProjectModalOpen = (state: RootState): boolean => state.a
 export const selectBackLayer = (state: RootState): boolean => state.app.backLayerOpen;
 
 export const selectSortByTabOpen = (state: RootState): boolean => state.app.sortByTabOpen;
+
+export const selectInvitationModalOpen = (state: RootState): boolean => state.app.invitationModalOpen;

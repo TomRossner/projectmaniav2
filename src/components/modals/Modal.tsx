@@ -117,6 +117,7 @@ const Modal = ({
                             action={onClose || close}
                             icon={<RxCross2 />}
                             additionalStyles='absolute end-2 top-2 bg-white'
+                            title='Close'
                         />
                     )}
 

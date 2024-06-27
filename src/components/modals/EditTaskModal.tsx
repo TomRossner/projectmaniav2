@@ -105,7 +105,6 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             stages: updatedStages
         } as IProject;
 
-        console.log(updatedValues)
         // dispatch(setCurrentTask(updatedValues));
         dispatch(setCurrentProject(updatedCurrentProject));
 

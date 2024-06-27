@@ -16,6 +16,7 @@ interface IAppInitialState {
     backLayerOpen: boolean;
     modalOpen: boolean;
     sortByTabOpen: boolean;
+    invitationModalOpen: boolean;
 }
 
 const initialState: IAppInitialState = {
@@ -34,6 +35,7 @@ const initialState: IAppInitialState = {
     backLayerOpen: false,
     modalOpen: false,
     sortByTabOpen: false,
+    invitationModalOpen: false,
 }
 
 export const appSlice = createSlice({
@@ -183,6 +185,16 @@ export const appSlice = createSlice({
         openSortByTab: (state) => {
             state.sortByTabOpen = true;
         },
+
+        toggleInvitationModal: (state) => {
+            state.invitationModalOpen = !state.invitationModalOpen;
+        },
+        closeInvitationModal: (state) => {
+            state.invitationModalOpen = false;
+        },
+        openInvitationModal: (state) => {
+            state.invitationModalOpen = true;
+        },
     }
 })
 
@@ -244,4 +256,8 @@ export const {
     toggleSortByTab,
     closeSortByTab,
     openSortByTab,
+    
+    toggleInvitationModal,
+    closeInvitationModal,
+    openInvitationModal,
 } = appSlice.actions;

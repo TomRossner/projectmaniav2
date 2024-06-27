@@ -8,6 +8,7 @@ type ServerToClientEvents = {
 
 type ClientToServerEvents = {
     online: (userId: {userId?: string}) => void;
+    sendInvitation: (userId: {userId: string}) => void;
 }
 
 const useSocket = () => {

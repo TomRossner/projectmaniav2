@@ -16,6 +16,7 @@ import { TbLogout2 } from "react-icons/tb";
 import { IoSettingsOutline } from "react-icons/io5";
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
+import { MdOutlineNotifications } from "react-icons/md";
 
 const MobileMenu = () => {
     const {mobileMenu} = useMobileMenu();
@@ -41,6 +42,10 @@ const MobileMenu = () => {
         {
             text: "Messages",
             icon: <HiOutlineChatAlt />
+        },
+        {
+            text: "Notifications",
+            icon: <MdOutlineNotifications />
         },
     ]
 

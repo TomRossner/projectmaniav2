@@ -8,4 +8,5 @@ export const LINKS: {[key: string]: string} = {
     SIGN_IN: '/sign-in',
     SIGN_OUT: '/sign-out',
     NOT_FOUND: '/not-found',
+    NOTIFICATIONS: '/notifications',
 }

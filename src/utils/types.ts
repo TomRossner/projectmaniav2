@@ -1,5 +1,5 @@
 import { IUser } from "@/store/auth/auth.slice";
-import { IStage } from "@/store/projects/projects.slice";
+import { IProject, IStage } from "@/store/projects/projects.slice";
 import { ReactNode } from "react";
 
 type ScrollDirection = 'next' | 'prev';
@@ -72,6 +72,19 @@ type Filter = {
 
 type SelectedStage = Pick<IStage, "stageId" | "title">;
 
+type Invitation = {
+    isPending: boolean;
+    projectData: Pick<IProject, "projectId" | "title">;
+    createdAt: Date;
+    id: string;
+    sender: MessageSender;
+    subject: MessageSubject;
+}
+
+type MessageSender = Pick<IUser, "userId" | "firstName" | "lastName">;
+
+type MessageSubject = Pick<IUser, "userId" | "firstName" | "lastName">;
+
 export type {
     ScrollDirection,
     Tag,
@@ -89,6 +102,10 @@ export type {
     Status,
     TOption,
     SelectedStage,
+    MessageSender,
+    MessageSubject,
+    Invitation,
+    
 }
 
 export {

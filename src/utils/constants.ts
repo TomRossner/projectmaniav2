@@ -21,10 +21,6 @@ const PRIORITIES: Priority[] = [
     "high"
 ]
 
-enum Priorities {
-    
-}
-
 const DEFAULT_PRIORITY: Priority = "low";
 
 const DEFAULT_TASK_VALUES: IBaseTask = {

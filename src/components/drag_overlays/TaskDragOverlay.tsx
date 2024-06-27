@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { createPortal } from 'react-dom';
 
 type TaskDragOverlayProps = {
     task: ITask;
@@ -139,9 +140,14 @@ const TaskDragOverlay = (props: TaskDragOverlayProps) => {
     </div>;
 
   return (
-    <DragOverlay>
-        {taskContent}
-    </DragOverlay>
+    <>
+    {createPortal(
+        <DragOverlay zIndex={99} className='border border-red-500'>
+            {taskContent}
+        </DragOverlay>,
+        document.body
+    )}
+    </>
   )
 }
 

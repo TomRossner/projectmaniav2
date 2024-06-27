@@ -79,7 +79,7 @@ const Home = () => {
 
                     <p className='text-md text-blue-400 px-1 pt-1 flex items-center gap-2'>
                       {getStagesCount(mostRecentProject.stages)}
-                      <BsCircleFill className='w-1 pb-1'/>
+                      <BsCircleFill className='w-1 pb-1' />
                       {getTotalTasks(mostRecentProject.stages)}
                     </p>
                     

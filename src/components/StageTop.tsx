@@ -17,6 +17,8 @@ import Filters from './Filters';
 import Input from './common/Input';
 import { RxCross2 } from 'react-icons/rx';
 import MoreOptions from './common/MoreOptions';
+import { TbFilterCancel, TbFilterOff, TbFilterPlus, TbFilterX } from "react-icons/tb";
+import useFilters from '@/hooks/useFilters';
 
 type StageTopProps = {
     stage: IStage;
@@ -36,6 +38,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     const [subMenuOpen, setSubMenuOpen] = useState<boolean>(false);
 
     const [filtersTabOpen, setFiltersTabOpen] = useState<boolean>(false);
+    const {filters} = useFilters();
     
     const dispatch = useAppDispatch();
 
@@ -205,6 +208,25 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                     action={handleAddNewTask}
                     icon={<BiPlus />}
                 />
+                {filtersTabOpen
+                    ? (
+                        <ButtonWithIcon
+                            title='Add filters'
+                            action={() => setFiltersTabOpen(!filtersTabOpen)}
+                            icon={<TbFilterX />}
+                            withCount
+                            itemCount={filters.length}
+                        />
+                    ) : (
+                        <ButtonWithIcon
+                            title='Clear filters'
+                            action={() => setFiltersTabOpen(!filtersTabOpen)}
+                            icon={<TbFilterPlus />}
+                            withCount
+                            itemCount={filters.length}
+                        />   
+                    )
+                }
 
                 {/* <AnimatePresence>
                     {inputVisible && (

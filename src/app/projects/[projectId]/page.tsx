@@ -27,6 +27,7 @@ import { updateUser } from '@/services/user.api';
 import { refreshUser, saveJwt } from '@/services/localStorage';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import InvitationModal from '@/components/modals/InvitationModal';
 
 const Project = () => {
   const {user} = useAuth();
@@ -118,7 +119,7 @@ const Project = () => {
     activationConstraint: {
       distance: 5
     },
-  })
+  });
 
   // Set currentStageIndex to 0
   useEffect(() => {
@@ -234,6 +235,7 @@ const Project = () => {
     <DeleteProjectPrompt />
     <EditTaskModal task={currentTask as ITask} />
     <DeleteTaskPrompt />
+    <InvitationModal />
     <div className='flex justify-end w-full h-[90vh]'>
         <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full mb-2'>
             <div
@@ -274,7 +276,10 @@ const Project = () => {
                     h-full
                   `}
                 >
-                  <DndContext
+                  {currentProject?.stages.map((stage: IStage) =>
+                    <Stage {...stage} key={stage.stageId} />
+                  )}
+                  {/* <DndContext
                     collisionDetection={closestCorners}
                     sensors={[mouseSensor]}
                     onDragEnd={onDragEnd}
@@ -294,7 +299,7 @@ const Project = () => {
                         )}
                       </DragOverlay>
                     </SortableContext>
-                  </DndContext>
+                  </DndContext> */}
                 </div>
             </div>
         </div>

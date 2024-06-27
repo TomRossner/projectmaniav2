@@ -8,7 +8,7 @@ import ProjectTitle from './ProjectTitle';
 import Line from './common/Line';
 import { BiPlus } from 'react-icons/bi';
 import { useAppDispatch } from '@/hooks/hooks';
-import { openDeleteProjectPrompt, openEditProjectModal, openNewStageModal } from '@/store/app/app.slice';
+import { openDeleteProjectPrompt, openEditProjectModal, openInvitationModal, openNewStageModal } from '@/store/app/app.slice';
 import { twMerge } from 'tailwind-merge';
 import { BsThreeDots } from 'react-icons/bs';
 import { PROJECT_MENU_OPTIONS } from '@/utils/constants';
@@ -55,6 +55,10 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
       console.log("This will be sick");
     }
 
+    const handleOpenInvitationModal = () => {
+      dispatch(openInvitationModal());
+    }
+
     const handleOpt = (opt: TOption): void => {
       setMenuOpen(false);
 
@@ -65,6 +69,8 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
           return openActivityLog();
         case "edit":
           return handleEdit();
+        case "invite":
+          return handleOpenInvitationModal();
         default:
           return setMenuOpen(false);
       }

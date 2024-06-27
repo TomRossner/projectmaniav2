@@ -3,6 +3,7 @@ import {
   selectEditStageModal,
   selectEditTaskModalOpen,
   selectErrorModal,
+  selectInvitationModalOpen,
   selectNewProjectModal,
   selectNewStageModal,
   selectNewTaskModal
@@ -20,6 +21,8 @@ const useModals = () => {
     const editTaskModalOpen = useAppSelector(selectEditTaskModalOpen);
     const editProjectModalOpen = useAppSelector(selectEditProjectModalOpen);
 
+    const invitationModalOpen = useAppSelector(selectInvitationModalOpen);
+
   return {
     editStageModalOpen,
     errorModalOpen,
@@ -27,7 +30,8 @@ const useModals = () => {
     newTaskModalOpen,
     newProjectModalOpen,
     editTaskModalOpen,
-    editProjectModalOpen
+    editProjectModalOpen,
+    invitationModalOpen,
   }
 }
 

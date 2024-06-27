@@ -1,9 +1,10 @@
-import { IStage } from "@/store/projects/projects.slice";
-import { ScrollDirection, Priority, TOption, Filter, Status } from "./types";
+import { IProject, IStage } from "@/store/projects/projects.slice";
+import { ScrollDirection, Priority, TOption, Filter, Status, Invitation } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
 import { LINKS } from "./links";
 import { IUser } from "@/store/auth/auth.slice";
+import { v4 as uuid } from "uuid";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -51,7 +52,7 @@ const getTotalTasks = (stages: IStage[]): string => {
 
 const getStagesCount = (stages: IStage[]): string => {
   return stages.length
-    ? `${stages.length} stage${(stages.length > 1) || (stages.length === 0) ? 's' : ''}`
+    ? `${stages.length} stage${(stages.length === 1) ? '' : 's'}`
     : `0 stages`;
 }
 
@@ -70,15 +71,59 @@ const getInvalidLinks = (links: ExternalLink[]): ExternalLink[] => {
   return links.filter((l: ExternalLink) => !l.url.match(URL_REGEX));
 }
 
+const normalizeUrl = (linkUrl: string): string => {
+  /*
+    Removes
+      - http://
+      - https://
+      - www.
+      - http://www.
+      - https://www.
+    from url
+
+    Examples:
+      - https://www.google.com => google.com
+      - www.youtube.com => youtube.com
+      - http://localhost:3000 => localhost:3000
+  */
+
+  return linkUrl
+    .trim()
+    .toLowerCase()
+    .replace(/^(https?:\/\/)?(http?:\/\/)?(www\.)?(https:\/\/www\.)?(http:\/\/www\.)?/, '');
+
+  // const isHttp = linkUrl.startsWith('http://');
+  // const isHttps = linkUrl.startsWith('https://');
+  // const isWww = linkUrl.startsWith('www.');
+
+  // if (isHttp || isHttps) {
+  //   linkUrl = linkUrl.split(isHttp ? 'http://' : 'https://')[1];
+
+  //   if (isWww) {
+  //     return linkUrl.split('www.')[1];
+  //   }
+
+  //   return linkUrl;
+  // }
+
+  // if (isWww) {
+  //   return linkUrl.split('www.')[1];
+  // }
+
+  // return linkUrl;
+}
+
 const getUniqueLinks = (links: ExternalLink[]): ExternalLink[] => {
-  const linksIds = new Set();
+  const map = new Map();
   const uniqueLinks: ExternalLink[] = [];
 
-  for (const link of links) {
-      if (!linksIds.has(link.url)) {
-          linksIds.add(link.url);
-          uniqueLinks.push(link);
-      }
+  for (let link of links) {
+    const normalizedUrl: string = normalizeUrl(link.url);
+    console.log(normalizedUrl)
+    if (!map.has(normalizedUrl)) {
+      map.set(normalizedUrl, true);
+      uniqueLinks.push(link);
+    }
 
   }
 
@@ -86,15 +131,17 @@ const getUniqueLinks = (links: ExternalLink[]): ExternalLink[] => {
 }
 
 const getDuplicatedLinks = (links: ExternalLink[]): ExternalLink[] => {
-  const linksIds = new Set();
+  const map = new Map();
   const duplicates: ExternalLink[] = [];
 
-  for (const link of links) {
-      if (linksIds.has(link.url)) {
-          linksIds.add(link.url);
-          duplicates.push(link);
-      }
+  for (let link of links) {
+    const normalizedUrl: string = normalizeUrl(link.url);
 
+    if (map.has(normalizedUrl)) {
+      duplicates.push(link);
+    }
+
+    map.set(normalizedUrl, true);
   }
 
   return duplicates;
@@ -192,6 +239,32 @@ const getStatus = (isDone: boolean, status: Status): boolean => {
   return status === 'completed';
 }
 
+const generateId = () => {
+  return uuid();
+}
+
+const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProject, "projectId" | "title">): Invitation => {
+  return {
+      createdAt: new Date(Date.now()),
+      id: generateId(),
+      isPending: true,
+      projectData: {
+          title: projectData.title,
+          projectId: projectData.projectId
+      },
+      sender: {
+          userId: sender.userId,
+          firstName: sender.firstName,
+          lastName: sender.lastName
+      },
+      subject: {
+          userId: subject.userId,
+          firstName: subject.firstName,
+          lastName: subject.lastName
+      },
+  }
+}
+
 export {
     capitalizeFirstLetter,
     convertToISODate,
@@ -213,4 +286,6 @@ export {
     setProjectLink,
     getFilters,
     getStatus,
+    generateId,
+    createInvitation,
 }

@@ -35,7 +35,7 @@ const ButtonWithIcon = ({
   tooltipProps = DEFAULT_TOOLTIP_PROPS,
   withTooltip = true,
   withCount = false,
-  itemCount,
+  itemCount = 0,
 }: ButtonWithIconProps) => {
   
   const {

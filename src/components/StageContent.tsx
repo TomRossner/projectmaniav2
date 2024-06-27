@@ -1,12 +1,15 @@
 'use client'
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import BigPlus from './utils/BigPlus';
-import { IStage, ITask } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setFilters } from '@/store/projects/projects.slice';
 import Task from './Task';
 import Button from './common/Button';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
 import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { createPortal } from 'react-dom';
+import { useAppDispatch } from '@/hooks/hooks';
+import useProjects from '@/hooks/useProjects';
 
 type StageContentProps = {
   stage: IStage;
@@ -15,8 +18,14 @@ type StageContentProps = {
 }
 
 const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
-
+  const dispatch = useAppDispatch();
+  const {currentProject} = useProjects();
   const tasksIds = useMemo(() => tasks.map(t => ({id: t.taskId})), [tasks]);
+
+  const resetFilters = () => {
+    dispatch(setFilters([]));
+    setTasks(stage.tasks);
+  }
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
@@ -35,9 +44,8 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
     const oldIndex = tasks.findIndex(t => t.taskId === active.id);
     const newIndex = tasks.findIndex(t => t.taskId === over.id);
 
-    if (oldIndex === newIndex) return;
-
     const newTasks = arrayMove(tasks, oldIndex, newIndex);
+    updateProject(newTasks);
 
     setTasks(newTasks);
   }
@@ -77,12 +85,13 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
             }
           } else return t;
         }) as ITask[];
-
+        // console.log(arrayMove(tasks, activeIndex, overIndex))
         return arrayMove(tasks, activeIndex, overIndex);
       }
 
-      setTasks(updateTasks(tasks));
-      return
+      const updatedTasks = updateTasks(tasks);
+
+      setTasks(updatedTasks);
     }
 
     const isOverAStage = active.data.current?.type === "stage";
@@ -99,9 +108,28 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
         return arrayMove(tasks, activeIndex, activeIndex);
       }
 
+      updateProject(updateTasks(tasks));
       setTasks(updateTasks(tasks));
     }
 
+  }
+
+  const updateProject = (tasks: ITask[]) => {
+    const updatedStages = currentProject?.stages.map(s => {
+      if (s.stageId === stage?.stageId) {
+        return {
+          ...s,
+          tasks
+        }
+      } else return s;
+    }) as IStage[];
+
+    const updatedProject: IProject = {
+      ...currentProject,
+      stages: updatedStages as IStage[]
+    } as IProject;
+
+    dispatch(setCurrentProject(updatedProject));
   }
 
   return (
@@ -129,16 +157,19 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
                       setTasks={setTasks}
                     />
                   )}
-                  <DragOverlay>
-                    {activeTask && (
-                      <Task
-                        animate={false}
-                        task={activeTask}
-                        setTasks={setTasks}
-                        idx={tasks.findIndex(t => t.taskId === activeTask.taskId)}
-                      />
-                    )}
-                  </DragOverlay>
+                  {createPortal(
+                    <DragOverlay>
+                      {activeTask && (
+                        <Task
+                          animate={false}
+                          task={activeTask}
+                          setTasks={setTasks}
+                          idx={tasks.findIndex(t => t.taskId === activeTask.taskId)}
+                        />
+                      )}
+                    </DragOverlay>,
+                    document.body
+                  )}
                 </SortableContext>
               </DndContext>
             </div>
@@ -149,7 +180,7 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
                 <p className='p-2 w-full text-center'>There are no tasks matching your filters, reset filters and try again.</p>
 
                 <Button
-                  action={() => setTasks(stage.tasks)}
+                  action={resetFilters}
                   type='button'
                   additionalStyles='self-center justify-start'
                 >

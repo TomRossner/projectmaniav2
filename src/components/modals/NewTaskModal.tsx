@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, TAGS, MAX_EXTERNAL_LINKS, PRIORITIES } from '@/utils/constants';
 import { IProject, IStage, ITask, setCurrentProject } from '@/store/projects/projects.slice';
-import { capitalizeFirstLetter, convertToISODate, getInvalidLinks, validateUrls } from '@/utils/utils';
+import { capitalizeFirstLetter, convertToISODate, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
 import { IBaseTask } from '@/utils/interfaces';
 import { createNewTask } from '@/services/projects.api';
@@ -43,7 +43,7 @@ const NewTaskModal = () => {
             return;
         }
 
-        const links: ExternalLink[] = inputValues.externalLinks as ExternalLink[];
+        const links: ExternalLink[] = renameLinks(getUniqueLinks(inputValues.externalLinks as ExternalLink[]));
 
         const linksValid: boolean = validateUrls(links);
 
@@ -101,11 +101,11 @@ const NewTaskModal = () => {
         
         */
 
-        handleClose();
+        resetInputs();
+        dispatch(closeNewTaskModal());
     }
 
-    const handleClose = (): void => {
-        dispatch(closeNewTaskModal());
+    const resetInputs = (): void => {
         setSelectedPriority(DEFAULT_PRIORITY);
         setInputValues(DEFAULT_TASK_VALUES);
         setSelectedTags([]);
@@ -262,7 +262,7 @@ const NewTaskModal = () => {
     <Modal
         title='Create a task'
         onSubmit={() => handleCreate(inputValues)}
-        onClose={handleClose}
+        onClose={() => dispatch(closeNewTaskModal())}
         optionalNote={`This task will be added to ${currentProject?.title} in ${currentStage?.title}`}
         submitBtnText='Create'
         isOpen={newTaskModalOpen}
@@ -424,7 +424,8 @@ const NewTaskModal = () => {
                                 />
                             </div>
                         )
-                    )}
+                    )
+                }
 
                 <button
                     type='button'
@@ -513,7 +514,8 @@ const NewTaskModal = () => {
                                 type='button'
                                 onClick={handleRemoveThumbnail}
                                 className={`
-                                    text-xl cursor-pointer
+                                    text-xl
+                                    cursor-pointer
                                     text-blue-400
                                     sm:hover:text-blue-500
                                     active:text-blue-500
