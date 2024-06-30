@@ -59,7 +59,7 @@ const MobileMenu = () => {
                 ? `${user.firstName} ${user.lastName}`
                 : "Profile",
             icon: <CgProfile />,
-            imageSrc: user?.thumbnailSrc
+            imageSrc: user?.imgSrc
         },
         {
             text: "Sign in",

@@ -36,7 +36,7 @@ type MenuItem = {
     text: string;
     action?: () => void;
     icon?: ReactNode;
-    imageSrc?: Pick<IUser, "thumbnailSrc"> & string;
+    imageSrc?: Pick<IUser, "imgSrc"> & string;
 }
 
 type TOption = {
@@ -72,18 +72,22 @@ type Filter = {
 
 type SelectedStage = Pick<IStage, "stageId" | "title">;
 
-type Invitation = {
-    isPending: boolean;
-    projectData: Pick<IProject, "projectId" | "title">;
+type Sender = Pick<IUser, "userId" | "firstName" | "lastName">;
+
+type Subject = Pick<IUser, "userId" | "firstName" | "lastName">;
+
+type NotificationType = 'invitation' | 'message' | 'friendRequest' | 'joinedProject';
+
+type NotificationData = Pick<IProject, "projectId" | "title"> | Pick<Message, "id" | "from" | "createdAt" | "isRead">;
+
+type Message = {
+    from: Pick<IUser, "userId" | "firstName" | "lastName">;
+    to: Pick<IUser, "userId">;
+    message: string;
     createdAt: Date;
+    isRead: boolean;
     id: string;
-    sender: MessageSender;
-    subject: MessageSubject;
 }
-
-type MessageSender = Pick<IUser, "userId" | "firstName" | "lastName">;
-
-type MessageSubject = Pick<IUser, "userId" | "firstName" | "lastName">;
 
 export type {
     ScrollDirection,
@@ -102,10 +106,10 @@ export type {
     Status,
     TOption,
     SelectedStage,
-    MessageSender,
-    MessageSubject,
-    Invitation,
-    
+    Sender,
+    Subject,  
+    NotificationData,
+    NotificationType, 
 }
 
 export {

@@ -1,69 +1,54 @@
 'use client'
 
-import Notification, { TNotification } from '@/components/Notification';
+import Notification from '@/components/Notification';
 import Container from '@/components/common/Container';
 import Header from '@/components/common/Header';
 import useAuth from '@/hooks/useAuth';
 import React from 'react';
 import isAuth from '../ProtectedRoute';
-import {v4 as uuid} from "uuid";
+import useNotifications from '@/hooks/useNotifications';
+import { getProjectById, updateProject } from '@/services/projects.api';
+import { IProject } from '@/store/projects/projects.slice';
+import { useRouter } from 'next/navigation';
+import { LINKS } from '@/utils/links';
+import { INotification } from '@/utils/interfaces';
 
 const Notifications = () => {
     const {user} = useAuth();
+    const {notifications} = useNotifications();
 
-    const handleJoinProject = (projectId: string) => {
+    const router = useRouter();
 
+    const handleJoinProject = async (projectData: Pick<IProject, "projectId" | "title">) => {
+        const {data: project} = await getProjectById(projectData.projectId);
+
+        if (project) {
+            const updatedProject = {
+                ...project,
+                team: [...project.team, {
+                    email: user?.email,
+                    firstName: user?.firstName,
+                    lastName: user?.lastName,
+                    imgSrc: user?.imgSrc,
+                    userId: user?.userId,
+                }],
+            } as IProject;
+            
+            await updateProject(updatedProject);
+
+            router.push(LINKS['HOME']);
+        }
+    }
+
+    const handleDenyJoinProject = () => {
+        // Set isPending to false
+        // Remove invitation
     }
 
     const handleAcceptFriendRequest = (senderId: string) => {
 
     }
 
-    const notifications = [
-        {
-            id: uuid(),
-            type: "invitation",
-            from: {
-                firstName: "Tom",
-                lastName: "Rossner",
-                userId: "abc-123"
-            },
-            to: {
-                userId: user?.userId as string,
-            },
-            isSeen: false,
-            data: {
-                projectId: 'c0b718c9-7937-40da-a226-24d227887367',
-                title: "Bill's Project"
-            }
-        },
-        {
-            id: uuid(),
-            type: "friend request",
-            from: {
-                firstName: "Morgan",
-                lastName: "Freeman",
-                userId: "def-456"
-            },
-            to: {
-                userId: user?.userId as string,
-            },
-            isSeen: false
-        },
-        {
-            id: uuid(),
-            type: "new message",
-            from: {
-                firstName: "Tom",
-                lastName: "Rossner",
-                userId: "abc-123"
-            },
-            to: {
-                userId: user?.userId as string,
-            },
-            isSeen: false
-        },
-]
   return (
     <Container id='notificationsPage'>
         <Header text='Notifications' />
@@ -72,8 +57,10 @@ const Notifications = () => {
             {notifications.map(n =>
                 <Notification
                     key={n.id}
-                    notification={n as TNotification}
-                    withDenyBtn={n.type !== "new message"}
+                    notification={n as INotification}
+                    withDenyBtn={n.type !== "message"}
+                    onDeny={handleDenyJoinProject}
+                    action={() => handleJoinProject(n.data as Pick<IProject, "projectId" | "title">)}
                 />
             )}
         </div>

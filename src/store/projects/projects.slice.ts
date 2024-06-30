@@ -21,7 +21,7 @@ export interface ITeamMember {
     userId: string;
     firstName: string;
     lastName: string;
-    thumbnailSrc: string;
+    imgSrc: string;
 }
 
 export interface IStage {

@@ -5,9 +5,8 @@ import { useForm } from "react-hook-form";
 import FormHeader from './FormHeader';
 import { twMerge } from 'tailwind-merge';
 import { z } from 'zod';
-import { NAME_MIN_LENGTH, PASSWORD_MIN_LENGTH } from '@/utils/forms';
+import { PASSWORD_MIN_LENGTH } from '@/utils/forms';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { signUp } from '@/services/auth.api';
 import GoogleLogo from '../utils/GoogleLogo';
 import { fetchUserAsync, setAuthError, setUser } from '@/store/auth/auth.slice';
 import { useAppDispatch } from '@/hooks/hooks';
@@ -15,18 +14,12 @@ import { getUserFromJwt } from '@/services/localStorage';
 import LoadingIcon from '../utils/LoadingIcon';
 import Button from '../common/Button';
 
-const signUpSchema = z.object({
-    firstName: z.string().min(NAME_MIN_LENGTH, `Names must be at least ${NAME_MIN_LENGTH} characters`),
-    lastName: z.string().min(NAME_MIN_LENGTH, `Names must be at least ${NAME_MIN_LENGTH} characters`),
+const logInSchema = z.object({
     email: z.string().email(),
     password: z.string().min(PASSWORD_MIN_LENGTH, `Password must contain at least ${PASSWORD_MIN_LENGTH} characters`),
-    confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-    message: "Passwords must match",
-    path: ["confirmPassword"]
 });
 
-type TSignUpSchema = z.infer<typeof signUpSchema>;
+type TLogInSchema = z.infer<typeof logInSchema>;
 
 const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) => {
     const {
@@ -34,15 +27,27 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
         reset,
         handleSubmit,
         formState: { errors, isSubmitting }
-    } = useForm<TSignUpSchema>({
-        resolver: zodResolver(signUpSchema)
+    } = useForm<TLogInSchema>({
+        resolver: zodResolver(logInSchema)
     });
 
     const dispatch = useAppDispatch();
 
-    const onSubmit = async (data: TSignUpSchema) => {
+    const onSubmit = async (data: TLogInSchema) => {
         try {
-            await signUp(data);
+            const {email, password} = data;
+            await dispatch(fetchUserAsync({
+                email,
+                password
+            }))
+                .unwrap()
+                .catch(
+                    ({message}: {message: string}) =>
+                        dispatch(setAuthError(message && 'Failed logging in'))
+                );
+    
+            dispatch(setUser(getUserFromJwt()));
+    
             reset();
         } catch (error) {
             console.error(error);
@@ -88,9 +93,9 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
             bg-slate-100
         `)}
     >
-        <FormHeader text='Login'/>
+        <FormHeader text='Login' />
 
-        <hr className='w-3/4 mx-auto'/>
+        <hr className='w-3/4 mx-auto' />
 
         <div className='grid grid-cols-2 w-full gap-2'>
             <input

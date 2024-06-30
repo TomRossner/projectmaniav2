@@ -1,10 +1,11 @@
 import { IProject, IStage } from "@/store/projects/projects.slice";
-import { ScrollDirection, Priority, TOption, Filter, Status, Invitation } from "./types";
+import { ScrollDirection, Priority, TOption, Filter, Status, NotificationData } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
 import { LINKS } from "./links";
 import { IUser } from "@/store/auth/auth.slice";
 import { v4 as uuid } from "uuid";
+import { NewInvitationData, NewNotificationData } from "./interfaces";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -243,11 +244,8 @@ const generateId = () => {
   return uuid();
 }
 
-const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProject, "projectId" | "title">): Invitation => {
+const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProject, "projectId" | "title">): NewInvitationData => {
   return {
-      createdAt: new Date(Date.now()),
-      id: generateId(),
-      isPending: true,
       projectData: {
           title: projectData.title,
           projectId: projectData.projectId
@@ -263,6 +261,26 @@ const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProj
           lastName: subject.lastName
       },
   }
+}
+
+const createNotification = (newNotificationData: NewNotificationData): NewNotificationData => {
+  const {
+    data,
+    sender,
+    subject,
+    type
+  } = newNotificationData;
+
+  return {
+    data,
+    sender,
+    subject,
+    type
+  }
+}
+
+const isProject = (data: NotificationData): data is Pick<IProject, "projectId" | "title"> => {
+  return (data as Pick<IProject, "projectId" | "title">).title !== undefined;
 }
 
 export {
@@ -288,4 +306,6 @@ export {
     getStatus,
     generateId,
     createInvitation,
+    createNotification,
+    isProject
 }

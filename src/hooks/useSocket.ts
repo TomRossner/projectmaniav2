@@ -1,14 +1,15 @@
-import { useEffect } from "react";
+import { INotification, NewNotificationData } from "@/utils/interfaces";
 import { Socket, io } from "socket.io-client";
 
 type ServerToClientEvents = {
     noArg: () => void;
     basicEmit: (...args: any[]) => void;
+    notification: (notification: INotification) => void;
 }
 
 type ClientToServerEvents = {
     online: (userId: {userId?: string}) => void;
-    sendInvitation: (userId: {userId: string}) => void;
+    notification: (notificationData: NewNotificationData) => void;
 }
 
 const useSocket = () => {

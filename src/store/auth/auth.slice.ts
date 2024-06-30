@@ -9,11 +9,12 @@ export interface IUser {
     lastName: string;
     email: string;
     userId?: string;
-    thumbnailSrc?: string;
+    imgSrc?: string;
     createdAt?: Date;
     isOnline?: boolean;
     contacts?: string[];
     mostRecentProject?: Partial<IProject> | null;
+    notifications?: string[];
 }
 
 export interface IAuthState {

@@ -4,7 +4,7 @@ import Modal from './Modal';
 import { useAppDispatch } from '@/hooks/hooks';
 import { closeInvitationModal } from '@/store/app/app.slice';
 import Input from '../common/Input';
-import { IUser, User } from '@/store/auth/auth.slice';
+import { IUser } from '@/store/auth/auth.slice';
 import Image from 'next/image';
 import ButtonWithIcon from '../common/ButtonWithIcon';
 import { MdOutlinePersonAddAlt } from "react-icons/md";
@@ -14,16 +14,17 @@ import isAuth from '@/app/ProtectedRoute';
 import { GoSearch } from 'react-icons/go';
 import { RxCross2 } from 'react-icons/rx';
 import useSocket from '@/hooks/useSocket';
-import { Invitation, MessageSender, MessageSubject } from '@/utils/types';
-import { v4 as uuid } from 'uuid';
-import { createInvitation, generateId } from '@/utils/utils';
+import { createInvitation, createNotification } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
 import { IProject } from '@/store/projects/projects.slice';
+import { Sender, Subject } from '@/utils/types';
+import { NewNotificationData } from '@/utils/interfaces';
 
 const InvitationModal = () => {
     const {user} = useAuth();
     const {invitationModalOpen} = useModals();
     const {currentProject} = useProjects();
+    const {socket} = useSocket();
 
     const [searchResults, setSearchResults] = useState<IUser[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -35,7 +36,7 @@ const InvitationModal = () => {
         .map(res => ({
             userId: res.userId,
             userName: `${res.firstName} ${res.lastName}`,
-            imgSrc: res.thumbnailSrc
+            imgSrc: res.imgSrc
         })
     ), [searchResults, user]);
 
@@ -63,9 +64,7 @@ const InvitationModal = () => {
             + userName.split(" ")[1].charAt(0).toUpperCase();
     }
 
-    const {socket} = useSocket();
-
-    const handleSendInvitation = (subject: Pick<IUser, "userId" | "firstName" | "lastName">) => {
+    const handleSendInvitation = (subject: Subject) => {
         // socket.emit('sendInvitation', {userId});
         const subjectAsUser = searchResults.find(u => u.userId === subject.userId) as IUser;
 
@@ -77,9 +76,25 @@ const InvitationModal = () => {
             projectId: currentProject?.projectId,
         } as Pick<IProject, "projectId" | "title">;
 
-        const invitation = createInvitation(user as IUser, subjectAsUser, projectData);
+        const notificationData: NewNotificationData = {
+            data: projectData,
+            type: "invitation",
+            subject: {
+                userId: subject?.userId,
+                firstName: subject?.firstName,
+                lastName: subject?.lastName
+            },
+            sender: {
+                userId: user?.userId,
+                firstName: user?.firstName,
+                lastName: user?.lastName
+            } as Sender,
+        }
+
+        const invitation = createNotification(notificationData);
 
         console.log(invitation)
+        socket.emit("notification", invitation);
         // Send invitation to backend
         // Emit event from backend
         // Receive and process event in frontend
@@ -150,6 +165,9 @@ const InvitationModal = () => {
                                 <Image
                                     src={res.imgSrc}
                                     alt={res.userName}
+                                    width={28}
+                                    height={28}
+                                    className='rounded-full w-7 h-7'
                                 />
                             ) : (
                                 <div className='w-7 h-7 rounded-full flex items-center justify-center bg-slate-400 relative text-white'>

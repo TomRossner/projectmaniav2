@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
 import useProjects from '@/hooks/useProjects';
 import { getProjectById } from '@/services/projects.api';
-import { IProject, IStage, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
+import { IProject, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -12,15 +12,22 @@ import Container from './common/Container';
 import Button from './common/Button';
 import Header from './common/Header';
 import Image from 'next/image';
-import { IUser } from '@/store/auth/auth.slice';
+import { IUser, setUser } from '@/store/auth/auth.slice';
 import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
 import { BsCircleFill } from 'react-icons/bs';
-import { getAvatarPosition, getStagesCount, getTotalTasks, setProjectLink, userInitials } from '@/utils/utils';
+import { getAvatarPosition, getStagesCount, getTotalTasks, isProject, setProjectLink, userInitials } from '@/utils/utils';
+import useSocket from '@/hooks/useSocket';
+import { setNotifications } from '@/store/notifications/notifications.slice';
+import useNotifications from '@/hooks/useNotifications';
+import { getUserNotifications } from '@/services/notifications.api';
+import { INotification, NewNotificationData } from '@/utils/interfaces';
 
 const Home = () => {
   const {isAuthenticated, user} = useAuth();
   const {projects} = useProjects();
   const [mostRecentProject, setMostRecentProject] = useState<IProject | null>(null);
+  const {socket} = useSocket();
+  const {notifications} = useNotifications();
 
   const dispatch = useAppDispatch();
 
@@ -43,8 +50,45 @@ const Home = () => {
     if (user) {
       getMostRecentProject();
       getUserProjects(user.userId as string);
+      getUserNotifications(user.notifications as string[])
+          .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)));
     };
   }, [user])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      socket.on("connect", () => {
+        console.log("Socket connected");
+
+        socket.emit("online", {
+          userId: user?.userId
+        });
+
+        socket.on("notification", (newNotification: INotification) => {
+          console.log({newNotification})
+
+          // const updatedNotificationsIds: string[] = user?.notifications?.filter(nid => notifications.some(n => n.id === nid)) || [];
+
+          // for (const id of user?.notifications as string[]) {
+          //   if (!updatedNotificationsIds.some(nid => nid === id)) {
+          //     updatedNotificationsIds.push(id);
+          //   }
+          // }
+          // console.log({notifications})
+          // console.log({userNotifications: user?.notifications})
+          // console.log({updatedNotificationsIds})
+
+          dispatch(setNotifications([...notifications, newNotification]));
+          dispatch(setUser({
+            ...user,
+            notifications: [
+              ...user?.notifications as string[],
+              newNotification.id
+            ]} as IUser));
+        });
+      });
+    }
+  }, [isAuthenticated, user?.userId]);
 
   return (
     <Container id='homePage' className='text-xl flex gap-3 flex-col items-start w-full'>
@@ -87,9 +131,9 @@ const Home = () => {
                       {mostRecentProject.team.map(
                         (u: IUser, idx: number) => (
                           <span key={u.userId} className='relative'>
-                            {u.thumbnailSrc ? (
+                            {u.imgSrc ? (
                                 <Image
-                                  src={u.thumbnailSrc}
+                                  src={u.imgSrc}
                                   alt={u.firstName}
                                   className={`rounded-full w-8 h-8 bg-white ${getAvatarPosition(idx)}`}
                                 />

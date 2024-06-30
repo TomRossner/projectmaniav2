@@ -7,7 +7,7 @@ import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from "@/st
 import { LINKS } from "@/utils/links";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import React, { FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import Input from "../common/Input";
 import useModals from "@/hooks/useModals";
 import { capitalizeFirstLetter, convertToISODate, getDuplicatedLinks, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from "@/utils/utils";
@@ -45,19 +45,24 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
 
     const [selectedStage, setSelectedStage] = useState<SelectedStage | null>(null);
 
-    // Must change ANY type to correct type
-    const handleUploadChange = (e: any) => {
-        if (!e.target.files.length) return;
-        handleUpload(e.target.files[0]);
+    const handleUploadChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const {files} = e.target;
+
+        if (!files || !files.length) return;
+
+        handleUpload(files[0]);
     }
 
-    const handleUpload = (file: any) => {
+    const handleUpload = (file: Blob) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
 
         reader.onload = async () => {
           const base64EncodedFile = reader.result as string;
-          setInputValues({...inputValues, thumbnailSrc: base64EncodedFile} as ITask);
+          setInputValues({
+            ...inputValues,
+            thumbnailSrc: base64EncodedFile
+          } as ITask);
         }
     }
 
@@ -300,10 +305,10 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }, [selectedStage])
 
     useEffect(() => {
-        if (task) {
+        if (editTaskModalOpen && task) {
             setSelectedStage(task.currentStage as SelectedStage);
         }
-    }, [task])
+    }, [task, editTaskModalOpen])
 
     // Add links to inputValues
     useEffect(() => {
