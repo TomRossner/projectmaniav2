@@ -1,11 +1,8 @@
 import useModals from '@/hooks/useModals';
 import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
 import Modal from './Modal';
-import { useAppDispatch } from '@/hooks/hooks';
-import { closeInvitationModal } from '@/store/app/app.slice';
 import Input from '../common/Input';
 import { IUser } from '@/store/auth/auth.slice';
-import Image from 'next/image';
 import ButtonWithIcon from '../common/ButtonWithIcon';
 import { MdOutlinePersonAddAlt } from "react-icons/md";
 import { getUsersByQuery } from '@/services/user.api';
@@ -14,17 +11,19 @@ import isAuth from '@/app/ProtectedRoute';
 import { GoSearch } from 'react-icons/go';
 import { RxCross2 } from 'react-icons/rx';
 import useSocket from '@/hooks/useSocket';
-import { createInvitation, createNotification } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
 import { IProject } from '@/store/projects/projects.slice';
-import { Sender, Subject } from '@/utils/types';
+import { Sender, Recipient } from '@/utils/types';
 import { NewNotificationData } from '@/utils/interfaces';
+import Avatar from '../common/Avatar';
+import useNotifications from '@/hooks/useNotifications';
 
 const InvitationModal = () => {
-    const {user} = useAuth();
-    const {invitationModalOpen} = useModals();
+    const {user, getUserName, getUserInitials} = useAuth();
+    const {isInvitationModalOpen, closeInvitationModal} = useModals();
     const {currentProject} = useProjects();
     const {socket} = useSocket();
+    const {createNotification} = useNotifications();
 
     const [searchResults, setSearchResults] = useState<IUser[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -35,18 +34,16 @@ const InvitationModal = () => {
         .filter(res => res.userId !== user?.userId)
         .map(res => ({
             userId: res.userId,
-            userName: `${res.firstName} ${res.lastName}`,
+            userName: getUserName(res),
             imgSrc: res.imgSrc
         })
     ), [searchResults, user]);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
-    const dispatch = useAppDispatch();
-
     const handleClose = () => {
         setSearchQuery("");
-        dispatch(closeInvitationModal());
+        closeInvitationModal();
     }
 
     const handleChange = (ev: ChangeEvent<HTMLInputElement>) => {
@@ -59,16 +56,11 @@ const InvitationModal = () => {
         return await getUsersByQuery(query);
     }
 
-    const getUserInitials = (userName: string): string => {
-        return userName.split(" ")[0].charAt(0).toUpperCase()
-            + userName.split(" ")[1].charAt(0).toUpperCase();
-    }
-
-    const handleSendInvitation = (subject: Subject) => {
+    const handleSendInvitation = (recipient: Recipient) => {
         // socket.emit('sendInvitation', {userId});
-        const subjectAsUser = searchResults.find(u => u.userId === subject.userId) as IUser;
+        const recipientAsUser = searchResults.find(u => u.userId === recipient.userId) as IUser;
 
-        if (!subjectAsUser) return;
+        if (!recipientAsUser) return;
         // Set error
 
         const projectData = {
@@ -79,10 +71,10 @@ const InvitationModal = () => {
         const notificationData: NewNotificationData = {
             data: projectData,
             type: "invitation",
-            subject: {
-                userId: subject?.userId,
-                firstName: subject?.firstName,
-                lastName: subject?.lastName
+            recipient: {
+                userId: recipient?.userId,
+                firstName: recipient?.firstName,
+                lastName: recipient?.lastName
             },
             sender: {
                 userId: user?.userId,
@@ -93,20 +85,14 @@ const InvitationModal = () => {
 
         const invitation = createNotification(notificationData);
 
-        console.log(invitation)
-        socket.emit("notification", invitation);
-        // Send invitation to backend
-        // Emit event from backend
-        // Receive and process event in frontend
-
-        // Notify the sender that the invitation has been sent
+        socket!.emit("notification", invitation);
     }
 
     useEffect(() => {
-        if (invitationModalOpen && inputRef.current) {
+        if (isInvitationModalOpen && inputRef.current) {
             inputRef.current.focus();
         }
-    }, [invitationModalOpen])
+    }, [isInvitationModalOpen])
 
 
     useEffect(() => {
@@ -119,7 +105,7 @@ const InvitationModal = () => {
 
   return (
     <Modal
-        isOpen={invitationModalOpen}
+        isOpen={isInvitationModalOpen}
         title='Project invitation'
         onClose={handleClose}
         withCrossIcon
@@ -138,7 +124,7 @@ const InvitationModal = () => {
             value={searchQuery}
             ref={inputRef}
             searchIcon={<GoSearch />}
-            iconInsideInput
+            withIconInsideInput
             inputIcon={
                 <ButtonWithIcon
                     withTooltip={false}
@@ -161,19 +147,12 @@ const InvitationModal = () => {
                 memoizedResults.map(res => (
                     <div key={res.userId} className='flex gap-2 w-full items-center border p-2 bg-slate-50'>
                         <div className='flex items-center gap-2 grow'>
-                            {res.imgSrc ? (
-                                <Image
-                                    src={res.imgSrc}
-                                    alt={res.userName}
-                                    width={28}
-                                    height={28}
-                                    className='rounded-full w-7 h-7'
-                                />
-                            ) : (
-                                <div className='w-7 h-7 rounded-full flex items-center justify-center bg-slate-400 relative text-white'>
-                                    <span className='pt-1 text-lg'>{getUserInitials(res.userName)}</span>
-                                </div>
-                            )}
+                            <Avatar
+                                src={res.imgSrc}
+                                text={getUserInitials(res.userName)}
+                                additionalStyles='w-7 h-7'
+                            />
+
                             <p className='text-lg'>
                                 {res.userName}
                             </p>

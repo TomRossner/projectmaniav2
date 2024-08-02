@@ -2,27 +2,31 @@
 
 import React from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
-import { closeDeleteTaskPrompt, setError } from '@/store/app/app.slice';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from '@/store/projects/projects.slice';
-import usePrompts from '@/hooks/usePrompts';
 import { deleteTask } from '@/services/projects.api';
 import Modal from './Modal';
+import useModals from '@/hooks/useModals';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { ActivityType } from '@/utils/types';
+import { IUser } from '@/store/auth/auth.slice';
+import useActivityLog from '@/hooks/useActivityLog';
+import useAuth from '@/hooks/useAuth';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
 
 const DeleteTaskPrompt = () => {
     const {currentProject, currentTask, currentStage} = useProjects();
-    const {deleteTaskPromptOpen} = usePrompts();
+    const {isDeleteTaskModalOpen, closeDeleteTaskModal} = useModals();
+    const {createNewActivity, activities} = useActivityLog();
+    const {user} = useAuth();
 
     const dispatch = useAppDispatch();
 
-    const closePrompt = (): void => {
-        dispatch(closeDeleteTaskPrompt());
-    }
 
     // Handle stage deletion
     const handleDeleteTask = async (): Promise<void> => {
         if (!currentTask) {
-            dispatch(setError('Failed deleting task'));
+            dispatch(setErrorMsg('Failed deleting task'));
             return;
         }
         
@@ -41,24 +45,34 @@ const DeleteTaskPrompt = () => {
 
         const updatedCurrentProject: IProject = {
             ...currentProject,
-            stages: updatedStages
+            stages: updatedStages,
         } as IProject;
 
         await deleteTask(currentTask.taskId);
 
+        const activityLog = await createNewActivity(
+            ActivityType.DeleteTask,
+            user as IUser,
+            currentTask as ITask,
+            currentProject?.projectId as string
+        );
+
         dispatch(setCurrentProject(updatedCurrentProject));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
         dispatch(setCurrentTask(null));
 
-
-        closePrompt();
+        closeDeleteTaskModal();
     }
 
   return (
     <Modal
         title={`Delete ${currentTask?.title}`}
         onSubmit={handleDeleteTask}
-        onClose={closePrompt}
-        isOpen={deleteTaskPromptOpen}
+        onClose={closeDeleteTaskModal}
+        isOpen={isDeleteTaskModalOpen}
         noteBelowContent
         optionalNote={`You are deleting ${currentTask?.title} and all of its contents.`}
         submitBtnStyles='rounded-bl-lg bg-red-400 hover:bg-red-500 text-white'

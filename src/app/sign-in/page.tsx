@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/common/Header';
-import SignUpForm from '@/components/forms/SignUpForm';
-import LoginForm from '@/components/forms/LoginForm';
 import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
 import { setIsAuthenticated } from '@/store/auth/auth.slice';
 import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import Container from '@/components/common/Container';
+import Login from '@/components/forms/Login';
+import SignUp from '@/components/forms/SignUp';
 
 const SignIn = () => {
   const [isNotRegistered, setIsNotRegistered] = useState<boolean>(false);
@@ -22,7 +22,6 @@ const SignIn = () => {
   const router = useRouter();
 
   useEffect(() => {
-    if (user) dispatch(setIsAuthenticated(true));
     if (!user && isAuthenticated) dispatch(setIsAuthenticated(false));
 
     if (isAuthenticated) router.push(LINKS['HOME']);
@@ -33,17 +32,15 @@ const SignIn = () => {
       <Header text='Sign in'/>
       
       <div className='flex items-center justify-center w-full overflow-x-hidden'>
-        <SignUpForm
-          isNotRegistered={isNotRegistered}
-          setIsNotRegistered={setIsNotRegistered}
-          toggleIsNotRegistered={toggleIsNotRegistered}
-        />
-        
-        <LoginForm
-          isNotRegistered={isNotRegistered}
-          setIsNotRegistered={setIsNotRegistered}
-          toggleIsNotRegistered={toggleIsNotRegistered}
-        />
+        {isNotRegistered
+          ? <SignUp
+              toggleIsNotRegistered={toggleIsNotRegistered}
+            />
+          :
+            <Login
+              toggleIsNotRegistered={toggleIsNotRegistered}
+            />
+        }
       </div>
     </Container>
   )

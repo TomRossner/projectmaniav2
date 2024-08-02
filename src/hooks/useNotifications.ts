@@ -1,15 +1,25 @@
-import { useMemo } from 'react';
-import { useAppSelector } from './hooks';
+import { useEffect, useMemo } from 'react';
+import { useAppDispatch, useAppSelector } from './hooks';
 import { selectINotifications } from '@/store/notifications/notifications.selectors';
-import { INotification } from '@/utils/interfaces';
-import { isProject } from '@/utils/utils';
-
+import { INotification, NewNotificationData } from '@/utils/interfaces';
+import { setNotifications } from '@/store/notifications/notifications.slice';
+import { removeNotification } from '@/services/notifications.api';
+import useAuth from './useAuth';
+import { updateUserData } from '@/services/user.api';
+import { IUser } from '@/store/auth/auth.slice';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { NotificationData } from '@/utils/types';
+import { IProject } from '@/store/projects/projects.slice';
 
 const useNotifications = () => {
     const notifications = useAppSelector(selectINotifications);
+    const {user} = useAuth();
+    
+    const isProject = (data: NotificationData): data is Pick<IProject, "projectId" | "title"> => {
+      return (data as Pick<IProject, "projectId" | "title">).title !== undefined;
+    }
 
     const memoizedNotifications = useMemo(() => {
-      console.log(notifications)
       return notifications.reduce((acc: INotification[], curr: INotification) => {
         const existingNotificationIndex = acc.findIndex(notification =>
           (isProject(notification.data) && isProject(curr.data)) &&
@@ -32,10 +42,62 @@ const useNotifications = () => {
       }, []);
     } , [notifications]);
 
-    console.log(memoizedNotifications)
+    const dispatch = useAppDispatch();
+
+    const handleRemoveNotification = async (notificationId: string) => {
+      if (!user) {
+        dispatch(setErrorMsg('Failed removing notification'));
+        return;
+      }
+
+      const updatedUserData = {
+        ...user,
+        notifications: [
+          ...user.notifications.filter(n => n !== notificationId)
+        ] as string[],
+      } as IUser;
+
+      try {
+        await removeNotification(notificationId);
+
+        dispatch(setNotifications([
+          ...notifications.filter(n => n.id !== notificationId)
+        ]));
+
+        await updateUserData(updatedUserData);
+        
+      } catch (error) {
+        dispatch(setErrorMsg('Failed removing notification'));
+        return;
+      }
+    }
+
+    const createNotification = (newNotificationData: NewNotificationData): NewNotificationData => {
+      const {
+        data,
+        sender,
+        recipient,
+        type
+      } = newNotificationData;
+    
+      return {
+        data,
+        sender,
+        recipient,
+        type
+      }
+    }
+    
+    const getUpdatedNotificationsIds = (notificationsIds: string[], notifications: INotification[]): string[] => {
+      return notificationsIds.filter(n => notifications.some(not => not.id === n));
+    }
 
   return {
-    notifications: memoizedNotifications
+    notifications: memoizedNotifications,
+    handleRemoveNotification,
+    createNotification,
+    getUpdatedNotificationsIds,
+    isProject,
   }
 }
 

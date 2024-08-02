@@ -1,5 +1,6 @@
-import { IProject, IStage } from "@/store/projects/projects.slice";
-import { ExternalLink, NotificationData, NotificationType, Priority, SelectedStage, Sender, Subject, TagName } from "./types";
+import { IProject, IStage, ITask, TeamMember } from "@/store/projects/projects.slice";
+import { ExternalLink, NotificationData, NotificationType, Priority, SelectedStage, Sender, SubTask, Recipient, TagName, NewSubTask, ActivityType } from "./types";
+import { IUser } from "@/store/auth/auth.slice";
 
 interface IUserSignUpData extends ILoginCredentials {
     firstName: string;
@@ -23,7 +24,7 @@ interface IPasswordRegExp {
     SPECIAL_CHAR: RegExp;
 }
 
-interface IBaseTask {
+interface NewTaskData {
     title: string;
     dueDate: string;
     priority: Priority;
@@ -31,15 +32,18 @@ interface IBaseTask {
     currentStage?: SelectedStage;
     description?: string;
     thumbnailSrc?: string;
-    externalLinks?: ExternalLink[];
+    externalLinks: ExternalLink[];
     tags: TagName[];
-    // attachedFiles: Media[];
+    assignees: string[];
+    subtasks: NewSubTask[];
+    createdBy: string;
+    dependencies: string[];
 }
 
 interface NewInvitationData {
     projectData: Pick<IProject, "projectId" | "title">;
     sender: Sender;
-    subject: Subject;
+    recipient: Recipient;
 }
 
 interface Invitation extends NewInvitationData {
@@ -57,17 +61,33 @@ interface INotification extends NewNotificationData {
 interface NewNotificationData {
     type: NotificationType;
     sender: Sender;
-    subject: Subject;
+    recipient: Recipient;
     data: NotificationData;
+}
+
+interface NewActivityData {
+    user: TeamMember;
+    type: ActivityType;
+    data: ITask | IStage | IProject | TeamMember;
+    projectId: string;
+}
+
+interface Activity extends NewActivityData {
+    createdAt: Date;
+    createdBy: string;
+    updatedAt: Date;
+    activityId: string;
 }
 
 export type {
     ILoginCredentials,
     IPasswordRegExp,
     IUserSignUpData,
-    IBaseTask,
+    NewTaskData,
     NewInvitationData,
     Invitation,
     NewNotificationData,
     INotification,
+    NewActivityData,
+    Activity,
 }

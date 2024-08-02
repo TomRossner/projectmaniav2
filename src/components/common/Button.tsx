@@ -9,6 +9,8 @@ type ButtonProps = {
     type?: 'submit' | 'reset' | 'button';
     additionalStyles?: string;
     disabled?: boolean;
+    withIcon?: boolean;
+    icon?: ReactNode;
 }
 
 const Button = ({

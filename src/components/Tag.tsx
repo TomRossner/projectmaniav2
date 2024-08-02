@@ -13,15 +13,15 @@ const Tag = ({tag, additionalStyles}: TagProps) => {
       {tag && (
         <div
           className={twMerge(`
-            min-w-[40px]
+            min-w-[50px]
             px-4
             rounded-bl-lg
             text-white
             border
             shadow-sm
             text-center
-            self-stretch
-            pt-1
+            self-center
+            pt-0.5
             select-none
             text-sm
             ${(tag.toLowerCase() === "bug") && "bg-yellow-400 border-yellow-600"}

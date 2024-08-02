@@ -1,20 +1,15 @@
 'use client'
 
-import { useAppDispatch } from '@/hooks/hooks';
-import { openNewTaskModal } from '@/store/app/app.slice';
+import useModals from '@/hooks/useModals';
 import React from 'react';
 import { BiPlus } from 'react-icons/bi';
 
 const BigPlus = () => {
-  const dispatch = useAppDispatch();
-
-  const handleClick = (): void => {
-    dispatch(openNewTaskModal());
-  }
+  const {openNewTaskModal} = useModals();
 
   return (
     <span
-      onClick={handleClick}
+      onClick={openNewTaskModal}
       className='
         flex
         items-center

@@ -16,11 +16,12 @@ type InputProps = {
     labelText?: string;
     isOptional?: boolean;
     inputIcon?: ReactNode;
-    iconInsideInput?: boolean;
+    withIconInsideInput?: boolean;
     isRequired?: boolean;
     onBlur?: () => void;
     hidden?: boolean;
     searchIcon?: ReactNode;
+    isChecked?: boolean;
 }
 
 const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTMLInputElement>) {
@@ -36,11 +37,12 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
     onChange,
     isOptional,
     inputIcon,
-    iconInsideInput = false,
+    withIconInsideInput = false,
     isRequired = false,
     onBlur,
     hidden = false,
     searchIcon,
+    isChecked = false
   } = props;
 
   return (
@@ -53,13 +55,14 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
           isRequired={isRequired}
         />
 
-        {iconInsideInput ? (
-          <div className='flex items-center relative grow bg-white border border-slate-300 rounded-bl-lg'>
+        {withIconInsideInput ? (
+          <div className='flex items-center relative grow w-full overflow-x-hidden bg-white border border-slate-300 rounded-bl-lg'>
             {searchIcon && (
               <span className='flex items-center justify-center px-1 inset-y-0 start-0 text-stone-400'>
                 {searchIcon}
               </span>
             )}
+
             <input
                 autoComplete='off'
                 onChange={onChange}
@@ -71,6 +74,7 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
                 ref={ref}
                 hidden={hidden}
                 placeholder={placeholder}
+                checked={isChecked}
                 className={twMerge(`
                   text-lg
                   text-stone-600
@@ -84,7 +88,7 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
               `)}
             />
 
-            {iconInsideInput && (
+            {withIconInsideInput && (
               <span className='flex items-center justify-center absolute inset-y-0 end-0 bg-white'>
                 {inputIcon}
               </span>
@@ -95,6 +99,7 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
           <input
             autoComplete='off'
             onChange={onChange}
+            onBlur={onBlur}
             type={type}
             id={id}
             ref={ref}
@@ -102,6 +107,7 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
             name={name}
             value={value}
             placeholder={placeholder}
+            checked={isChecked}
             className={twMerge(`
                 px-2
                 text-lg

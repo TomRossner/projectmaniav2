@@ -1,15 +1,16 @@
-import React, { ChangeEvent, FormEvent, Fragment, useEffect, useState } from 'react';
+import React, { ChangeEvent, FormEvent, Fragment, useEffect, useMemo, useState } from 'react';
 import Button from './common/Button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAppDispatch } from '@/hooks/hooks';
-import { STAGE_MENU } from '@/utils/constants';
+import { FILTERS_CATEGORIES, STAGE_MENU } from '@/utils/constants';
 import InputLabel from './common/InputLabel';
 import Line from './common/Line';
-import { getFilters, getStatus, setPriorityColor } from '@/utils/utils';
+import { getStatus, setPriorityColor } from '@/utils/utils';
 import { Filter, Priority, StageOptions, Status } from '@/utils/types';
-import { IStage, ITask, setFilters } from '@/store/projects/projects.slice';
+import { IStage, ITask, TeamMember, setFilters } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import useFilters from '@/hooks/useFilters';
+import AssigneeCard from './common/AssigneeCard';
 
 type FiltersProps = {
     isOpen: boolean;
@@ -20,9 +21,13 @@ type FiltersProps = {
 
 const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
-    const {filters} = useFilters();
+    const {filters, getFilters, getFilteredTasks} = useFilters();
+    const {currentProject} = useProjects();
 
     const {currentStage} = useProjects();
+
+    const [selectedAssignees, setSelectedAssignees] = useState<TeamMember[]>([]);
+    const assigneesIds: string[] = useMemo(() => selectedAssignees.map(a => a.userId), [selectedAssignees]);
 
     const dispatch = useAppDispatch();
 
@@ -34,6 +39,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
 
     const clearAllFilters = () => {
         setSelectedFilters([]);
+        setSelectedAssignees([]);
         setTasks(stage.tasks);
     }
 
@@ -67,35 +73,48 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
         return selectedFilters.some(f => f.value === opt);
     }
 
-    const applyFilters = (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+    const getTasksByAssignees = (tasks: ITask[], filter: Filter): ITask[] => {
+        if (filter.category !== FILTERS_CATEGORIES["Assignee"]) return tasks;
 
-        const filters = getFilters(["priority", "tag", "status", "date"], selectedFilters);
+        const ids = filter.value.split(", ");
 
-        let filteredTasks: ITask[] = currentStage?.tasks as ITask[];
+        const filtered: ITask[] = [] 
 
-        for (const filter of filters) {
-            const category = filter.category.toLowerCase();
-
-            switch (category) {
-                case "priority":
-                    filteredTasks = filteredTasks.filter(t => t.priority === filter.value.toLowerCase()) as ITask[];
-                    break;
-                case "tag":
-                    filteredTasks = filteredTasks.filter(t => t.tags.some(t => t.toLowerCase() === filter.value.toLowerCase())) as ITask[];
-                    break;
-                case "status":
-                    filteredTasks = filteredTasks.filter(t => t.isDone === getStatus(t.isDone, filter.value as Status)) as ITask[];
-                    break;
-                
-                default:
-                    filteredTasks = filteredTasks;
-                    break;
+        for (const task of tasks) {
+            const {assignees} = task;
+            
+            for (const id of ids) {
+                if (assignees.some(a => a === id)) {
+                    filtered.push(task);
+                }
             }
         }
 
-        setTasks(filteredTasks);
+        return filtered;
+    }
+
+    const applyFilters = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const filters = getFilters(["priority", "tag", "status", "date", "assignee"], selectedFilters);
+
+        setTasks(getFilteredTasks(stage.tasks, filters));
         closeFilterWindow();
+    }
+
+    const handleAssigneeSelect = (assignee: TeamMember) => {
+        if (assigneesIds.some(id => id === assignee.userId)) return;
+
+        setSelectedAssignees([
+            ...selectedAssignees,
+            assignee
+        ]);
+    }
+
+    const handleAssigneeRemove = (assigneeId: string) => {
+        setSelectedAssignees([
+            ...selectedAssignees.filter(a => a.userId !== assigneeId)
+        ]);
     }
     
     // Update filters
@@ -105,13 +124,43 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
 
     // Reset selectedFilters when filters are cleared from 'Reset filters' button displayed when no tasks match filters. 
     useEffect(() => {
-        if (!filters.length && selectedFilters.length > 0) setSelectedFilters([]);
+        if (!filters.length && selectedFilters.length > 0) {
+            setSelectedFilters([]);
+        }
+
+        if (!filters.length && selectedAssignees.length > 0) {
+            setSelectedAssignees([]);
+        }
     }, [filters])
+
+    useEffect(() => {
+        if (selectedAssignees.length) {
+            const assigneesFullNames = selectedAssignees.map(a => a.userId);
+
+            const newAssigneeFilter: Filter = {
+                value: assigneesFullNames.join(", "),
+                category: 'Assignee',
+            }
+
+            const updatedSelectedFilters = [
+                ...selectedFilters.filter(f =>
+                    f.category !== FILTERS_CATEGORIES["Assignee"]),
+                newAssigneeFilter
+            ];
+
+            setSelectedFilters(updatedSelectedFilters);
+        } else if (!selectedAssignees.length && filters.some((f: Filter) => f.category === FILTERS_CATEGORIES["Assignee"])) {
+            setSelectedFilters([
+                ...selectedFilters.filter(f => f.category !== FILTERS_CATEGORIES["Assignee"])
+            ]);
+        }
+    }, [selectedAssignees])
 
   return (
     <AnimatePresence>
         {isOpen && (
             <motion.form
+                onSubmit={applyFilters}
                 className={`
                     absolute
                     top-12
@@ -141,7 +190,6 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                         duration: 0.1
                     }
                 }}
-                onSubmit={applyFilters}
             >
                 <h4 className='text-xl w-full text-start flex items-center justify-between'>
                     <span>Filters</span>
@@ -160,13 +208,31 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                         return (
                             <div key={sub.option} className='flex items-start gap-2 flex-col'>
                                 <h5>{sub.option}</h5>
+                                
+                                {sub.option === FILTERS_CATEGORIES["Assignee"] && (
+                                    <div key={sub.option} className='w-full flex flex-wrap gap-2'>
+                                        {currentProject?.team.map(u => {
+                                            return (
+                                                <AssigneeCard
+                                                    key={u.userId}
+                                                    assignee={u}
+                                                    onClick={() => handleAssigneeSelect(u)}
+                                                    withImg={false}
+                                                    isSelectable
+                                                    onRemove={() => handleAssigneeRemove(u.userId)}
+                                                    isSelected={assigneesIds.some(id => id === u.userId)}
+                                                />
+                                            )
+                                        })}
+                                    </div>
+                                )}
 
                                 <div className='flex gap-1 items-start flex-wrap'>
                                     {sub.subOptions?.map((o, idx) => {
-                                        return (
+                                        return  (
                                             <Fragment key={o.option}>
                                                 <input
-                                                    type={sub.option === "Tag" ? "checkbox" : "radio"}
+                                                    type={sub.option === FILTERS_CATEGORIES["Tag"] ? "checkbox" : "radio"}
                                                     id={o.option}
                                                     name={sub.option.toLowerCase()}
                                                     onChange={(ev) => handleSelect(ev, o)}
@@ -193,7 +259,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                                                         border
                                                         border-transparent
                                                         transition-colors
-                                                        ${(sub.option !== "Tag" && sub.option !== "Priority") && `
+                                                        ${(sub.option !== FILTERS_CATEGORIES["Tag"] && sub.option !== FILTERS_CATEGORIES["Priority"]) && `
                                                             border
                                                             border-slate-300
                                                             bg-slate-100
@@ -201,7 +267,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                                                             active:bg-slate-200
                                                             text-black
                                                         `}
-                                                        ${sub.option === "Priority" && setPriorityColor(o.option as Priority)}
+                                                        ${sub.option === FILTERS_CATEGORIES["Priority"] && setPriorityColor(o.option as Priority)}
                                                         ${idx === 0 && "rounded-bl-lg"}
                                                         ${isSelected(o.option) && "opacity-100 border-blue-500"}
                                                     `}
@@ -220,9 +286,10 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                 <div className='grow flex items-center w-full gap-2'>
                     <Button
                         type='submit'
+                        disabled={!filters.length}
                         additionalStyles='bg-blue-400 text-white rounded-bl-lg w-full'
                     >
-                        <span>Save</span>
+                        <span>Apply filters {!!filters.length && `(${filters.length})`}</span>
                     </Button>
                     <Button
                         action={closeFilterWindow}

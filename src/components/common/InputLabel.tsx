@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 type LabelProps = {
@@ -12,6 +12,8 @@ type LabelProps = {
     isTitle?: boolean;
     isRequired?: boolean;
     isSelectable?: boolean;
+    withIcon?: boolean;
+    icon?: ReactNode;
 }
 
 const InputLabel = ({
@@ -23,6 +25,8 @@ const InputLabel = ({
   isTitle = false,
   isRequired = false,
   isSelectable = false,
+  withIcon = false,
+  icon,
 }: LabelProps) => {
 
   // Should return tag?
@@ -65,13 +69,14 @@ const InputLabel = ({
             ${(text?.toLowerCase() === "backend") && "bg-sky-400 border-sky-600"}
             ${isSelectable && "bg-opacity-70 active:bg-opacity-100 sm:hover:bg-opacity-100"}
             ${additionalStyles}
-            ${isOptional || isRequired && 'flex items-center gap-1'}
-            ${isRequired && 'justify-between w-full'}
+            ${(isOptional || isRequired || withIcon) && 'flex items-center gap-1'}
+            ${isRequired && 'flex justify-between w-full items-center'}
           `)}
         >
+          {withIcon && icon}
           {text}
           {(isOptional || isRequired) && (
-            <span className='text-sm text-slate-400'>
+            <span className={`text-sm text-slate-400`}>
               {isOptional ? "(optional)" : "required"}
             </span>
           )}

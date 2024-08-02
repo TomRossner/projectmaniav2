@@ -1,12 +1,11 @@
 'use client'
 
-import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
+import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
-import { closeErrorModal, setError } from '@/store/app/app.slice';
 import { setAuthError } from '@/store/auth/auth.slice';
 import React from 'react';
-import { selectError } from '@/store/app/app.selectors';
 import Modal from './Modal';
+import useError from '@/hooks/useError';
 
 type ErrorModalProps = {
   action?: () => void;
@@ -24,12 +23,16 @@ const ErrorModal = ({
     const dispatch = useAppDispatch();
 
     const {authError} = useAuth();
-    const error = useAppSelector(selectError);
+    const {errorMsg, closeErrorModal, clearError} = useError();
 
     const closeModal = () => {
-        dispatch(authError ? setAuthError(null) : setError(null));
-        dispatch(closeErrorModal());
-        if (action) action();
+      if (authError) dispatch(setAuthError(null));
+
+      if (errorMsg) clearError();
+
+      closeErrorModal();
+      
+      if (action) action();
     }
 
   return (
@@ -40,13 +43,13 @@ const ErrorModal = ({
       withSubmitBtn={withSubmitBtn}
       submitBtnText={submitBtnText}
       onSubmit={onSubmit}
-      isOpen={(authError || error)
+      isOpen={(authError || errorMsg)
         ? true
         : false
       }
     >
       <p className='text-stone-500 w-full text-lg min-h-14'>
-        {authError || error}.
+        {authError || errorMsg}.
       </p>
     </Modal>
   )

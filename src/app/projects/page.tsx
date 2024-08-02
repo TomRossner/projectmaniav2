@@ -1,76 +1,48 @@
 'use client'
 
-import React, { Suspense, useEffect, useState } from 'react';
+import React from 'react';
 import isAuth from '../ProtectedRoute';
-import { useAppDispatch } from '@/hooks/hooks';
-import { ITeamMember, fetchProjectsAsync, setCurrentProject } from '@/store/projects/projects.slice';
-import useAuth from '@/hooks/useAuth';
 import Header from '@/components/common/Header';
-import { createProject } from '@/services/projects.api';
-import { DEFAULT_STAGE } from '@/utils/constants';
 import ButtonWithIcon from '@/components/common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
-import { openNewProjectModal, setError } from '@/store/app/app.slice';
-import LoadingIcon from '@/components/utils/LoadingIcon';
 import ProjectsList from '@/components/ProjectsList';
 import Container from '@/components/common/Container';
-import { AxiosError } from 'axios';
-import Loading from '@/components/common/Loading';
 import useProjects from '@/hooks/useProjects';
+import useModals from '@/hooks/useModals';
 
 const Projects = () => {
-  const {user} = useAuth();
   const {projects} = useProjects();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {openNewProjectModal} = useModals();
+  // const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const dispatch = useAppDispatch();
-
-  const handleError = (error: AxiosError): void => {
-    if (error.code === 'ERR_NETWORK') {
-        dispatch(setError(`Failed handling HTTP request - ${error.message.toLowerCase()}`));
-        return;
-    } else dispatch(setError('An error occurred while loading projects'));
-  }
-
-  const handleCreateProject = async () => {
-    setIsLoading(true);
+  // const handleCreateProject = async () => {
+  //   setIsLoading(true);
     
-    try {
-      const self: ITeamMember = {
-        email: user?.email,
-        userId: user?.userId,
-        firstName: user?.firstName,
-        lastName: user?.lastName
-      } as ITeamMember;
+  //   try {
+  //     const self: TeamMember = {
+  //       email: user?.email,
+  //       userId: user?.userId,
+  //       firstName: user?.firstName,
+  //       lastName: user?.lastName
+  //     } as TeamMember;
   
-      const newProject = {
-        title: `${user?.firstName}'s Project`,
-        team: [self],
-        stages: [DEFAULT_STAGE]
-      }
+  //     const newProject = {
+  //       title: `${user?.firstName}'s Project`,
+  //       team: [self],
+  //       stages: [DEFAULT_STAGE]
+  //     }
   
-      return await createProject(newProject);
-    } catch (error: unknown) {
-      handleError(error as AxiosError);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  //     return await createProject(newProject);
+  //   } catch (error: unknown) {
+  //     handleError(error as AxiosError);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
 
-  const handleNewProject = (): void => {
-    dispatch(openNewProjectModal());
+  const handleNewProject = () => {
+    openNewProjectModal();
   }
-
-  const getProjects = async () => {
-      return await dispatch(fetchProjectsAsync(user?.userId as string))
-          .unwrap()
-          .catch((error) => handleError(error));
-  }
-
-  useEffect(() => {
-      dispatch(setCurrentProject(null));
-      getProjects();
-  }, [])
 
   return (
     <Container id='projectsPage'>

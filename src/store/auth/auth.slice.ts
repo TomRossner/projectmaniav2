@@ -3,44 +3,64 @@ import { saveJwt } from "@/services/localStorage";
 import { ILoginCredentials } from "@/utils/interfaces";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { IProject } from "../projects/projects.slice";
+import { jwtDecode } from "jwt-decode";
 
 export interface IUser {
     firstName: string;
     lastName: string;
     email: string;
-    userId?: string;
-    imgSrc?: string;
-    createdAt?: Date;
-    isOnline?: boolean;
-    contacts?: string[];
-    mostRecentProject?: Partial<IProject> | null;
-    notifications?: string[];
+    userId: string;
+    imgSrc: string;
+    createdAt: Date;
+    isOnline: boolean;
+    contacts: string[];
+    mostRecentProject?: Pick<IProject, "projectId" | "title"> | null;
+    notifications: string[];
 }
 
-export interface IAuthState {
+export interface AuthState {
     user: User;
     isAuthenticated: boolean;
     isLoading: boolean;
     authError: string | null;
 }
 
-export type User = IUser | null;
+export type User = (IUser & {
+    _id: string;
+    __v: number;
+    iat: number;
+    session: string;
+    exp: number;
+    socketId: string;
+    updatedAt: string;
+}) | null;
 
-const initialState: IAuthState = {
+const initialState: AuthState = {
     user: null,
     isAuthenticated: false,
     isLoading: false,
     authError: null
 }
 
-export const fetchUserAsync = createAsyncThunk('authSlice/fetchUserAsync', async (credentials: ILoginCredentials) => {
+export const fetchUserAsync = createAsyncThunk('authSlice/fetchUserAsync', async (credentials: ILoginCredentials, {rejectWithValue}) => {
     try {
-        const {data: {token}} = await login(credentials);
-        return token;
+        const res = await login(credentials);
+        console.log(res.data);
+
+        if (res.data.accessToken) {
+            const decodedUser = jwtDecode<User>(res.data.accessToken);
+            return decodedUser;
+        }
+
+        return res.data;
+        
     } catch (error: any) {
+        console.log("fetchUserAsync error: ", error);
         if (error.response) {
             const {response: {data: {error: errorMsg}}} = error;
-            throw errorMsg;
+            
+            console.log("Reject with value");
+            return rejectWithValue(errorMsg);
         } else throw error;
     } 
 })
@@ -73,13 +93,19 @@ export const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchUserAsync.fulfilled, (state: IAuthState, action: PayloadAction<string>) => {
+            .addCase(fetchUserAsync.fulfilled, (state: AuthState, action: PayloadAction<User>) => {
                 state.isLoading = false;
-                saveJwt(action.payload);
+                // saveJwt(action.payload);
+                state.isAuthenticated = action.payload !== null;
+                console.log(action);
             })
-            .addCase(fetchUserAsync.pending, (state: IAuthState) => {
+            .addCase(fetchUserAsync.pending, (state: AuthState) => {
                 state.isLoading = true;
-            });
+            })
+            .addCase(fetchUserAsync.rejected, (state: AuthState, action) => {
+                console.log("Rejected: ", action);
+                state.authError = "Invalid email or password";
+            })
     }
 })
 

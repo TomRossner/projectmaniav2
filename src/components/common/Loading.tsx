@@ -27,7 +27,7 @@ const Loading = ({
         
         {withText && (
           <p className='text-xl text-stone-800 text-center'>
-            Loading{withText && " " + text}...
+            {text}
           </p>
         )}
     </>

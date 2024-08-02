@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import BigPlus from './utils/BigPlus';
-import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setFilters } from '@/store/projects/projects.slice';
+import { IStage, ITask, setFilters } from '@/store/projects/projects.slice';
 import Task from './Task';
 import Button from './common/Button';
 import { DndContext, DragEndEvent, DragOverEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { createPortal } from 'react-dom';
 import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
@@ -19,7 +19,7 @@ type StageContentProps = {
 
 const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
   const dispatch = useAppDispatch();
-  const {currentProject} = useProjects();
+  const {updateProjectTasks, currentProject} = useProjects();
   const tasksIds = useMemo(() => tasks.map(t => ({id: t.taskId})), [tasks]);
 
   const resetFilters = () => {
@@ -45,7 +45,7 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
     const newIndex = tasks.findIndex(t => t.taskId === over.id);
 
     const newTasks = arrayMove(tasks, oldIndex, newIndex);
-    updateProject(newTasks);
+    updateProjectTasks(newTasks, stage);
 
     setTasks(newTasks);
   }
@@ -102,34 +102,14 @@ const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
     if (isActiveATask && isOverAStage) {
       const updateTasks = (tasks: ITask[]): ITask[] => {
         const activeIndex = tasks.findIndex(t => t.taskId === active.id);
-        console.log(over)
         // tasks[activeIndex].currentStage = tasks[oldIndex].currentStage;
 
         return arrayMove(tasks, activeIndex, activeIndex);
       }
 
-      updateProject(updateTasks(tasks));
+      updateProjectTasks(updateTasks(tasks), stage);
       setTasks(updateTasks(tasks));
     }
-
-  }
-
-  const updateProject = (tasks: ITask[]) => {
-    const updatedStages = currentProject?.stages.map(s => {
-      if (s.stageId === stage?.stageId) {
-        return {
-          ...s,
-          tasks
-        }
-      } else return s;
-    }) as IStage[];
-
-    const updatedProject: IProject = {
-      ...currentProject,
-      stages: updatedStages as IStage[]
-    } as IProject;
-
-    dispatch(setCurrentProject(updatedProject));
   }
 
   return (

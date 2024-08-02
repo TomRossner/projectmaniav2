@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import FormHeader from './FormHeader';
 import { twMerge } from 'tailwind-merge';
@@ -8,11 +8,14 @@ import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/utils/forms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import GoogleLogo from '../utils/GoogleLogo';
-import { fetchUserAsync, setAuthError, setUser } from '@/store/auth/auth.slice';
+import { fetchUserAsync, IUser, setAuthError, setUser, User } from '@/store/auth/auth.slice';
 import { useAppDispatch } from '@/hooks/hooks';
 import { getUserFromJwt } from '@/services/localStorage';
 import LoadingIcon from '../utils/LoadingIcon';
 import Button from '../common/Button';
+import useAuth from '@/hooks/useAuth';
+import { redirect, useRouter } from 'next/navigation';
+import { LINKS } from '@/utils/links';
 
 const logInSchema = z.object({
     email: z.string().email(),
@@ -21,7 +24,11 @@ const logInSchema = z.object({
 
 type TLogInSchema = z.infer<typeof logInSchema>;
 
-const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) => {
+type LoginProps = {
+    toggleIsNotRegistered: () => void;
+}
+
+const Login = ({toggleIsNotRegistered}: LoginProps) => {
     const {
         register,
         reset,
@@ -32,23 +39,27 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
     });
 
     const dispatch = useAppDispatch();
+    const router = useRouter();
 
     const onSubmit = async (data: TLogInSchema) => {
         try {
             const {email, password} = data;
-            await dispatch(fetchUserAsync({
+            const user = await dispatch(fetchUserAsync({
                 email,
                 password
             }))
                 .unwrap()
                 .catch(
-                    ({message}: {message: string}) =>
-                        dispatch(setAuthError(message && 'Failed logging in'))
+                    (error: {message: string}) => {
+                        console.log(error)
+                        // dispatch(setAuthError(error.message))
+                    }
                 );
-    
-            dispatch(setUser(getUserFromJwt()));
-    
-            reset();
+
+            if (user) {
+                reset();
+                router.push(LINKS.HOME);
+            }
         } catch (error) {
             console.error(error);
         }
@@ -56,9 +67,9 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
 
     const handleGoogleSignIn = async () => {
         // const response = await googleSignIn(loginData.email)
-        await dispatch(fetchUserAsync({
-            email: process.env.NEXT_PUBLIC_MOCK_EMAIL as string,
-            password: process.env.NEXT_PUBLIC_MOCK_PASSWORD as string
+        const user = await dispatch(fetchUserAsync({
+            email: process.env.NEXT_PUBLIC_MOCK_EMAIL_2 as string,
+            password: process.env.NEXT_PUBLIC_MOCK_PASSWORD_2 as string
         }))
             .unwrap()
             .catch(
@@ -66,9 +77,12 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
                     dispatch(setAuthError(message && 'Failed logging in'))
             );
 
-        dispatch(setUser(getUserFromJwt()));
+        // dispatch(setUser(getUserFromJwt()));
 
-        reset();
+        if (user) {
+            reset();
+            router.push(LINKS.HOME);
+        }
     }
 
   return (
@@ -102,6 +116,7 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
                 {...register("email")}
                 type="email"
                 placeholder='Email'
+                autoComplete='username'
                 className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
             />
 
@@ -109,6 +124,7 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
                 {...register("password")}
                 type="password"
                 placeholder='Password'
+                autoComplete='current-password'
                 className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
             />
         </div>
@@ -187,4 +203,4 @@ const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) =>
   )
 }
 
-export default SignUp;
+export default Login;

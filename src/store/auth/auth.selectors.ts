@@ -1,7 +1,7 @@
 import { RootState } from "../store";
-import { IAuthState, User } from "./auth.slice";
+import { AuthState, User } from "./auth.slice";
 
-export const selectAuth = (state: RootState): IAuthState => state.auth;
+export const selectAuth = (state: RootState): AuthState => state.auth;
 
 export const selectUser = (state: RootState): User => state.auth.user;
 

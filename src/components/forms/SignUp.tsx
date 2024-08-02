@@ -22,7 +22,11 @@ const signUpSchema = z.object({
 
 type TSignUpSchema = z.infer<typeof signUpSchema>;
 
-const SignUp = ({toggleIsNotRegistered}: {toggleIsNotRegistered: () => void}) => {
+type SignUpProps = {
+    toggleIsNotRegistered: () => void;
+}
+
+const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
     const {
         register,
         reset,

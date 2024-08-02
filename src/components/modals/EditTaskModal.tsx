@@ -2,20 +2,19 @@
 
 import { useAppDispatch } from "@/hooks/hooks";
 import useProjects from "@/hooks/useProjects";
-import { closeEditTaskModal, setError } from "@/store/app/app.slice";
-import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from "@/store/projects/projects.slice";
+import { IProject, IStage, ITask, TeamMember, setCurrentProject } from "@/store/projects/projects.slice";
 import { LINKS } from "@/utils/links";
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import React, { ChangeEvent, FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { ChangeEvent, FormEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Input from "../common/Input";
 import useModals from "@/hooks/useModals";
-import { capitalizeFirstLetter, convertToISODate, getDuplicatedLinks, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from "@/utils/utils";
-import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, MAX_EXTERNAL_LINKS, PRIORITIES, TAGS } from "@/utils/constants";
+import { capitalizeFirstLetter, convertToISODate, createNewSubtask, getDuplicatedLinks, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from "@/utils/utils";
+import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, MAX_EXTERNAL_LINKS, MAX_SUBTASKS, PRIORITIES, TAGS } from "@/utils/constants";
 import InputLabel from "../common/InputLabel";
 import ButtonWithIcon from "../common/ButtonWithIcon";
 import { BiPlus, BiTrash } from "react-icons/bi";
-import { ExternalLink, Priority, SelectedStage, TagName } from "@/utils/types";
+import { ActivityType, ExternalLink, NewSubTask, Priority, SelectedStage, SubTask, TagName } from "@/utils/types";
 import { RxCross2 } from "react-icons/rx";
 import { Tag } from "@/utils/types";
 import Modal from "./Modal";
@@ -23,6 +22,15 @@ import { twMerge } from "tailwind-merge";
 import ErrorModal from "./ErrorModal";
 import { AnimatePresence, motion } from "framer-motion";
 import Button from "../common/Button";
+import { IUser } from "@/store/auth/auth.slice";
+import { GoSearch } from "react-icons/go";
+import useAuth from "@/hooks/useAuth";
+import AssigneeCard from "../common/AssigneeCard";
+import Avatar from "../common/Avatar";
+import Line from "../common/Line";
+import { setErrorMsg } from "@/store/error/error.slice";
+import { setActivities } from "@/store/activity_log/activity_log.slice";
+import useActivityLog from "@/hooks/useActivityLog";
 
 type EditTaskModalProps = {
     task: ITask;
@@ -35,7 +43,10 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const [selectedTags, setSelectedTags] = useState<TagName[]>([]);
 
     const {currentProject, currentTask} = useProjects();
-    const {editTaskModalOpen} = useModals();
+    const {isEditTaskModalOpen, closeEditTaskModal} = useModals();
+    const {createNewActivity, activities} = useActivityLog();
+
+    const {user, getUserInitials, getUserName} = useAuth();
 
     const DEFAULT_VALUES: ITask = task;
 
@@ -44,6 +55,24 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([DEFAULT_EXTERNAL_LINK]);
 
     const [selectedStage, setSelectedStage] = useState<SelectedStage | null>(null);
+
+    const duplicatedLinks = useMemo(() => {
+        if (inputValues?.externalLinks) {
+            return !!getDuplicatedLinks(inputValues?.externalLinks as ExternalLink[]).length;
+        } else return false;
+    }, [inputValues?.externalLinks]);
+
+    const [selectedAssignees, setSelectedAssignees] = useState<TeamMember[]>([]);
+    
+    const assigneesIds = useMemo(() => selectedAssignees.map(u => u.userId), [selectedAssignees]);
+    const assigneesInputRef = useRef<HTMLInputElement>(null);
+    
+    const [assigneesSearchResults, setAssigneesSearchResults] = useState<TeamMember[]>([]);
+    const [assigneesSearchQuery, setAssigneesSearchQuery] = useState<string>("");
+    
+    const isAssigneesInputDirty = useMemo(() => !!assigneesSearchQuery, [assigneesSearchQuery]);
+
+    const [subtasks, setSubtasks] = useState<SubTask[]>([]);
 
     const handleUploadChange = (e: ChangeEvent<HTMLInputElement>) => {
         const {files} = e.target;
@@ -67,17 +96,18 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }
 
     const closeModal = () => {
+        resetAssigneesSearch();
         setSelectedStage(null);
         setInputValues(DEFAULT_VALUES);
-        dispatch(closeEditTaskModal());
+        closeEditTaskModal();
     }
 
-    const handleSave = (ev: FormEvent<HTMLFormElement>, updatedValues: ITask): void => {
+    const handleSave = async (ev: FormEvent<HTMLFormElement>, updatedValues: ITask) => {
         ev.preventDefault();
 
         if (!updatedValues) return;
 
-        dispatch(setError(null));
+        dispatch(setErrorMsg(null));
         
         if (updatedValues.externalLinks && updatedValues.externalLinks.length) {
             const updatedLinks: ExternalLink[] = renameLinks(getUniqueLinks(updatedValues.externalLinks));
@@ -92,7 +122,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             if (!!updatedLinks[0]?.url && !linksValid) {
                 const invalidLinks: ExternalLink[] = getInvalidLinks(updatedLinks);
     
-                dispatch(setError(`${invalidLinks.map((l: ExternalLink) => l.name)
+                dispatch(setErrorMsg(`${invalidLinks.map((l: ExternalLink) => l.name)
                     .join(", ")} ${invalidLinks.length > 1
                         ? "are not valid links"
                         : "is not a valid link"
@@ -110,11 +140,21 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             stages: updatedStages
         } as IProject;
 
+        const activityLog =  await createNewActivity(
+            ActivityType.UpdateTask,
+            user as IUser,
+            currentTask as ITask,
+            currentProject?.projectId as string
+        );
+
         // dispatch(setCurrentTask(updatedValues));
         dispatch(setCurrentProject(updatedCurrentProject));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
 
         closeModal();
-        return;
     }
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -188,7 +228,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         if (externalLinks.some((l: ExternalLink) => !l.url)) {
             const emptyLinks: ExternalLink[] = externalLinks.filter((l: ExternalLink) => !l.url);
 
-            dispatch(setError(`You must fill ${emptyLinks.length > 1
+            dispatch(setErrorMsg(`You must fill ${emptyLinks.length > 1
                 ? emptyLinks.map((l: ExternalLink) => l.name).join(", ")
                 : emptyLinks[0].name} before adding a new one`
             ));
@@ -197,7 +237,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         }
 
         if (externalLinks.length === MAX_EXTERNAL_LINKS) {
-            dispatch(setError(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`));
+            dispatch(setErrorMsg(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`));
             return;
         }
         
@@ -231,7 +271,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
 
     const getUpdatedStages = useCallback((inputValues: ITask, project: IProject): IStage[] | void => {
         if (!project || !inputValues) {
-            dispatch(setError('Failed to update project'));
+            dispatch(setErrorMsg('Failed to update project'));
             return;
         }
 
@@ -292,9 +332,116 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             return updatedStages;
         }
 
-        dispatch(setError('Failed to update project'));
+        dispatch(setErrorMsg('Failed to update project'));
         return project.stages;
     }, [task, currentProject?.stages, selectedStage?.stageId]);
+
+    const removeDuplicates = (links: ExternalLink[]) => {
+        setExternalLinks(renameLinks(getUniqueLinks(links)));
+        dispatch(setErrorMsg(null));
+    }
+
+    const handleSearchAssignees = (query: string) => {
+        query = query.trim().toLowerCase();
+
+        const newSearchResults = currentProject?.team.filter(u =>
+            (u.firstName.toLowerCase().includes(query)) ||
+            (u.lastName.toLowerCase().includes(query))
+        );
+
+        if (!!newSearchResults?.length) {
+            setAssigneesSearchResults(newSearchResults as IUser[]);
+        } else setAssigneesSearchResults([]); 
+    }
+
+    const resetAssigneesSearch = () => {
+        setAssigneesSearchQuery("");
+        setAssigneesSearchResults([]);
+    }
+
+    const handleSelectAssignee = (newAssignee: TeamMember) => {
+        if (assigneesIds.some(id => id === newAssignee.userId)) {
+            assigneesInputRef.current?.focus();
+            resetAssigneesSearch();
+            return;
+        }
+
+        assigneesInputRef.current?.focus();
+        setSelectedAssignees([...selectedAssignees, newAssignee]);
+        resetAssigneesSearch();
+    }
+
+    const handleRemoveAssignee = (assigneeId: string) => {
+        setSelectedAssignees([
+            ...selectedAssignees.filter(a => a.userId !== assigneeId)
+        ]);
+    }
+
+    const handleAddSubtask = () => {
+        if (subtasks.length === MAX_SUBTASKS) {
+            dispatch(setErrorMsg(`Cannot add more than ${MAX_SUBTASKS} subtasks`));
+            return;
+        }
+        
+        const newSubtask: NewSubTask = createNewSubtask(subtasks.length);
+
+        setSubtasks([...subtasks, newSubtask]);
+    }
+
+    const handleSubtaskIsDone = (subtaskId: string) => {
+        setSubtasks([
+            ...subtasks.map(s => s.subtaskId === subtaskId
+                ? {
+                    ...s,
+                    isDone: !s.isDone
+                } as NewSubTask
+                : s
+        )])
+    }
+
+    const handleSubtaskChange = (ev: ChangeEvent<HTMLInputElement>) => {
+        const {value, id} = ev.target;
+
+        const subtask = subtasks.find(s => s.subtaskId === id);
+
+        setSubtasks([
+            ...subtasks.map(s =>
+                s.subtaskId === id
+                    ? {
+                        ...subtask,
+                        title: value
+                    } as NewSubTask
+                    : s
+            )
+        ]);
+    }
+
+    const handleRemoveSubtask = (subtaskId: string) => {
+        setSubtasks([
+            ...subtasks.filter(s => s.subtaskId !== subtaskId)
+        ]);
+    }
+
+    const handleSubtaskOnBlur = (subtask: NewSubTask) => {
+        if (!subtask.title) {
+            handleRemoveSubtask(subtask.subtaskId);
+        }
+    }
+
+    useEffect(() => {
+        setInputValues({
+            ...inputValues,
+            subtasks
+        } as ITask);
+    }, [subtasks])
+
+    useEffect(() => {
+        if (assigneesSearchQuery) {
+            handleSearchAssignees(assigneesSearchQuery);
+        } else {
+            resetAssigneesSearch();
+        }
+    }, [assigneesSearchQuery])
 
     // Update selected stage in inputValues
     useEffect(() => {
@@ -305,10 +452,19 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }, [selectedStage])
 
     useEffect(() => {
-        if (editTaskModalOpen && task) {
+        if (isEditTaskModalOpen && task) {
             setSelectedStage(task.currentStage as SelectedStage);
+
+            const getAssignees = (assigneesIds: string[]): TeamMember[] => {
+                return currentProject?.team.filter(u =>
+                    assigneesIds.some(id => u.userId === id))
+                    || [];
+            }
+
+            setSelectedAssignees(getAssignees(task.assignees));
+            setSubtasks(task.subtasks);
         }
-    }, [task, editTaskModalOpen])
+    }, [task, isEditTaskModalOpen])
 
     // Add links to inputValues
     useEffect(() => {
@@ -348,19 +504,18 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }, [currentTask])
 
     useEffect(()=> {
-        setInputValues({...inputValues, priority: selectedPriority as string} as ITask);
+        setInputValues({
+            ...inputValues,
+            priority: selectedPriority as string
+        } as ITask);
     }, [selectedPriority])
 
-    const removeDuplicates = (links: ExternalLink[]) => {
-        setExternalLinks(renameLinks(getUniqueLinks(links)));
-        dispatch(setError(null));
-    }
-
-    const duplicatedLinks = useMemo(() => {
-        if (inputValues?.externalLinks) {
-            return !!getDuplicatedLinks(inputValues?.externalLinks as ExternalLink[]).length;
-        } else return false;
-    }, [inputValues?.externalLinks]);
+    useEffect(()=> {
+        setInputValues({
+            ...inputValues,
+            assignees: assigneesIds as string[]
+        } as ITask);
+    }, [assigneesIds])
 
   return (
     <>
@@ -369,9 +524,9 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                 withSubmitBtn
                 submitBtnText="Remove duplicates and continue"
                 onSubmit={() => removeDuplicates(inputValues?.externalLinks as ExternalLink[])}
-                action={() => dispatch(setError(null))}
+                action={() => dispatch(setErrorMsg(null))}
             />
-            : <ErrorModal action={() => dispatch(setError(null))} />
+            : <ErrorModal action={() => dispatch(setErrorMsg(null))} />
         }
         
         {inputValues && (
@@ -380,7 +535,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                 onSubmit={(ev: FormEvent<HTMLFormElement>) => handleSave(ev, inputValues)}
                 onClose={closeModal}
                 submitBtnText="Save"
-                isOpen={editTaskModalOpen}
+                isOpen={isEditTaskModalOpen}
             >
                 <div className="flex flex-col w-full overflow-y-auto max-h-[70vh] my-auto">
                     <Input
@@ -393,6 +548,9 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                         additionalStyles="focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4"
                         isRequired
                     />
+
+                    <Line additionalStyles='mb-4' />
+                    
                     <Input
                         labelText="Due date"
                         type="date"
@@ -402,6 +560,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                         onChange={handleInputChange}
                         additionalStyles="focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4"
                     />
+
+                    <Line additionalStyles='mb-4' />
 
                     <InputLabel isTitle text="Stage" isRequired />
 
@@ -440,6 +600,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                             )
                         )}
                     </div>
+
+                    <Line additionalStyles='mb-4' />
 
                     <div className="flex gap-1 items-center w-full py-4 flex-wrap">
                         <InputLabel isTitle text="Priority" isRequired />
@@ -484,6 +646,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                             })}
                         </div>
                     </div>
+
+                    <Line additionalStyles='mb-4' />
 
                     <div
                         className="flex items-center w-full mt-2 mb-3 flex-wrap"
@@ -585,6 +749,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                         </div>
                     </div>
 
+                    <Line additionalStyles='mb-4' />
+
                     <InputLabel
                         htmlFor="description"
                         text="Description"
@@ -597,6 +763,144 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                         onChange={handleInputChange}
                         className="text-lg px-1 outline-none mb-4 border rounded-bl-lg border-stone-300 w-full min-h-20 max-h-40"
                     />
+
+                    <Line additionalStyles='mb-4' />
+
+                    <div className='w-full flex flex-col gap-2'>
+                        <InputLabel
+                            text='Subtasks'
+                            htmlFor='subtasks'
+                            isOptional
+                        />
+
+                        {subtasks?.map((sub, idx) => {
+                            return (
+                                <div key={idx} className='flex gap-1 w-full items-center'>
+                                    <Input
+                                        type='checkbox'
+                                        id={sub.subtaskId}
+                                        name={sub.title}
+                                        isChecked={sub.isDone}
+                                        onChange={() => handleSubtaskIsDone(sub.subtaskId)}
+                                        additionalStyles='grow-0 accent-green-600'
+                                    />
+
+                                    <Input
+                                        type='text'
+                                        id={sub.subtaskId}
+                                        name={sub.title}
+                                        onChange={handleSubtaskChange}
+                                        additionalStyles='grow border-transparent sm:hover:border-slate-200 bg-transparent focus:bg-white'
+                                        value={sub.title}
+                                        onBlur={() => handleSubtaskOnBlur(sub)}
+                                    />
+
+                                    <ButtonWithIcon
+                                        icon={<RxCross2 />}
+                                        title='Remove'
+                                        withTooltip={false}
+                                        action={() => handleRemoveSubtask(sub.subtaskId)}
+                                    />
+                                </div>
+                            )
+                        })}
+
+                        <Button
+                            type='button'
+                            additionalStyles={`
+                                text-xl
+                                cursor-pointer
+                                text-blue-400
+                                sm:hover:text-blue-500
+                                active:text-blue-500
+                                self-start
+                                flex
+                                items-center
+                                gap-1
+                                border-none
+                                w-fit
+                            `}
+                            action={handleAddSubtask}
+                        >
+                            <span className='pt-1'>Add subtask</span>
+                            <span className='text-sm'><BiPlus /></span>
+                        </Button>
+                    </div>
+
+                    <Line additionalStyles='mb-4' />
+
+                    <div className="relative w-full flex flex-col items-start pb-5">
+                        <Input
+                            type="text"
+                            id="searchAssignees"
+                            name="searchAssignees"
+                            onChange={(ev) => setAssigneesSearchQuery(ev.target.value)}
+                            labelText="Assignees"
+                            placeholder="Search for assignees..."
+                            ref={assigneesInputRef}
+                            value={assigneesSearchQuery}
+                            searchIcon={<GoSearch />}
+                            additionalStyles=""
+                            withIconInsideInput
+                            inputIcon={
+                                <ButtonWithIcon
+                                    withTooltip={false}
+                                    icon={<RxCross2 />}
+                                    action={() => setAssigneesSearchQuery("")}
+                                    additionalStyles="border-none h-full"
+                                />
+                            }
+                        />
+
+                        {isAssigneesInputDirty && (
+                            <div className="absolute top-[65px] shadow-md z-10 w-full flex flex-col gap-2 border border-slate-200 bg-white">
+                                <p className="w-full flex justify-between px-1 text-gray-500">
+                                    <span>Search results</span>
+                                    <span>{assigneesSearchResults.length} result{assigneesSearchResults.length === 1 ? "" : "s"}</span>
+                                </p>
+                                {!!assigneesSearchResults.length
+                                    ? assigneesSearchResults.map(u => {
+                                        return (
+                                            <div
+                                                key={u.userId}
+                                                onClick={() => handleSelectAssignee(u)}
+                                                className="w-full p-2 flex items-center gap-2 hover:bg-blue-100 border border-transparent hover:border-blue-400 cursor-pointer"
+                                            >
+                                                <Avatar
+                                                    src={u.imgSrc}
+                                                    text={getUserInitials(getUserName(u))}
+                                                    additionalStyles="w-7 h-7"
+                                                />
+
+                                                <p className="font-medium">
+                                                    {getUserName(u)} {u.userId === user?.userId && '(You)'}
+                                                </p>
+                                            </div>
+                                        )
+                                    }) : <p className="px-2">No results found</p>
+                                }
+                            </div>
+                        )}
+
+                        {!!selectedAssignees.length && (
+                            <div className="flex w-full -gap-1 mt-4 flex-wrap gap-2">
+                                {selectedAssignees.map(assignee => {
+                                    return (
+                                        <AssigneeCard
+                                            key={assignee.userId}
+                                            assignee={assignee}
+                                            withImg
+                                            isSelectable
+                                            isSelected={assigneesIds.some(id => id === assignee.userId)}
+                                            onRemove={() => handleRemoveAssignee(assignee.userId)}
+                                        />
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <Line additionalStyles='mb-4' />
 
                     <div className="flex flex-col items-start gap-4 mb-4 w-full">
                         <InputLabel
@@ -618,7 +922,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                                         value={l.url}
                                         additionalStyles="grow flex-1 pl-1.5 rounded-bl-lg"
                                         labelAdditionalStyles="mr-3 text-md font-thin"
-                                        iconInsideInput
+                                        withIconInsideInput
                                         inputIcon={!!l.url && (
                                             <ButtonWithIcon
                                                 icon={<RxCross2 />}
@@ -674,6 +978,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                         </Button>
                     </div>
 
+                    <Line additionalStyles='mb-4' />
+
                     <div className="flex w-full items-center justify-between">
                         <InputLabel
                             isOptional
@@ -728,7 +1034,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
                             width={100}
                             height={60}
                             alt="Thumbnail"
-                            className="w-full rounded-bl-lg border border-black"
+                            className="w-full rounded-bl-lg border border-black mb-5"
                         />
                     )}
                 </div>

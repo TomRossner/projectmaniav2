@@ -8,15 +8,23 @@ import ProjectTitle from './ProjectTitle';
 import Line from './common/Line';
 import { BiPlus } from 'react-icons/bi';
 import { useAppDispatch } from '@/hooks/hooks';
-import { openDeleteProjectPrompt, openEditProjectModal, openInvitationModal, openNewStageModal } from '@/store/app/app.slice';
 import { twMerge } from 'tailwind-merge';
 import { BsThreeDots } from 'react-icons/bs';
 import { PROJECT_MENU_OPTIONS } from '@/utils/constants';
 import MoreOptions from './common/MoreOptions';
-import { TOption } from '@/utils/types';
+import { ActivityType, TOption } from '@/utils/types';
 import { GoSearch } from "react-icons/go";
-import { ITask } from '@/store/projects/projects.slice';
+import { IProject, ITask, setCurrentProject, setProjects } from '@/store/projects/projects.slice';
 import SearchModal from './modals/SearchModal';
+import useAuth from '@/hooks/useAuth';
+import { updateUserData } from '@/services/user.api';
+import { IUser } from '@/store/auth/auth.slice';
+import { useRouter } from 'next/navigation';
+import { LINKS } from '@/utils/links';
+import useModals from '@/hooks/useModals';
+import { updateProject } from '@/services/projects.api';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
+import useActivityLog from '@/hooks/useActivityLog';
 
 type DashboardTopProps = {
   moveNext: () => void;
@@ -26,51 +34,86 @@ type DashboardTopProps = {
 }
 
 const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTopProps) => {
-    const {currentProject} = useProjects();
+    const {currentProject, allTasks, handleLeaveProject, projects} = useProjects();
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
+    const {user, isAuthenticated} = useAuth();
+    const {openNewStageModal, openDeleteProjectModal, openEditProjectModal, openInvitationModal, openActivityLog} = useModals();
+    const {createNewActivity, activities} = useActivityLog();
 
     const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
 
     const dispatch = useAppDispatch();
-
-    const tasks = useMemo(() =>currentProject?.stages.flatMap(s => s.tasks), [currentProject]);
+    const router = useRouter();
 
     const openModal = (): void => {
-      dispatch(openNewStageModal());
+      openNewStageModal();
     }
     
     const handleDeleteProject = (): void => {
-      dispatch(openDeleteProjectPrompt());
+      openDeleteProjectModal();
     }
 
     const handleEdit = (): void => {
-      dispatch(openEditProjectModal());
+      openEditProjectModal();
     }
 
     const toggleProjectMenu = () => {
       setMenuOpen(!menuOpen);
     }
 
-    const openActivityLog = () => {
-      console.log("This will be sick");
+    const openActivity = () => {
+      openActivityLog();
     }
 
     const handleOpenInvitationModal = () => {
-      dispatch(openInvitationModal());
+      openInvitationModal();
     }
 
-    const handleOpt = (opt: TOption): void => {
+    const handleLeave = async (projectId: string) => {
+      // await handleLeaveProject(currentProject?.projectId as string, user?.userId as string);
+      
+      // const updatedUser = {
+      //   ...user,
+      //   mostRecentProject: null,
+      // } as IUser;
+      
+      // await updateUserData(updatedUser);
+      if (
+        (currentProject?.team.length === 1) &&
+        (currentProject.team[0].userId === user?.userId)
+      ) {
+        return;
+      }
+      
+      const activityLog =  await createNewActivity(
+        ActivityType.LeaveProject,
+        user as IUser,
+        currentProject as IProject,
+        currentProject?.projectId as string
+      );
+
+      dispatch(setActivities([
+        ...activities,
+        activityLog
+      ]));
+
+      handleLeaveProject(projectId, user?.userId as string);
+    }
+
+    const handleOpt = async (opt: TOption): Promise<void> => {
       setMenuOpen(false);
 
       switch (opt.text.toLowerCase()) {
         case "delete":
           return handleDeleteProject();
         case "activity log":
-          return openActivityLog();
+          return openActivity();
         case "edit":
           return handleEdit();
         case "invite":
           return handleOpenInvitationModal();
+        case "leave project":
+          return handleLeave(currentProject?.projectId as string);
         default:
           return setMenuOpen(false);
       }
@@ -79,13 +122,23 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
     const toggleInputVisibility = (): void => {
       setIsSearchModalOpen(!isSearchModalOpen);
     }
+
+    const projectMenuOptions: string[] = useMemo(() => {
+      if (isAuthenticated && ((user?.userId === currentProject?.createdBy))) {
+        return ((currentProject?.team.length === 1) && (currentProject.team[0].userId === user?.userId))
+          ? [...PROJECT_MENU_OPTIONS.filter(o => o !== 'Leave project')]
+          : PROJECT_MENU_OPTIONS;
+      } else return [
+        ...PROJECT_MENU_OPTIONS.filter(o => o !== 'Delete')
+      ];
+    }, [currentProject, user, isAuthenticated]);
     
   return (
     <>
       <SearchModal
         isOpen={isSearchModalOpen}
         setIsOpen={setIsSearchModalOpen}
-        tasks={tasks as ITask[]}
+        tasks={allTasks as ITask[]}
       />
 
       {currentProject && (
@@ -162,7 +215,7 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
                     />
 
                     <MoreOptions
-                      options={PROJECT_MENU_OPTIONS}
+                      options={projectMenuOptions}
                       isOpen={menuOpen}
                       setIsOpen={setMenuOpen}
                       action={handleOpt}

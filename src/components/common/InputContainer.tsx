@@ -3,12 +3,12 @@
 import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-interface IInputContainerProps {
+type InputContainerProps = {
     input: ReactNode;
     additionalStyles?: string;
 }
 
-const InputContainer = ({input, additionalStyles}: IInputContainerProps) => {
+const InputContainer = ({input, additionalStyles}: InputContainerProps) => {
   return (
     <div className={twMerge(`flex flex-col w-full mx-auto ${additionalStyles}`)}>
         {input}

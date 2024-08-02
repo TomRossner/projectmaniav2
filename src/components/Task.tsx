@@ -1,5 +1,5 @@
 import { ITask, setCurrentTask } from '@/store/projects/projects.slice';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import TaskTop from './TaskTop';
 import TaskPriority from './TaskPriority';
 import { useDispatch } from 'react-redux';
@@ -13,6 +13,8 @@ import Tag from './Tag';
 import TaskLinks from './TaskLinks';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { BiCheckCircle } from "react-icons/bi";
+import Button from './common/Button';
 
 type TaskProps = {
   task: ITask;
@@ -29,7 +31,9 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
         isDone,
         priority,
         description,
-        thumbnailSrc
+        thumbnailSrc,
+        subtasks,
+        tags,
     } = task;
 
     const {
@@ -186,8 +190,19 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
               </div>
             )}
 
+            {!!subtasks.length && (
+              <Button
+                type='button'
+                action={() => {}}
+                additionalStyles='flex items-center rounded-bl-lg bg-slate-50 w-fit border-slate-300 text-slate-400 gap-1'
+              >
+                <BiCheckCircle />
+                <p className='text-slate-400 text-sm font-sans'>{subtasks.filter(s => s.isDone).length}/{subtasks.length}</p>
+              </Button>
+            )}
+
             <div className='w-full flex items-center justify-end gap-2 flex-wrap-reverse min-w-'>
-              {task.tags?.map((t: TagName, i: number) =>
+              {tags?.map((t: TagName, i: number) =>
                 <Tag
                   key={i}
                   tag={t}

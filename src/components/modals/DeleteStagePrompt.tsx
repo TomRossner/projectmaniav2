@@ -1,22 +1,25 @@
 'use client'
 
 import React from 'react';
-import useDeleteStagePrompt from '@/hooks/usePrompts';
 import { useAppDispatch } from '@/hooks/hooks';
-import { closeDeleteStagePrompt, setError } from '@/store/app/app.slice';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, setCurrentProject, setCurrentStageIndex } from '@/store/projects/projects.slice';
 import Modal from './Modal';
+import useModals from '@/hooks/useModals';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { ActivityType } from '@/utils/types';
+import useActivityLog from '@/hooks/useActivityLog';
+import { IUser } from '@/store/auth/auth.slice';
+import useAuth from '@/hooks/useAuth';
 
 const DeleteStagePrompt = () => {
-    const {deleteStagePromptOpen} = useDeleteStagePrompt();
+    const {isDeleteStageModalOpen, closeDeleteStageModal} = useModals();
     const {currentStage, stages, currentProject} = useProjects();
+    const {createNewActivity, activities} = useActivityLog();
+    const {user} = useAuth();
 
     const dispatch = useAppDispatch();
-
-    const closePrompt = (): void => {
-        dispatch(closeDeleteStagePrompt());
-    }
 
     // Update currentStageIndex
     const updateCurrentStageIndex = (index: number) => {
@@ -26,9 +29,9 @@ const DeleteStagePrompt = () => {
     }
 
     // Handle stage deletion
-    const handleDeleteStage = (): void => {
+    const handleDeleteStage = async () => {
         if (!currentStage) {
-            dispatch(setError('Failed deleting stage'));
+            dispatch(setErrorMsg('Failed deleting stage'));
             return;
         }
 
@@ -41,19 +44,30 @@ const DeleteStagePrompt = () => {
             )
         } as IProject;
 
+        const activityLog = await createNewActivity(
+            ActivityType.DeleteStage,
+            user as IUser,
+            currentStage as IStage,
+            currentProject?.projectId as string
+        );
+
         dispatch(setCurrentProject(updatedCurrentProject));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]))
 
         updateCurrentStageIndex(currentStageIndex);
 
-        closePrompt();
+        closeDeleteStageModal();
     }
 
   return (
     <Modal
         title={`Delete ${currentStage?.title}`}
         onSubmit={handleDeleteStage}
-        onClose={closePrompt}
-        isOpen={deleteStagePromptOpen}
+        onClose={closeDeleteStageModal}
+        isOpen={isDeleteStageModalOpen}
         optionalNote={`You are deleting ${currentStage?.title} and all of its contents.`}
         submitBtnStyles='rounded-bl-lg bg-red-400 hover:bg-red-500 text-white'
         closeBtnStyles='hover:bg-slate-200'

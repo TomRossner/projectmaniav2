@@ -1,4 +1,4 @@
-import React, { RefObject, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { RefObject, forwardRef, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from "framer-motion";
 import Option from '../Option';
 import { TOption } from '@/utils/types';
@@ -12,6 +12,7 @@ type MoreOptionsProps = {
     options: string[];
     action?: (arg: TOption) => void;
     additionalStyles?: string;
+    disabled?: boolean;
 }
 
 const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref) {
@@ -21,6 +22,7 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
         options,
         action = () => {},
         additionalStyles,
+        disabled = false,
     } = props;
 
     const moreOptionsRef = useRef<HTMLElement>(null);
@@ -78,7 +80,7 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
                         <Option
                             key={idx}
                             action={() => action(opt)}
-                            isDisabled={opt.disabled}
+                            isDisabled={disabled}
                             opt={opt}
                         />
                     )

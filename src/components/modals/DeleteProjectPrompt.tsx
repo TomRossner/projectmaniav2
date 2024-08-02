@@ -2,31 +2,46 @@
 
 import React from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
-import { closeDeleteProjectPrompt, setError } from '@/store/app/app.slice';
 import useProjects from '@/hooks/useProjects';
 import { IProject, setCurrentProject, setProjects } from '@/store/projects/projects.slice';
-import usePrompts from '@/hooks/usePrompts';
 import { deleteProject } from '@/services/projects.api';
 import Modal from './Modal';
+import useModals from '@/hooks/useModals';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { ActivityType } from '@/utils/types';
+import { IUser } from '@/store/auth/auth.slice';
+import useActivityLog from '@/hooks/useActivityLog';
+import useAuth from '@/hooks/useAuth';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
 
 const DeleteProjectPrompt = () => {
-    const {deleteProjectPromptOpen} = usePrompts();
+    const {isDeleteProjectModalOpen, closeDeleteProjectModal} = useModals();
     const {currentProject, projects} = useProjects();
+    const {createNewActivity, activities} = useActivityLog();
+    const {user} = useAuth();
 
     const dispatch = useAppDispatch();
-
-    const closePrompt = (): void => {
-        dispatch(closeDeleteProjectPrompt());
-    }
 
     // Handle project deletion
     const handleDeleteProject = async (): Promise<void> => {
         try {
             if (!currentProject) {
-                dispatch(setError('Failed deleting project'));
+                dispatch(setErrorMsg('Failed deleting project'));
                 return;
             }
             
+            const activityLog =  await createNewActivity(
+                ActivityType.DeleteProject,
+                user as IUser,
+                currentProject as IProject,
+                currentProject?.projectId as string
+            );
+
+            dispatch(setActivities([
+                ...activities,
+                activityLog
+            ]));
+
             await deleteProject(currentProject.projectId);
             
             dispatch(setProjects([
@@ -36,15 +51,15 @@ const DeleteProjectPrompt = () => {
             ]));
 
             dispatch(setCurrentProject(null));
-            closePrompt();  
+            closeDeleteProjectModal();  
     
         } catch (error: any) {
             console.error(error);
 
             if (error.response) {
-                dispatch(setError(error.response.data.error));
+                dispatch(setErrorMsg(error.response.data.error));
                 return;
-            } else dispatch(setError('Failed deleting project'));
+            } else dispatch(setErrorMsg('Failed deleting project'));
         }
     }
 
@@ -52,9 +67,9 @@ const DeleteProjectPrompt = () => {
     <Modal
         title={`Delete ${currentProject?.title}`}
         onSubmit={handleDeleteProject}
-        onClose={closePrompt}
+        onClose={closeDeleteProjectModal}
         submitBtnText='Yes, delete'
-        isOpen={deleteProjectPromptOpen}
+        isOpen={isDeleteProjectModalOpen}
         optionalNote={`You are deleting ${currentProject?.title} and all of its contents.`}
         submitBtnStyles='rounded-bl-lg bg-red-400 hover:bg-red-500 text-white'
         closeBtnStyles='hover:bg-slate-200'

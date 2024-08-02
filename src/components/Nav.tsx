@@ -1,33 +1,30 @@
 'use client'
 
 import React from 'react';
-import { closeMobileMenu, openMobileMenu, openNewProjectModal } from '@/store/app/app.slice';
 import { MdMenu } from 'react-icons/md';
-import { useAppDispatch } from '@/hooks/hooks';
 import Logo from './utils/Logo';
 import { BiPlus } from 'react-icons/bi';
 import ToolTip from './common/ToolTip';
 import useAuth from '@/hooks/useAuth';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
+import useMobileMenu from '@/hooks/useMobileMenu';
+import useModals from '@/hooks/useModals';
 
 const Nav = () => {
-    const dispatch = useAppDispatch();
     const {isAuthenticated} = useAuth();
-    
-    const openMenu = () => dispatch(openMobileMenu());
-    const closeMenu = () => dispatch(closeMobileMenu());
+    const {openMobileMenu, closeMobileMenu} = useMobileMenu();
+    const {openNewProjectModal} = useModals();
 
-    const handleNewProjectClick = (): void => {
-      dispatch(openNewProjectModal());
-
-      closeMenu();
+    const handleNewProjectClick = () => {
+      openNewProjectModal();
+      closeMobileMenu();
     }
 
   return (
     <nav className='sticky top-1 left-0 flex items-center py-1 px-2 z-30 mb-3'>
       <button
-        onClick={openMenu}
+        onClick={openMobileMenu}
         className={`
           flex
           items-center
@@ -51,7 +48,7 @@ const Nav = () => {
       </button>
       
       <Logo
-        action={closeMenu}
+        action={closeMobileMenu}
         additionalStyles='absolute top-2 left-0 right-0 mx-auto'
       />
 

@@ -1,21 +1,30 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import useEditModal from '@/hooks/useModals';
 import useProjects from '@/hooks/useProjects';
-import { closeEditStageModal } from '@/store/app/app.slice';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import { redirect } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Input from '../common/Input';
 import Modal from './Modal';
+import { updateStage } from '@/services/projects.api';
+import useModals from '@/hooks/useModals';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { ActivityType } from '@/utils/types';
+import { IUser } from '@/store/auth/auth.slice';
+import useActivityLog from '@/hooks/useActivityLog';
+import useAuth from '@/hooks/useAuth';
 
 const EditStageModal = () => {
     const dispatch = useAppDispatch();
 
     const {currentProject, currentStage, stages} = useProjects();
-    const {editStageModalOpen} = useEditModal();
+    const {isEditStageModalOpen, closeEditStageModal} = useModals();
+    const {createNewActivity, activities} = useActivityLog();
+    const {user} = useAuth();
+
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     const DEFAULT_VALUES = {
         title: '',
@@ -24,7 +33,7 @@ const EditStageModal = () => {
     const [inputValues, setInputValues] = useState(DEFAULT_VALUES);
 
     const closeModal = () => {
-        dispatch(closeEditStageModal());
+        closeEditStageModal();
         setInputValues(DEFAULT_VALUES);
     }
 
@@ -37,36 +46,66 @@ const EditStageModal = () => {
 
         const updatedCurrentProject: IProject = {
             ...currentProject,
-            stages: stages.map((stage: IStage) => {
-                if (stage.stageId === updatedStage.stageId) {
-                    return updatedStage;
-                } else return stage;
-            }
-        )} as IProject;
+            stages: stages.map(s =>
+                s.stageId === updatedStage.stageId
+                    ? updatedStage
+                    : s
+            ),
+        } as IProject;
 
+        const activityLog =  await createNewActivity(
+            ActivityType.UpdateStageTitle,
+            user as IUser,
+            currentStage as IStage,
+            currentProject?.projectId as string
+        );
+        
         dispatch(setCurrentProject(updatedCurrentProject));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
 
         closeModal();
+
+        // if (currentStage?.title !== updatedValues.title) {
+        //     // Updates currentStage property in tasks
+        // }
+        await updateStage(updatedStage);
+    }
+
+    const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+        const {name, value} = ev.target;
+
+        setInputValues({
+            ...inputValues,
+            [name]: value
+        });
     }
 
     useEffect(() => {
-        if (currentStage) setInputValues(inputValues => ({...inputValues, title: currentStage.title}));
-    }, [currentStage])
+        if (isEditStageModalOpen && currentStage) setInputValues(inputValues => ({
+            ...inputValues,
+            title: currentStage.title
+        }));
+    }, [isEditStageModalOpen, currentStage])
 
     useEffect(() => {
         if (!currentProject) redirect(LINKS['PROJECTS']);
     }, [currentProject])
 
-    const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
-        setInputValues({...inputValues, [ev.target.name]: ev.target.value})
-    }
+    useEffect(() => {
+        if (isEditStageModalOpen && titleInputRef.current) {
+            titleInputRef.current.focus();
+        }
+    }, [isEditStageModalOpen])
 
   return (
     <Modal
         title={`Edit ${currentStage?.title}`}
         onSubmit={() => handleSave(inputValues as IStage)}
         onClose={closeModal}
-        isOpen={editStageModalOpen}
+        isOpen={isEditStageModalOpen}
         submitBtnText='Save'
     >
         <Input
@@ -74,6 +113,7 @@ const EditStageModal = () => {
             type="text"
             name="title"
             id="title"
+            ref={titleInputRef}
             value={inputValues?.title}
             onChange={handleInputChange}
             additionalStyles='focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4'

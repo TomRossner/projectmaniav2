@@ -16,7 +16,12 @@ const Container = ({
     <div
         id={id}
         className={twMerge(
-            "p-4",
+            `
+            p-4
+            flex
+            flex-col
+            h-[90vh]
+            `,
             className,
         )}
     >

@@ -1,11 +1,11 @@
-import { IProject, IStage } from "@/store/projects/projects.slice";
-import { ScrollDirection, Priority, TOption, Filter, Status, NotificationData } from "./types";
+import { IProject, IStage, ITask, TeamMember } from "@/store/projects/projects.slice";
+import { ScrollDirection, Priority, TOption, Status, NewSubTask, ActivityType } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
 import { LINKS } from "./links";
 import { IUser } from "@/store/auth/auth.slice";
 import { v4 as uuid } from "uuid";
-import { NewInvitationData, NewNotificationData } from "./interfaces";
+import { NewActivityData, NewInvitationData } from "./interfaces";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();
@@ -120,12 +120,11 @@ const getUniqueLinks = (links: ExternalLink[]): ExternalLink[] => {
 
   for (let link of links) {
     const normalizedUrl: string = normalizeUrl(link.url);
-    console.log(normalizedUrl)
+
     if (!map.has(normalizedUrl)) {
       map.set(normalizedUrl, true);
       uniqueLinks.push(link);
     }
-
   }
 
   return uniqueLinks;
@@ -205,31 +204,11 @@ const setProjectLink = (projectId: string): string => {
   return `${LINKS.PROJECTS}/${projectId}`;
 }
 
-const userInitials = (user: IUser): string => {
-  const {firstName, lastName} = user;
-  return `${firstName.slice(0, 1).toUpperCase()}${lastName.slice(0, 1).toUpperCase()}`;
-}
-
 const getAvatarPosition = (idx: number): string => {
   const increment = idx * 5;
   return idx > 0
-    ? `absolute right-[${increment}px] z-[${increment}]`
+    ? `-mx-[${increment}] z-[${increment}]`
     : '';
-}
-
-const getFilters = (queries: string[], filtersArr: Filter[]): Filter[] => {
-  let filters: Filter[] = [];
-
-  if (!filtersArr.length) return filters;
-
-  for (const query of queries) {
-      filters = [
-          ...filters,
-          filtersArr.find(f => f.category.toLowerCase() === query)
-      ] as Filter[];
-  }
-
-  return filters.filter(Boolean);
 }
 
 const getStatus = (isDone: boolean, status: Status): boolean => {
@@ -244,7 +223,7 @@ const generateId = () => {
   return uuid();
 }
 
-const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProject, "projectId" | "title">): NewInvitationData => {
+const createInvitation = (sender: IUser, recipient: IUser, projectData: Pick<IProject, "projectId" | "title">): NewInvitationData => {
   return {
       projectData: {
           title: projectData.title,
@@ -255,32 +234,20 @@ const createInvitation = (sender: IUser, subject: IUser, projectData: Pick<IProj
           firstName: sender.firstName,
           lastName: sender.lastName
       },
-      subject: {
-          userId: subject.userId,
-          firstName: subject.firstName,
-          lastName: subject.lastName
+      recipient: {
+          userId: recipient.userId,
+          firstName: recipient.firstName,
+          lastName: recipient.lastName
       },
   }
 }
 
-const createNotification = (newNotificationData: NewNotificationData): NewNotificationData => {
-  const {
-    data,
-    sender,
-    subject,
-    type
-  } = newNotificationData;
-
+const createNewSubtask = (subtasksLength: number): NewSubTask => {
   return {
-    data,
-    sender,
-    subject,
-    type
+      title: `Subtask #${subtasksLength + 1}`,
+      isDone: false,
+      subtaskId: uuid(),
   }
-}
-
-const isProject = (data: NotificationData): data is Pick<IProject, "projectId" | "title"> => {
-  return (data as Pick<IProject, "projectId" | "title">).title !== undefined;
 }
 
 export {
@@ -293,19 +260,15 @@ export {
     validateUrls,
     getInvalidLinks,
     setPriorityColor,
-    // getBlurData,
     createOption,
     createSearchRegExp,
     renameLinks,
     getUniqueLinks,
     getDuplicatedLinks,
     getAvatarPosition,
-    userInitials,
     setProjectLink,
-    getFilters,
     getStatus,
     generateId,
     createInvitation,
-    createNotification,
-    isProject
+    createNewSubtask,
 }

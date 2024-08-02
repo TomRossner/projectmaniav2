@@ -1,11 +1,18 @@
-import { useAppSelector } from './hooks';
-import { selectMobileMenu } from '@/store/app/app.selectors';
+import { selectIsMobileMenuOpen } from '@/store/modals/modals.selectors';
+import { useAppDispatch, useAppSelector } from './hooks';
+import { closeModal, openModal } from '@/store/modals/modals.slice';
 
 const useMobileMenu = () => {
-    const mobileMenu = useAppSelector(selectMobileMenu);
+    const isMobileMenuOpen = useAppSelector(selectIsMobileMenuOpen);
+    const dispatch = useAppDispatch();
+
+    const openMobileMenu = () => dispatch(openModal('mobileMenu'));
+    const closeMobileMenu = () => dispatch(closeModal('mobileMenu'));
 
   return {
-    mobileMenu
+    isMobileMenuOpen,
+    openMobileMenu,
+    closeMobileMenu,
   }
 }
 

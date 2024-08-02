@@ -1,7 +1,5 @@
 'use client'
 
-import { useAppDispatch } from '@/hooks/hooks';
-import { openDeleteStagePrompt, openEditStageModal, openNewTaskModal } from '@/store/app/app.slice';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
@@ -19,6 +17,9 @@ import { RxCross2 } from 'react-icons/rx';
 import MoreOptions from './common/MoreOptions';
 import { TbFilterCancel, TbFilterOff, TbFilterPlus, TbFilterX } from "react-icons/tb";
 import useFilters from '@/hooks/useFilters';
+import SortBy from './SortBy';
+import { BsSortDown } from "react-icons/bs";
+import useModals from '@/hooks/useModals';
 
 type StageTopProps = {
     stage: IStage;
@@ -38,24 +39,24 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     const [subMenuOpen, setSubMenuOpen] = useState<boolean>(false);
 
     const [filtersTabOpen, setFiltersTabOpen] = useState<boolean>(false);
+    const [sortByTabOpen, setSortByTabOpen] = useState<boolean>(false);
     const {filters} = useFilters();
-    
-    const dispatch = useAppDispatch();
+    const {openEditStageModal, openNewTaskModal, openDeleteStageModal} = useModals();
 
     const toggleInputVisibility = (): void => {
         setInputVisible(!inputVisible);
     }
 
     const handleEdit = (): void => {
-        dispatch(openEditStageModal());
+        openEditStageModal();
     }
 
     const handleAddNewTask = (): void => {
-        dispatch(openNewTaskModal());
+        openNewTaskModal();
     }
 
     const handleDeletePrompt = (): void => {
-        dispatch(openDeleteStagePrompt());
+        openDeleteStageModal();
     }
 
     const handleSearchInputChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
@@ -110,8 +111,12 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
         setMenuOpen(!menuOpen);
     }
 
-    const openSortBy = () => {
+    const openFiltersTab = () => {
         setFiltersTabOpen(true);
+    }
+
+    const openSortBy = () => {
+        setSortByTabOpen(true);
     }
 
     const handleOpt = (opt: TOption) => {
@@ -125,10 +130,22 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
             case "search":
                 return setInputVisible(true);
             case "filter":
-                return openSortBy();
+                return handleFiltersTab();
+            case "sort":
+                return handleSortByTab();
             default:
                 return setMenuOpen(false);
         }
+    }
+
+    const handleFiltersTab = () => {
+        setFiltersTabOpen(!filtersTabOpen);
+        if (sortByTabOpen) setSortByTabOpen(false);
+    }
+
+    const handleSortByTab = () => {
+        setSortByTabOpen(!sortByTabOpen);
+        if (filtersTabOpen) setFiltersTabOpen(false);
     }
 
     const stageOptions = useMemo(() => [...STAGE_MENU.map(o => {
@@ -208,25 +225,22 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                     action={handleAddNewTask}
                     icon={<BiPlus />}
                 />
-                {filtersTabOpen
-                    ? (
-                        <ButtonWithIcon
-                            title='Add filters'
-                            action={() => setFiltersTabOpen(!filtersTabOpen)}
-                            icon={<TbFilterX />}
-                            withCount
-                            itemCount={filters.length}
-                        />
-                    ) : (
-                        <ButtonWithIcon
-                            title='Clear filters'
-                            action={() => setFiltersTabOpen(!filtersTabOpen)}
-                            icon={<TbFilterPlus />}
-                            withCount
-                            itemCount={filters.length}
-                        />   
-                    )
-                }
+                
+                <ButtonWithIcon
+                    title={filtersTabOpen ? 'Close filters' : 'Open filters'}
+                    action={handleFiltersTab}
+                    icon={filtersTabOpen ? <TbFilterX /> : <TbFilterPlus />} 
+                    withCount
+                    disabled={!tasks.length && !filters.length}
+                    itemCount={filters.length}
+                />
+
+                <ButtonWithIcon
+                    title={filtersTabOpen ? 'Close sort options' : 'Open sort options'}
+                    action={handleSortByTab}
+                    disabled={!tasks.length}
+                    icon={<BsSortDown />} 
+                />
 
                 {/* <AnimatePresence>
                     {inputVisible && (
@@ -271,7 +285,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                                 onChange={handleSearchInputChange}
                                 value={searchInputValue}
                                 placeholder='Search tasks...'
-                                iconInsideInput
+                                withIconInsideInput
                                 inputIcon={!!searchInputValue && (
                                     <ButtonWithIcon
                                         icon={<RxCross2 />}
@@ -310,6 +324,15 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                     title='More options'
                     action={toggleMenu}
                     icon={<BsThreeDots />}
+                />
+
+                <MoreOptions
+                    isOpen={menuOpen}
+                    setIsOpen={setMenuOpen}
+                    options={STAGE_MENU_OPTIONS}
+                    action={handleOpt}
+                    disabled={!tasks.length}
+                    additionalStyles='top-[80%] right-6'
                 />
 
                 {/* <AnimatePresence>
@@ -356,13 +379,6 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                         </motion.div>
                     )}
                 </AnimatePresence> */}
-                <MoreOptions
-                    isOpen={menuOpen}
-                    setIsOpen={setMenuOpen}
-                    options={STAGE_MENU_OPTIONS}
-                    action={handleOpt}
-                    additionalStyles='top-[80%] right-6'
-                />
             </div>
 
             {/* {inputVisible &&
@@ -377,7 +393,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                     <div className='flex flex-col gap-3 py-3'>
                         {!!searchResults.length
                             ?   searchResults.map(
-                                    (task: ITask) =>
+                                    (task: Task) =>
                                         <div key={task.taskId} className='w-full p-1 flex justify-between border border-blue-500 rounded-bl-lg bg-slate-100'>
                                             <p className='text-xl text-stone-800'>
                                                 {colorMatchedLetters(task.title)}
@@ -392,9 +408,17 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                 </div>
             } */}
         </div>
+        
         <Filters
             isOpen={filtersTabOpen}
-            setIsOpen={setFiltersTabOpen}
+            setIsOpen={handleFiltersTab}
+            setTasks={setTasks}
+            stage={stage}
+        />
+
+        <SortBy
+            isOpen={sortByTabOpen}
+            setIsOpen={handleSortByTab}
             setTasks={setTasks}
             stage={stage}
         />

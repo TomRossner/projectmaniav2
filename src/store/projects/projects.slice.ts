@@ -1,40 +1,43 @@
-import { createProject, getAllProjects } from "@/services/projects.api";
-import { IBaseTask } from "@/utils/interfaces";
+import { createProject, getAllProjects, getProject, updateProject } from "@/services/projects.api";
+import { Activity, NewTaskData } from "@/utils/interfaces";
 import { ErrorData, Filter } from "@/utils/types";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
+import { IUser } from "../auth/auth.slice";
+import { useRouter } from "next/navigation";
 
-export interface IProject extends IBaseProject {
+export interface IProject extends NewProjectData {
     stages: IStage[];
     projectId: string;
     subtitle?: string;
-    team: ITeamMember[];
+    team: TeamMember[];
+    activities: Activity[];
 }
 
-export interface IBaseProject {
+export interface NewProjectData {
     title: string,
-    team: ITeamMember[];
+    team: TeamMember[];
+    createdBy: string;
+    stages: IStage[];
+    activities: Activity[];
 }
 
-export interface ITeamMember {
-    email: string;
-    userId: string;
-    firstName: string;
-    lastName: string;
-    imgSrc: string;
-}
+export type TeamMember = Pick<IUser, "email" | "userId" | "firstName" | "lastName" |"imgSrc" | "isOnline">;
 
 export interface IStage {
     title: string;
     tasks: ITask[];
-    stageId?: string;
+    stageId: string;
+    parentProjectId: string;
+    createdBy: string;
 }
 
-export interface ITask extends IBaseTask {
+export interface ITask extends NewTaskData {
+    createdAt: Date;
     taskId: string;
 }
 
-export interface IProjectsState {
+export interface ProjectsState {
     projects: IProject[];
     currentProject: IProject | null;
     isFetching: boolean;
@@ -44,9 +47,11 @@ export interface IProjectsState {
     tasks: ITask[];
     currentStageIndex: number;
     filters: Filter[];
+    isJoiningProject: boolean;
+    isLeavingProject: boolean;
 }
 
-const initialState: IProjectsState = {
+const initialState: ProjectsState = {
     projects: [],
     currentProject: null,
     isFetching: false,
@@ -56,6 +61,8 @@ const initialState: IProjectsState = {
     tasks: [],
     currentStageIndex: 0,
     filters: [],
+    isJoiningProject: false,
+    isLeavingProject: false,
 }
 
 const handleError = (error: AxiosError<ErrorData>) => {
@@ -81,7 +88,7 @@ export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsA
     }
 })
 
-export const createProjectAsync = createAsyncThunk('projectsSlice/createProjectAsync', async (newProjectData: Partial<IProject>) => {
+export const createProjectAsync = createAsyncThunk('projectsSlice/createProjectAsync', async (newProjectData: NewProjectData) => {
     try {
         const {data} = await createProject(newProjectData);
         return data; 
@@ -89,6 +96,76 @@ export const createProjectAsync = createAsyncThunk('projectsSlice/createProjectA
         handleError(error as AxiosError<ErrorData>);
     }
 })
+
+type JoinProjectData = {
+    projectData: Pick<IProject, "projectId" | "title">;
+    user: IUser;
+}
+
+export const joinProjectAsync = createAsyncThunk('/projectsSlice/joinProjectAsync', async ({
+    projectData,
+    user,
+}: JoinProjectData) => {
+    try {
+        const res = await getProject(projectData.projectId);
+
+        if (res.data) {
+            const project: IProject = res.data;
+
+            const newTeamMember = {
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                imgSrc: user.imgSrc,
+                userId: user.userId,
+            } as TeamMember;
+
+            const updatedProject = {
+                ...project,
+                team: [
+                    // Remove user if present and then add the new one, for updated values(imgSrc?)
+                    ...project.team.filter(u => u.userId !== user?.userId),
+                    newTeamMember
+                ],
+            } as IProject;
+            
+            await updateProject(updatedProject);
+
+        //   await handleRemoveNotification(notificationId);
+
+        }
+    } catch (error) {
+        console.error(error);
+        handleError(error as AxiosError<ErrorData>);
+    }
+})
+
+type LeaveProjectData = {
+    userId: string;
+    projectId: string;
+}
+
+export const leaveProjectAsync = createAsyncThunk('/projectsSlice/leaveProjectAsync', async ({userId, projectId}: LeaveProjectData) => {
+    try {
+        const res = await getProject(projectId);
+
+        if (res.data) {
+            const project: IProject = res.data;
+            
+            const updatedProject: IProject = {
+                ...project,
+                team: [
+                    ...project.team.filter(u => u.userId !== userId)
+                ]
+            }
+
+            await updateProject(updatedProject);
+        }
+      
+    } catch (error: unknown) {
+      handleError(error as AxiosError<ErrorData>);
+    }
+});
 
 export const projectsSlice = createSlice({
     name: 'projectsSlice',
@@ -124,15 +201,33 @@ export const projectsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchProjectsAsync.fulfilled, (state: IProjectsState, action: PayloadAction<IProject[]>) => {
+            .addCase(fetchProjectsAsync.fulfilled, (state: ProjectsState, action: PayloadAction<IProject[]>) => {
                 state.projects = action.payload;
                 state.isFetching = false;
             })
-            .addCase(fetchProjectsAsync.pending, (state: IProjectsState) => {
+            .addCase(fetchProjectsAsync.pending, (state: ProjectsState) => {
                 state.isFetching = true;
             })
-            .addCase(fetchProjectsAsync.rejected, (state: IProjectsState) => {
+            .addCase(fetchProjectsAsync.rejected, (state: ProjectsState) => {
                 state.isFetching = false;
+            })
+            .addCase(joinProjectAsync.fulfilled, (state: ProjectsState) => {
+                state.isJoiningProject = false;
+            })
+            .addCase(joinProjectAsync.rejected, (state: ProjectsState) => {
+                state.isJoiningProject = false;
+            })
+            .addCase(joinProjectAsync.pending, (state: ProjectsState) => {
+                state.isJoiningProject = true;
+            })
+            .addCase(leaveProjectAsync.fulfilled, (state: ProjectsState) => {
+                state.isLeavingProject = false;
+            })
+            .addCase(leaveProjectAsync.rejected, (state: ProjectsState) => {
+                state.isLeavingProject = false;
+            })
+            .addCase(leaveProjectAsync.pending, (state: ProjectsState) => {
+                state.isLeavingProject = true;
             })
     }
 })

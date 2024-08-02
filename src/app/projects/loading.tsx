@@ -18,7 +18,7 @@ const loading = () => {
         />
       </div>
 
-      <Loading withText text='projects' />
+      <Loading withText text='Loading projects...' />
     </Container>
   )
 }

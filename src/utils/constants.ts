@@ -1,6 +1,6 @@
 import { IProject, IStage } from "@/store/projects/projects.slice";
-import { IBaseTask } from "./interfaces";
-import { Tag, ScrollDirection, Screen, ExternalLink, StageOptions, Priority } from "./types";
+import { NewTaskData } from "./interfaces";
+import { Tag, ScrollDirection, Screen, ExternalLink, StageOptions, Priority, NewStageData } from "./types";
 import { TooltipProps } from "@greguintow/react-tippy";
 import { capitalizeFirstLetter } from "./utils";
 
@@ -8,9 +8,9 @@ const APP_VERSION_FULL: string = process.env.NEXT_PUBLIC_APP_VERSION as string;
 
 const APP_VERSION: string = APP_VERSION_FULL.split(".")[0];
 
-const DEFAULT_STAGE: IStage = {
+const DEFAULT_STAGE: Pick<NewStageData, "title" | "tasks"> = {
     tasks: [],
-    title: 'Stage #1'
+    title: 'New Stage'
 }
 
 const DEFAULT_TASK_TITLE: string = 'New task';
@@ -23,7 +23,7 @@ const PRIORITIES: Priority[] = [
 
 const DEFAULT_PRIORITY: Priority = "low";
 
-const DEFAULT_TASK_VALUES: IBaseTask = {
+const DEFAULT_TASK_VALUES: NewTaskData = {
     title: DEFAULT_TASK_TITLE,
     dueDate: new Date(Date.now()).toJSON(),
     description: '',
@@ -31,17 +31,23 @@ const DEFAULT_TASK_VALUES: IBaseTask = {
     isDone: false,
     thumbnailSrc: '',
     externalLinks: [],
-    tags: []
+    tags: [],
+    assignees: [],
+    subtasks: [],
+    createdBy: "",
+    dependencies: [],
 }
 
 const SCROLL_DIRECTIONS: ScrollDirection[] = ['next', 'prev'];
 
 const DEFAULT_PROJECT_TITLE: string = 'New project';
 
-const DEFAULT_PROJECT: Pick<IProject, "title" | "stages" | "team"> = {
+const DEFAULT_PROJECT: Pick<IProject, "title" | "stages" | "team" | "createdBy" | "activities"> = {
     title: DEFAULT_PROJECT_TITLE,
-    stages: [DEFAULT_STAGE],
-    team: []
+    stages: [],
+    team: [],
+    activities: [],
+    createdBy: "",
 }
 
 const TAGS: Tag[] = [
@@ -77,6 +83,7 @@ const PROJECT_MENU_OPTIONS: string[] = [
     'Edit',
     'Invite',
     'Activity log',
+    'Leave project',
     'Delete',
 ]
 
@@ -85,6 +92,7 @@ const FILTERS_CATEGORIES = {
     "Tag": "Tag",
     "Status": "Status",
     "Date": "Date",
+    "Assignee": "Assignee",
 }
 
 const STAGE_MENU: StageOptions[] = [
@@ -131,18 +139,22 @@ const STAGE_MENU: StageOptions[] = [
                     },
                 ]
             },
+            // {
+            //     option: "Date",
+            //     subOptions: [
+            //         {
+            //             option: "Ascending",
+            //             category: FILTERS_CATEGORIES["Date"]
+            //         },
+            //         {
+            //             option: "Descending",
+            //             category: FILTERS_CATEGORIES["Date"]
+            //         },
+            //     ]
+            // },
             {
-                option: "Date",
-                subOptions: [
-                    {
-                        option: "Ascending",
-                        category: FILTERS_CATEGORIES["Date"]
-                    },
-                    {
-                        option: "Descending",
-                        category: FILTERS_CATEGORIES["Date"]
-                    },
-                ]
+                option: "Assignee",
+                subOptions: []
             },
         ]
     },
@@ -154,9 +166,10 @@ const STAGE_MENU: StageOptions[] = [
     },
 ]
 const STAGE_MENU_OPTIONS: string[] = [
-    'Edit',
+    'Sort',
     'Filter',
     // 'Search',
+    'Edit',
     'Delete',
 ]
 
@@ -185,6 +198,17 @@ const SCREENS: Screen = {
     "xl": 1280,
 }
 
+// Count for team members shown in homepage for mostRecentProject
+const TEAM_MEMBERS_COUNT = 3;
+
+const PRIORITY_ORDER = {
+    "low": 1,
+    "medium": 2,
+    "high": 3
+}
+
+const MAX_SUBTASKS: number = 10;
+
 export {
     APP_VERSION,
     APP_VERSION_FULL,
@@ -206,4 +230,7 @@ export {
     STAGE_MENU_OPTIONS,
     FILTERS_CATEGORIES,
     STAGE_MENU,
+    TEAM_MEMBERS_COUNT,
+    PRIORITY_ORDER,
+    MAX_SUBTASKS,
 }

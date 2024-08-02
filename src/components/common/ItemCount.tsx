@@ -5,10 +5,15 @@ import { twMerge } from 'tailwind-merge';
 type ItemCountProps = {
     count: number;
     additionalStyles?: string;
+    disabled?: boolean;
 }
 
-const ItemCount = ({count = 10, additionalStyles}: ItemCountProps) => {
-  return (
+const ItemCount = ({
+    count = 0,
+    additionalStyles,
+    disabled = false
+}: ItemCountProps) => {
+  return !disabled && (
     <span
         className={twMerge(`
             w-3
@@ -29,12 +34,12 @@ const ItemCount = ({count = 10, additionalStyles}: ItemCountProps) => {
             text-center
             font-sans
             font-bold
-            text-stone-400
             ${count >= MAX_EXTERNAL_LINKS
                 ? "text-[8px]"
                 : "text-[10px]"
             }
             ${additionalStyles}
+            ${disabled && 'disabled:border-slate-200 disabled:text-slate-200'}
         `)}
     >
         {count}
@@ -42,4 +47,4 @@ const ItemCount = ({count = 10, additionalStyles}: ItemCountProps) => {
   )
 }
 
-export default ItemCount
+export default ItemCount;

@@ -2,8 +2,6 @@
 
 import React from 'react';
 import Cross from './utils/Cross';
-import { useAppDispatch } from '@/hooks/hooks';
-import { closeMobileMenu } from '@/store/app/app.slice';
 import Logo from './utils/Logo';
 import MenuList from './MenuList';
 import { BiHome } from "react-icons/bi";
@@ -17,14 +15,11 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
 import { MdOutlineNotifications } from "react-icons/md";
+import { IUser } from '@/store/auth/auth.slice';
 
 const MobileMenu = () => {
-    const {mobileMenu} = useMobileMenu();
+    const {isMobileMenuOpen, closeMobileMenu} = useMobileMenu();
     const {user} = useAuth();
-
-    const dispatch = useAppDispatch();
-
-    const closeMenu = () => dispatch(closeMobileMenu());
 
     const ul1: MenuItem[] = [
         {
@@ -59,7 +54,7 @@ const MobileMenu = () => {
                 ? `${user.firstName} ${user.lastName}`
                 : "Profile",
             icon: <CgProfile />,
-            imageSrc: user?.imgSrc
+            imageSrc: user?.imgSrc as Pick<IUser, "imgSrc"> & string,
         },
         {
             text: "Sign in",
@@ -72,8 +67,8 @@ const MobileMenu = () => {
     ]
 
     const menuLists = [
-        ul1.map(i => ({...i, action: closeMenu})),
-        ul2.map(i => ({...i, action: closeMenu}))
+        ul1.map(i => ({...i, action: closeMobileMenu})),
+        ul2.map(i => ({...i, action: closeMobileMenu}))
     ]
 
   return (
@@ -90,11 +85,11 @@ const MobileMenu = () => {
             w-full
             h-screen
             p-2
-            ${!mobileMenu && '-translate-x-full'}
+            ${!isMobileMenuOpen && '-translate-x-full'}
         `)}
     >
-        <Cross action={closeMenu} additionalStyles='absolute left-2' />
-        <Logo action={closeMenu} additionalStyles='absolute top-2 left-0 right-0 mx-auto z-50' />
+        <Cross action={closeMobileMenu} additionalStyles='absolute left-2' />
+        <Logo action={closeMobileMenu} additionalStyles='absolute top-2 left-0 right-0 mx-auto z-50' />
 
         <div id='mobileMenu' className='flex flex-col w-full h-full fixed top-0 left-0'>
             {menuLists.map((list: MenuItem[], listIdx: number) =>

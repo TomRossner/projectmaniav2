@@ -121,7 +121,7 @@ const SearchModal = (props: SearchModalProps) => {
             onChange={handleSearchInputChange}
             value={searchQuery}
             placeholder='Search tasks...'
-            iconInsideInput
+            withIconInsideInput
             inputIcon={
                 <ButtonWithIcon
                     withTooltip={false}
@@ -162,11 +162,23 @@ const SearchModal = (props: SearchModalProps) => {
                     <div className='flex flex-col gap-3 py-3 overflow-y-auto p-2 max-h-[20vh]'>
                         {isDirty
                             ?   searchResults.map(
-                                    (task: ITask) =>
+                                    (task: ITask, idx) =>
                                         <div
-                                            key={task.taskId}
+                                            key={idx}
                                             onClick={closeSearchModal}
-                                            className='w-full p-1 flex justify-between border border-blue-500 rounded-bl-lg bg-slate-100 cursor-pointer'
+                                            className={twMerge(`
+                                                w-full
+                                                p-1
+                                                flex
+                                                justify-between
+                                                border
+                                                rounded-bl-lg
+                                                cursor-pointer
+                                                ${task.isDone
+                                                    ? 'bg-green-200 border-green-500'
+                                                    : 'border-blue-500 bg-slate-100'
+                                                }
+                                            `)}
                                         >
                                             <p className='text-xl text-stone-800'>
                                                 {colorMatchedLetters(task.title, searchQuery)}

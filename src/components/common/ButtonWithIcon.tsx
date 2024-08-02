@@ -67,6 +67,7 @@ const ButtonWithIcon = ({
         title={title}
         disabled={disabled}
         {...rest}
+        className='h-full'
       >  
         <button
           type='button'
@@ -95,7 +96,12 @@ const ButtonWithIcon = ({
             ${state && additionalStylesForState}
           `)}
         >
-          {withCount && <ItemCount count={itemCount as number} />}
+          {withCount && (
+            <ItemCount
+              count={itemCount as number}
+              disabled={disabled}
+            />
+          )}
           {icon}
         </button>
       </ToolTip>

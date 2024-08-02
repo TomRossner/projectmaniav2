@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectAuth } from '@/store/auth/auth.selectors';
-import { setUser } from '@/store/auth/auth.slice';
-import { getUserFromJwt, setTokenHeader } from '@/services/localStorage';
+import { IUser, setIsAuthenticated, setUser } from '@/store/auth/auth.slice';
+import { refreshUser, setTokenHeader } from '@/services/localStorage';
+import { TeamMember } from '@/store/projects/projects.slice';
+import { fetchSession } from '@/services/auth.api';
 
 const useAuth = () => {
     const {
@@ -16,16 +18,36 @@ const useAuth = () => {
 
     const dispatch = useAppDispatch();
 
-    useEffect(() => {
-      dispatch(setUser(getUserFromJwt()));
-      setTokenHeader();
-    }, [])
+    const getUserName = (user: IUser | TeamMember): string => {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    
+    const getUserInitials = (userName: string): string => {
+      return userName.split(" ")[0].charAt(0).toUpperCase()
+          + userName.split(" ")[1].charAt(0).toUpperCase();
+    }
+
+    const userInitials = (user: IUser | TeamMember): string => {
+      const {firstName, lastName} = user;
+      return `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}`;
+    }
+
+    // const isAuthenticated = useMemo(() => !!user, [user]);
+
+    // useEffect(() => {
+    //   fetchSession().then(res => dispatch(setUser(res)));
+    //   // dispatch(setUser(refreshUser()));
+    //   // setTokenHeader();
+    // }, [])
 
     return {
       user,
       isAuthenticated,
       isLoading,
-      authError
+      authError,
+      getUserInitials,
+      getUserName,
+      userInitials,
     }
 }
 

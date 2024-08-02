@@ -14,7 +14,11 @@ type TaskTopProps = {
   additionalStyles?: string;
 }
 
-const TaskTop = forwardRef(function TaskTop({title, task, additionalStyles}: TaskTopProps, ref: ForwardedRef<HTMLElement>) {
+const TaskTop = forwardRef(function TaskTop({
+  title,
+  task,
+  additionalStyles
+}: TaskTopProps, ref: ForwardedRef<HTMLElement>) {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const dispatch = useAppDispatch();
 

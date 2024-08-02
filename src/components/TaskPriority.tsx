@@ -13,13 +13,13 @@ const TaskPriority = ({priority}: TaskPriorityProps) => {
   return (
     <div
       className={twMerge(`
-        pt-1
+        pt-0.5
         text-white
         rounded-bl-lg
-        self-end
+        self-center
         flex
         items-end
-        w-[70px]
+        min-w-[50px]
         border
         border-slate-500
         text-sm

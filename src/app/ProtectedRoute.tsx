@@ -11,7 +11,7 @@ const isAuth = (Component: any) => {
         
         useEffect(() => {
             if (!isAuthenticated) {
-                return redirect(LINKS['SIGN_IN']);
+                return redirect(LINKS.SIGN_IN);
             }
         }, [])
 

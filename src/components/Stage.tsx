@@ -7,10 +7,12 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { IStage, ITask, setCurrentStage } from '@/store/projects/projects.slice';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import useFilters from '@/hooks/useFilters';
 
 const Stage = (stage: IStage) => {
     const dispatch = useAppDispatch();
     const [tasks, setTasks] = useState<ITask[]>([]);
+    const {filters: appliedFilters, getFilteredTasks} = useFilters();
 
     const {
       setNodeRef,
@@ -33,8 +35,8 @@ const Stage = (stage: IStage) => {
     }
 
     useEffect(() => {
-      setTasks(stage.tasks);
-    }, [stage.tasks]);
+      setTasks(getFilteredTasks(stage.tasks, appliedFilters));
+    }, [stage.tasks])
 
     if (isDragging) {
       return (

@@ -3,67 +3,105 @@
 import Notification from '@/components/Notification';
 import Container from '@/components/common/Container';
 import Header from '@/components/common/Header';
-import useAuth from '@/hooks/useAuth';
 import React from 'react';
 import isAuth from '../ProtectedRoute';
 import useNotifications from '@/hooks/useNotifications';
-import { getProjectById, updateProject } from '@/services/projects.api';
-import { IProject } from '@/store/projects/projects.slice';
+import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
+import { INotification } from '@/utils/interfaces';
+import useProjects from '@/hooks/useProjects';
+import ErrorModal from '@/components/modals/ErrorModal';
+import useAuth from '@/hooks/useAuth';
+import { IUser } from '@/store/auth/auth.slice';
+import LoadingModal from '@/components/modals/LoadingModal';
+import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
+import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
+import { getProject } from '@/services/projects.api';
 import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
-import { INotification } from '@/utils/interfaces';
+import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { ActivityType } from '@/utils/types';
+import useActivityLog from '@/hooks/useActivityLog';
 
 const Notifications = () => {
+    const {notifications, handleRemoveNotification} = useNotifications();
+    const {handleJoinProject} = useProjects();
     const {user} = useAuth();
-    const {notifications} = useNotifications();
+    const isJoiningProject = useAppSelector(selectIsJoiningProject);
+    const isLeavingProject = useAppSelector(selectIsLeavingProject);
+    const {createNewActivity, activities} = useActivityLog();
 
+    const dispatch = useAppDispatch();
     const router = useRouter();
 
-    const handleJoinProject = async (projectData: Pick<IProject, "projectId" | "title">) => {
-        const {data: project} = await getProjectById(projectData.projectId);
+    const handleJoin = async (notificationData: Pick<IProject, "projectId" | "title">, notificationId: string, user: IUser) => {
+        handleJoinProject(notificationData, user);
+        
+        const {data: project} = await getProject(notificationData.projectId);
 
-        if (project) {
-            const updatedProject = {
-                ...project,
-                team: [...project.team, {
-                    email: user?.email,
-                    firstName: user?.firstName,
-                    lastName: user?.lastName,
-                    imgSrc: user?.imgSrc,
-                    userId: user?.userId,
-                }],
-            } as IProject;
-            
-            await updateProject(updatedProject);
+        const activityLog =  await createNewActivity(
+            ActivityType.JoinProject,
+            user as IUser,
+            project as IProject,
+            project.projectId as string
+        );
 
-            router.push(LINKS['HOME']);
+        dispatch(setCurrentProject(project));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
+        
+        handleRemoveNotification(notificationId);
+        router.push(LINKS.HOME);
+    } 
+
+    const getAction = (notification: INotification) => {
+        switch (notification.type) {
+            case "invitation":
+                return () => handleJoin(
+                    notification.data as Pick<IProject, "projectId" | "title">,
+                    notification.id,
+                    user as IUser
+                );
+            default:
+                return () => {}
         }
-    }
-
-    const handleDenyJoinProject = () => {
-        // Set isPending to false
-        // Remove invitation
-    }
-
-    const handleAcceptFriendRequest = (senderId: string) => {
-
     }
 
   return (
     <Container id='notificationsPage'>
+        <LoadingModal
+            isOpen={isJoiningProject || isLeavingProject}
+            text={
+                isJoiningProject
+                ? 'Joining project...'
+                : isLeavingProject
+                    ? 'Leaving project...'
+                    : ''
+            }
+        />
+        <ErrorModal />
         <Header text='Notifications' />
 
-        <div className='flex flex-col gap-3 justify-center w-full mt-5'>
-            {notifications.map(n =>
-                <Notification
-                    key={n.id}
-                    notification={n as INotification}
-                    withDenyBtn={n.type !== "message"}
-                    onDeny={handleDenyJoinProject}
-                    action={() => handleJoinProject(n.data as Pick<IProject, "projectId" | "title">)}
-                />
-            )}
-        </div>
+        {!!notifications.length ? (
+            <div className='flex flex-col gap-3 justify-center w-full mt-5'>
+                {notifications.map(n =>
+                    <Notification
+                        key={n.id}
+                        notification={n as INotification}
+                        withDenyBtn={n.type !== "message"}
+                        onDeny={() => handleRemoveNotification(n.id)}
+                        action={getAction(n)}
+                    />
+                )}
+            </div>
+        ) : (
+            <div className='h-[50%] text-center w-full text-3xl flex items-center justify-center'>
+                <p>
+                    You do not have any notifications
+                </p>
+            </div>
+        )}
     </Container>
   )
 }

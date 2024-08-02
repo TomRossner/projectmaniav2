@@ -1,43 +1,89 @@
-import { IBaseProject, IProject, IStage, ITask } from "@/store/projects/projects.slice";
+import { NewProjectData, IProject, IStage, ITask } from "@/store/projects/projects.slice";
+import { NewTaskData } from "@/utils/interfaces";
+import { NewStageData } from "@/utils/types";
 import axios, { AxiosResponse } from "axios";
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL as string;
+axios.defaults.withCredentials = true;
+// Project
+// /api/projects/:projectId
 
-const createProject = async (project: IBaseProject | Partial<IProject>): Promise<AxiosResponse> =>
-    await axios.post('/projects/new-project', project);
+// Stage
+// /api/stages/:stageId
 
-const getAllProjects = async (userId: string): Promise<AxiosResponse> =>
+// Task
+// /api/tasks/:taskId
+
+
+
+// Projects API
+
+const getAllProjects = async (userId: string) =>
     await axios.get('/projects', {
         params: {
             userId
-        }
-    })
+        },
+        withCredentials: true
+    });
+    
+const createProject = async (projectData: NewProjectData) =>
+    await axios.post('/projects/', projectData);
 
-const getProjectById = async (projectId: string): Promise<AxiosResponse> =>
-    await axios.get(`/projects/id/${projectId}`);
+const getProject = async (projectId: string) =>
+    await axios.get(`/projects/${projectId}`);
 
-const createStage = async (projectId: string, stageData: IStage): Promise<AxiosResponse> =>
-    await axios.post(`/projects/${projectId}/new-stage`, stageData);
+const updateProject = async (project: IProject) =>
+    await axios.put(`/projects/${project.projectId}`, project);
 
-const updateProject = async (project: IProject): Promise<AxiosResponse> =>
-    await axios.put(`/projects/update-project`, project);
+const deleteProject = async (projectId: string) =>
+    await axios.delete(`/projects/${projectId}`);
 
-const deleteProject = async (projectId: string): Promise<AxiosResponse> =>
-    await axios.delete(`projects/${projectId}`);
 
-const deleteTask = async (taskId: string): Promise<AxiosResponse> =>
-    await axios.delete(`projects/tasks/${taskId}`);
+// Stages API
+const createStage = async (stageData: NewStageData) =>
+    await axios.post(`/stages/`, stageData);
 
-const createNewTask = async (newTask: Partial<ITask>): Promise<AxiosResponse> =>
-    await axios.post(`/projects/new-task`, newTask);
+const updateStage = async (stage: IStage) =>
+    await axios.put(`/stages/${stage.stageId}/`, stage);
 
+const deleteStage = async (stageId: string) =>
+    await axios.delete(`/stages/${stageId}`);
+
+// Tasks
+
+const deleteTask = async (taskId: string) =>
+    await axios.delete(`/tasks/${taskId}`);
+
+const createTask = async (newTask: NewTaskData) =>
+    await axios.post(`/tasks/`, newTask);
+
+const updateTask = async (task: ITask) =>
+    await axios.put(`/tasks/${task.taskId}`, task);
+
+
+// const updateProjectTitle = async (project: IProject) =>
+//     await axios.put(`/projects/${project.projectId}/update-title`, project);
+
+// const newUpdateProject = async (project: IProject) => {
+//     return await axios.put(`/projects/${project.projectId}`, project);
+// }
 export {
-    createProject,
     getAllProjects,
-    getProjectById,
-    createStage,
+
+    createProject,
+    getProject,
     updateProject,
     deleteProject,
+
+    createStage,
+    updateStage,
+    deleteStage,
+
+    createTask,
+    updateTask,
     deleteTask,
-    createNewTask
+    // createNewTask,
+    // updateStageTitle,
+    // updateProjectTitle,
+    // newUpdateProject,
 }

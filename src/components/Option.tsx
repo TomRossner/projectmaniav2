@@ -20,32 +20,30 @@ const Option = ({
     stageOpt,
 }: OptionProps) => {
   return (
-    <>
-        <button
-            type='button'
-            onClick={() => action(opt)}
-            className={twMerge(`
-                pt-0.5
-                px-1.5
-                text-stone-500
-                active:text-stone-800
-                sm:hover:text-stone-800
-                relative
-                flex
-                w-full
-                justify-between
-                disabled:text-stone-300
-                disabled:cursor-not-allowed
-                disabled:sm:hover:text-stone-300
-                disabled:active:text-stone-300
-                sm:hover:bg-slate-100
-                active:bg-slate-100
-            `)}
-            disabled={isDisabled}
-        >
-            {!isStageOption ? opt?.text : stageOpt?.option}
-        </button>
-    </>
+    <button
+        type='button'
+        disabled={isDisabled}
+        onClick={() => action(opt)}
+        className={twMerge(`
+            pt-0.5
+            px-1.5
+            text-stone-500
+            active:text-stone-800
+            sm:hover:text-stone-800
+            relative
+            flex
+            w-full
+            justify-between
+            disabled:text-stone-300
+            disabled:cursor-not-allowed
+            disabled:sm:hover:text-stone-300
+            disabled:active:text-stone-300
+            sm:hover:bg-slate-100
+            active:bg-slate-100
+        `)}
+    >
+        {!isStageOption ? opt?.text : stageOpt?.option}
+    </button>
   )
 }
 
