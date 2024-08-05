@@ -6,7 +6,7 @@ import useProjects from '@/hooks/useProjects';
 import { IProject, TeamMember, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import Link from 'next/link';
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import Container from './common/Container';
 import Button from './common/Button';
 import Header from './common/Header';
@@ -20,20 +20,19 @@ import { getUserById, updateUserData } from '@/services/user.api';
 import { INotification } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { IUser, setUser } from '@/store/auth/auth.slice';
-import { refreshUser } from '@/services/localStorage';
 import { getUserNotifications } from '@/services/notifications.api';
-import { getProject } from '@/services/projects.api';
 import useSocket from '@/hooks/useSocket';
 import useNotifications from '@/hooks/useNotifications';
 import LoadingModal from './modals/LoadingModal';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
 import { openModal } from '@/store/modals/modals.slice';
 import { fetchSession } from '@/services/auth.api';
+import Loading from './common/Loading';
 
 const Home = () => {
-  const {isAuthenticated, user, getUserInitials, getUserName} = useAuth();
-  const {projects, getUserProjects, getMostRecentProject} = useProjects();
-  const {socket} = useSocket();
+  const {isAuthenticated, user, getUserInitials, getUserName, userId} = useAuth();
+  const {projects, getUserProjects, getMostRecentProject, isFetching, projectId} = useProjects();
+  const {socket, emitEvent} = useSocket(userId as string);
   const {notifications, getUpdatedNotificationsIds} = useNotifications();
   const isJoiningProject = useAppSelector(selectIsJoiningProject);
   const isLeavingProject = useAppSelector(selectIsLeavingProject);
@@ -42,7 +41,7 @@ const Home = () => {
 
   const [mostRecentProject, setMostRecentProject] = useState<IProject | null>(null);
     
-  const handleSelectProject = (): void => {
+  const handleSelectProject = () => {
     dispatch(setCurrentProject(mostRecentProject));
   }
 
@@ -59,62 +58,83 @@ const Home = () => {
 
   useEffect(() => {
     if (user) {
+      console.log({user})
       if (!!user.mostRecentProject) {
         getMostRecentProject(user.mostRecentProject as Pick<IProject, "projectId" | "title">)
           .then(project => setMostRecentProject(project));
       }
       
-      getUserProjects(user.userId);
-      getUserNotifications(user.notifications as string[])
-        .then((res: { data: INotification[] }) => {console.log(res);dispatch(setNotifications(res.data))});
+      getUserProjects(userId as string);
+      getUserNotifications(userId as string)
+        .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)));
     }
-  }, [user, isJoiningProject, isLeavingProject])
+  }, [
+    user,
+    isJoiningProject,
+    isLeavingProject,
+    userId,
+  ])
+
+  const handleConnect = useCallback(() => {
+    if (!socket) return;
+
+    console.log("Socket now connected: ", socket?.id);
+    
+    emitEvent('updateSocketId', {
+      userId: userId as string,
+      socketId: socket.id as string
+    });
+    
+    emitEvent("online", {
+        userId
+    });
+  }, [socket, userId]);
+
+const handleOnline = useCallback(async (data: { userId: string }) => {
+    const { data: user } = await getUserById(data.userId);
+    console.log(`${user.firstName} is now online`);
+}, []);
+
+const handleNotification = useCallback((newNotification: INotification) => {
+    dispatch(setNotifications([...notifications, newNotification]));
+    updateUserData({
+        ...user,
+        notifications: getUpdatedNotificationsIds(
+            [...user?.notifications as string[], newNotification.notificationId],
+            [...notifications, newNotification]
+        ),
+    } as IUser)
+        .then(res => dispatch(setUser(res.data)));
+}, [user, dispatch, getUpdatedNotificationsIds, notifications]);
 
   useEffect(() => {
     if (isAuthenticated && user && socket) {
-        const handleConnect = () => {
-            console.log("Socket connected");
-
-            socket.emit("online", {
-                userId: user?.userId
-            });
-        }
-
-        const handleOnline = async (data: { userId: string }) => {
-            const { data: user } = await getUserById(data.userId);
-            console.log(`${user.firstName} is now online`);
-        }
-
-        const handleNotification = (newNotification: INotification) => {
-            dispatch(setNotifications([...notifications, newNotification]));
-            updateUserData({
-                ...user,
-                notifications: getUpdatedNotificationsIds(
-                    [...user.notifications as string[], newNotification.id],
-                    [...notifications, newNotification]
-                ),
-            } as IUser)
-                .then(res => dispatch(setUser(res.data)));
-        }
-
-
         socket.on("connect", handleConnect);
         socket.on("online", handleOnline);
         socket.on("notification", handleNotification);
         // socket.on("confirmedFriendRequest", handleConfirmedFriendRequest);
 
         return () => {
-          // socket.off("connect", handleConnect);
-          // socket.off("online", handleOnline);
-          // socket.off("notification", handleNotification);
+          socket.off("connect", handleConnect);
+          socket.off("online", handleOnline);
+          socket.off("notification", handleNotification);
           // socket.off("confirmedFriendRequest", handleConfirmedFriendRequest);
         }
     }
-  }, [isAuthenticated, user?.userId, socket]);
+  }, [
+    isAuthenticated,
+    userId,
+    socket,
+    user,
+    userId,
+    handleConnect,
+    handleNotification,
+    handleOnline
+  ]);
 
   useEffect(() => {
     fetchSession().then(res => dispatch(setUser(res ?? null)));
-  }, [])
+  }, [dispatch])
 
   return (
     <Container id='homePage' className='text-xl flex gap-3 flex-col items-start w-full'>
@@ -143,6 +163,10 @@ const Home = () => {
         <div className='w-full flex flex-col gap-5'>
           <Header text={`Welcome back ${user?.firstName}`} />
 
+          {isFetching && !projects.length && (
+            <Loading withText text='Loading...' />
+          )}
+          
           {!!projects.length && (
             <div className='w-full flex flex-col'>
               
@@ -229,43 +253,54 @@ const Home = () => {
             </div>
           )}
 
-          {!!projects?.length ? (
-            <div className='w-full flex flex-col'>
-              <h3 className='text-xl font-medium text-stone-800 text-left w-full flex items-center justify-between mt-4'>
-                Recent projects
-                <Link
-                  href={LINKS.PROJECTS}
-                  className='font-normal text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
-                >
-                  See all
-                </Link>
-              </h3>
-              <div className='w-full flex flex-col px-3 py-2 bg-slate-100 rounded-bl-lg'>
-                {projects.map(p => (
-                  <Fragment key={p.projectId}>
-                    <Link
-                      href={setProjectLink(p.projectId)}
-                      onClick={() => dispatch(setCurrentProject(p))}
-                      className='text-blue-400 w-full cursor-pointer sm:hover:text-blue-500 active:text-blue-500 pt-1 font-light'
-                    >
-                      {p.title}
-                    </Link>
-                  </Fragment>
-                ))}
+          {!!projects?.length
+            ? (
+              <div className='w-full flex flex-col'>
+                <h3 className='text-xl font-medium text-stone-800 text-left w-full flex items-center justify-between mt-4'>
+                  Recent projects
+                  <Link
+                    href={{
+                      pathname: LINKS.PROJECTS,
+                      query: {
+                        userId: user?.userId
+                      }
+                    }}
+                    className='font-normal text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
+                  >
+                    See all
+                  </Link>
+                </h3>
+                <div className='w-full flex flex-col px-3 py-2 bg-slate-100 rounded-bl-lg'>
+                  {projects.map(p => (
+                    <Fragment key={p.projectId}>
+                      <Link
+                        href={setProjectLink(p.projectId)}
+                        onClick={() => dispatch(setCurrentProject(p))}
+                        className='text-blue-400 w-full cursor-pointer sm:hover:text-blue-500 active:text-blue-500 pt-1 font-light'
+                      >
+                        {p.title}
+                      </Link>
+                    </Fragment>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className='w-full flex flex-col items-center justify-center gap-5 mt-24'>
-              <p className='w-full text-center'>You do not have any projects</p>
-              <Button
-                action={() => dispatch(openModal("newProject"))}
-                type='button'
-                additionalStyles='rounded-bl-lg bg-blue-400 sm:hover:bg-blue-500 active:bg-blue-500 text-white border-none w-1/2 mx-auto'
-              >
-                Create one
-              </Button>
-            </div>
-          )}
+            ) : (
+              <div className='w-full flex flex-col items-center justify-center gap-5 mt-24'>
+                {!isFetching && (
+                  <>
+                    <p className='w-full text-center'>You do not have any projects</p>
+                    <Button
+                      action={() => dispatch(openModal("newProject"))}
+                      type='button'
+                      additionalStyles='rounded-bl-lg bg-blue-400 sm:hover:bg-blue-500 active:bg-blue-500 text-white border-none w-1/2 mx-auto'
+                    >
+                      Create one
+                    </Button>
+                  </>
+                )}
+              </div>
+            )
+          }
         </div>
       )}
     </Container>

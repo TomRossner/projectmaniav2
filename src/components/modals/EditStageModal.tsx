@@ -4,8 +4,8 @@ import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
-import { redirect } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import { redirect, useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Input from '../common/Input';
 import Modal from './Modal';
 import { updateStage } from '@/services/projects.api';
@@ -15,6 +15,11 @@ import { ActivityType } from '@/utils/types';
 import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
+import useSocket from '@/hooks/useSocket';
+
+const DEFAULT_VALUES = {
+    title: '',
+}
 
 const EditStageModal = () => {
     const dispatch = useAppDispatch();
@@ -22,26 +27,25 @@ const EditStageModal = () => {
     const {currentProject, currentStage, stages} = useProjects();
     const {isEditStageModalOpen, closeEditStageModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
+    const {emitEvent} = useSocket(userId as string);
 
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
-    const DEFAULT_VALUES = {
-        title: '',
-    }
-
     const [inputValues, setInputValues] = useState(DEFAULT_VALUES);
 
-    const closeModal = () => {
+    const router = useRouter();
+
+    const closeModal = useCallback(() => {
         closeEditStageModal();
         setInputValues(DEFAULT_VALUES);
-    }
+    }, [closeEditStageModal]);
 
-    const handleSave = async (updatedValues: IStage) => {
-        
+    const handleSave = useCallback(async (updatedValues: IStage) => {
         const updatedStage: IStage = {
             ...currentStage,
-            ...updatedValues
+            ...updatedValues,
+            lastUpdatedBy: user?.userId as string,
         } as IStage;
 
         const updatedCurrentProject: IProject = {
@@ -72,7 +76,19 @@ const EditStageModal = () => {
         //     // Updates currentStage property in tasks
         // }
         await updateStage(updatedStage);
-    }
+
+        emitEvent('updateStage', updatedStage);
+    }, [
+        activities,
+        closeModal,
+        currentProject,
+        currentStage,
+        stages,
+        user,
+        createNewActivity,
+        emitEvent,
+        dispatch
+    ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = ev.target;
@@ -84,15 +100,17 @@ const EditStageModal = () => {
     }
 
     useEffect(() => {
-        if (isEditStageModalOpen && currentStage) setInputValues(inputValues => ({
-            ...inputValues,
-            title: currentStage.title
-        }));
+        if (isEditStageModalOpen && currentStage) {
+            setInputValues(inputValues => ({
+                ...inputValues,
+                title: currentStage.title
+            }));
+        }
     }, [isEditStageModalOpen, currentStage])
 
     useEffect(() => {
-        if (!currentProject) redirect(LINKS['PROJECTS']);
-    }, [currentProject])
+        if (!currentProject) router.push(LINKS['PROJECTS']);
+    }, [currentProject, router])
 
     useEffect(() => {
         if (isEditStageModalOpen && titleInputRef.current) {

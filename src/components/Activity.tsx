@@ -1,6 +1,7 @@
 import useAuth from '@/hooks/useAuth';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, ITask, TeamMember } from '@/store/projects/projects.slice';
+import { getHowLongAgo } from '@/utils/dates';
 import { Activity } from '@/utils/interfaces';
 import { ActivityData, ActivityType } from '@/utils/types';
 import Image from 'next/image';
@@ -167,7 +168,7 @@ const ActivityItem = ({activity}: ActivityProps) => {
         </p>
 
         <p className='whitespace-nowrap self-start text-stone-400 text-end grow'>
-            {String(new Date(createdAt).toLocaleTimeString())}
+            {getHowLongAgo(createdAt)}
         </p>
     </div>
   )

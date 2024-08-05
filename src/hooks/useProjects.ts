@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectProjectsSlice } from '@/store/projects/projects.selectors';
 import { fetchProjectsAsync, IProject, IStage, ITask, joinProjectAsync, leaveProjectAsync, setCurrentProject, setProjects, TeamMember } from '@/store/projects/projects.slice';
@@ -22,8 +22,6 @@ const useProjects = () => {
       currentStage,
       currentTask,
       isFetching,
-      stages,
-      tasks,
       currentStageIndex,
     } = useAppSelector(selectProjectsSlice);
 
@@ -34,8 +32,12 @@ const useProjects = () => {
     const {handleRemoveNotification} = useNotifications();
     // const {createNewActivity, activities} = useActivityLog();
 
-    const allTasks = useMemo(() =>
-      currentProject?.stages.flatMap(s => s.tasks), [currentProject]);
+    const tasks = useMemo(() =>
+      currentProject?.stages.flatMap(s => s.tasks) ?? [], [currentProject]);
+
+    const stages = useMemo(() => currentProject?.stages ?? [], [currentProject]);
+
+    const projectId = useMemo(() => currentProject?.projectId, [currentProject]);
 
     const handleError = (error: AxiosError): void => {
       if (error.code === 'ERR_NETWORK') {
@@ -68,7 +70,7 @@ const useProjects = () => {
       }
     }
 
-    const updateProjectTasks = (tasks: ITask[], stage: IStage) => {
+    const updateProjectTasks = useCallback((tasks: ITask[], stage: IStage) => {
       const updatedStages = currentProject?.stages.map(s => {
         if (s.stageId === stage.stageId) {
           return {
@@ -84,13 +86,15 @@ const useProjects = () => {
       } as IProject;
   
       dispatch(setCurrentProject(updatedProject));
-    }
+    }, [currentProject, dispatch]);
 
-    const handleJoinProject = (projectData: Pick<IProject, "projectId" | "title">, user: IUser) => {
+    const handleJoinProject = useCallback((projectData: Pick<IProject, "projectId" | "title">, user: IUser) => {
+      if (currentProject?.team.some(u => u.userId === user.userId)) return;
+      
       dispatch(joinProjectAsync({projectData, user}));
-    }
+    }, [currentProject, dispatch]);
 
-    const handleLeaveProject = async (projectId: string, userId: string) => {
+    const handleLeaveProject = useCallback(async (projectId: string, userId: string) => {
       dispatch(leaveProjectAsync({projectId, userId}));
 
       const updatedUser = {
@@ -113,7 +117,7 @@ const useProjects = () => {
       // ]));
       
       router.push(LINKS.HOME);
-    }
+    }, [user, dispatch, router]);
 
   return {
     projects,
@@ -124,7 +128,7 @@ const useProjects = () => {
     stages,
     tasks,
     currentStageIndex,
-    allTasks,
+    projectId,
     getProjects,
     handleError,
     getUserProjects,

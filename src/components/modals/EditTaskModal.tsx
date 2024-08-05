@@ -5,7 +5,7 @@ import useProjects from "@/hooks/useProjects";
 import { IProject, IStage, ITask, TeamMember, setCurrentProject } from "@/store/projects/projects.slice";
 import { LINKS } from "@/utils/links";
 import Image from "next/image";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import React, { ChangeEvent, FormEvent, Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Input from "../common/Input";
 import useModals from "@/hooks/useModals";
@@ -31,6 +31,7 @@ import Line from "../common/Line";
 import { setErrorMsg } from "@/store/error/error.slice";
 import { setActivities } from "@/store/activity_log/activity_log.slice";
 import useActivityLog from "@/hooks/useActivityLog";
+import useSocket from "@/hooks/useSocket";
 
 type EditTaskModalProps = {
     task: ITask;
@@ -45,8 +46,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const {currentProject, currentTask} = useProjects();
     const {isEditTaskModalOpen, closeEditTaskModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-
-    const {user, getUserInitials, getUserName} = useAuth();
+    const {user, getUserInitials, getUserName, userId} = useAuth();
+    const {emitEvent} = useSocket(userId as string);
 
     const DEFAULT_VALUES: ITask = task;
 
@@ -57,9 +58,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const [selectedStage, setSelectedStage] = useState<SelectedStage | null>(null);
 
     const duplicatedLinks = useMemo(() => {
-        if (inputValues?.externalLinks) {
-            return !!getDuplicatedLinks(inputValues?.externalLinks as ExternalLink[]).length;
-        } else return false;
+        return !!inputValues?.externalLinks.length &&
+            !!getDuplicatedLinks(inputValues?.externalLinks as ExternalLink[]).length;
     }, [inputValues?.externalLinks]);
 
     const [selectedAssignees, setSelectedAssignees] = useState<TeamMember[]>([]);
@@ -95,179 +95,12 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         }
     }
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         resetAssigneesSearch();
         setSelectedStage(null);
         setInputValues(DEFAULT_VALUES);
         closeEditTaskModal();
-    }
-
-    const handleSave = async (ev: FormEvent<HTMLFormElement>, updatedValues: ITask) => {
-        ev.preventDefault();
-
-        if (!updatedValues) return;
-
-        dispatch(setErrorMsg(null));
-        
-        if (updatedValues.externalLinks && updatedValues.externalLinks.length) {
-            const updatedLinks: ExternalLink[] = renameLinks(getUniqueLinks(updatedValues.externalLinks));
-
-            updatedValues = {
-                ...updatedValues,
-                externalLinks: updatedLinks
-            } as ITask;
-
-            const linksValid: boolean = validateUrls(updatedLinks);
-    
-            if (!!updatedLinks[0]?.url && !linksValid) {
-                const invalidLinks: ExternalLink[] = getInvalidLinks(updatedLinks);
-    
-                dispatch(setErrorMsg(`${invalidLinks.map((l: ExternalLink) => l.name)
-                    .join(", ")} ${invalidLinks.length > 1
-                        ? "are not valid links"
-                        : "is not a valid link"
-                    }`
-                ));
-    
-                return;
-            }
-        }
-        
-        const updatedStages = getUpdatedStages(updatedValues as ITask, currentProject as IProject);
-
-        const updatedCurrentProject = {
-            ...currentProject,
-            stages: updatedStages
-        } as IProject;
-
-        const activityLog =  await createNewActivity(
-            ActivityType.UpdateTask,
-            user as IUser,
-            currentTask as ITask,
-            currentProject?.projectId as string
-        );
-
-        // dispatch(setCurrentTask(updatedValues));
-        dispatch(setCurrentProject(updatedCurrentProject));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
-
-        closeModal();
-    }
-
-    const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
-        const updatedValues = {
-            ...inputValues,
-            [ev.target.name]: ev.target.value
-        };
-
-        setInputValues(updatedValues as ITask);
-    }
-
-    const handleSelectedPriorityChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
-        setSelectedPriority(ev.target.value as Priority);
-    }
-
-    const setPriorityColor = (priority: Priority): string => {
-        switch (priority) {
-            case "low":
-                return "rounded-bl-lg hover:bg-green-400";
-            case "medium":
-                return "rounded-0 hover:bg-yellow-400";
-            case "high":
-                return "rounded-0 hover:bg-red-400"
-            default:
-                return "rounded-bl-lg hover:bg-slate-200"
-        }
-    }
-
-    const isSelected = (priority: Priority): string => {
-        switch (priority) {
-            case "low":
-                return "bg-green-400";
-            case "medium":
-                return "bg-yellow-400";
-            case "high":
-                return "bg-red-400";
-            default:
-                return "bg-slate-300";
-
-        }
-    }
-
-    const handleRemoveThumbnail = (): void => {
-        setInputValues({
-            ...inputValues,
-            thumbnailSrc: ""
-        } as ITask);
-    }
-
-    const handleLinksChange = ({target: {value}}: React.ChangeEvent<HTMLInputElement>, index: number = 0): void => {
-        setExternalLinks(externalLinks => (
-            [
-                ...externalLinks.map((link: ExternalLink, i: number) =>
-                    i === index
-                        ?   {
-                                ...link,
-                                url: value
-                            }
-                        : link
-                    )
-            ] as ExternalLink[]
-        ));
-    }
-
-    const handleRemoveLink = (linkIndex: number): void => {
-        setExternalLinks([...externalLinks.filter((extLink: ExternalLink) =>
-                externalLinks.indexOf(extLink) !== linkIndex)]);
-    }
-
-    const handleAddLink = (externalLinks: ExternalLink[]): void => {
-        if (externalLinks.some((l: ExternalLink) => !l.url)) {
-            const emptyLinks: ExternalLink[] = externalLinks.filter((l: ExternalLink) => !l.url);
-
-            dispatch(setErrorMsg(`You must fill ${emptyLinks.length > 1
-                ? emptyLinks.map((l: ExternalLink) => l.name).join(", ")
-                : emptyLinks[0].name} before adding a new one`
-            ));
-
-            return;
-        }
-
-        if (externalLinks.length === MAX_EXTERNAL_LINKS) {
-            dispatch(setErrorMsg(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`));
-            return;
-        }
-        
-        setExternalLinks(
-            [
-                ...externalLinks,
-                {
-                    name: `Link #${externalLinks.length + 1}`,
-                    url: ""
-                } as ExternalLink
-            ]
-        );
-    }
-
-    const handleLabelChange = (tag: Tag): void => {
-        setSelectedTags([...selectedTags, tag.tag]);
-    }
-
-    const handleStageChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
-        const stage = currentProject?.stages.find(s => s.stageId === ev.target.value);
-
-        if (stage) {
-            const selectedStage: SelectedStage = {
-                stageId: stage.stageId,
-                title: stage.title,
-            };
-
-            setSelectedStage(selectedStage);
-        }
-    }
+    }, [DEFAULT_VALUES, closeEditTaskModal])
 
     const getUpdatedStages = useCallback((inputValues: ITask, project: IProject): IStage[] | void => {
         if (!project || !inputValues) {
@@ -334,14 +167,198 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
 
         dispatch(setErrorMsg('Failed to update project'));
         return project.stages;
-    }, [task, currentProject?.stages, selectedStage?.stageId]);
+    }, [task, currentProject?.stages, selectedStage?.stageId, dispatch]);
+
+    const handleSave = useCallback(async (ev: FormEvent<HTMLFormElement>, updatedValues: ITask) => {
+        ev.preventDefault();
+
+        if (!updatedValues) return;
+
+        dispatch(setErrorMsg(null));
+        
+        if (updatedValues.externalLinks && updatedValues.externalLinks.length) {
+            const updatedLinks: ExternalLink[] = renameLinks(getUniqueLinks(updatedValues.externalLinks));
+
+            updatedValues = {
+                ...updatedValues,
+                externalLinks: updatedLinks
+            } as ITask;
+
+            const linksValid: boolean = validateUrls(updatedLinks);
+    
+            if (!!updatedLinks[0]?.url && !linksValid) {
+                const invalidLinks: ExternalLink[] = getInvalidLinks(updatedLinks);
+    
+                dispatch(setErrorMsg(`${invalidLinks.map((l: ExternalLink) => l.name)
+                    .join(", ")} ${invalidLinks.length > 1
+                        ? "are not valid links"
+                        : "is not a valid link"
+                    }`
+                ));
+    
+                return;
+            }
+        }
+
+        const updatedTask: ITask = {
+            ...updatedValues,
+            lastUpdatedBy: user?.userId as string,
+        }
+        
+        const updatedStages = getUpdatedStages(updatedTask, currentProject as IProject);
+
+        const updatedCurrentProject = {
+            ...currentProject,
+            stages: updatedStages
+        } as IProject;
+
+        const activityLog =  await createNewActivity(
+            ActivityType.UpdateTask,
+            user as IUser,
+            currentTask as ITask,
+            currentProject?.projectId as string
+        );
+
+        // dispatch(setCurrentTask(updatedValues));
+        dispatch(setCurrentProject(updatedCurrentProject));
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
+
+        emitEvent('updateTask', updatedTask);
+
+        closeModal();
+    }, [
+        activities,
+        closeModal,
+        createNewActivity,
+        currentProject,
+        currentTask,
+        emitEvent,
+        user,
+        getUpdatedStages,
+        dispatch
+    ]);
+
+    const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
+        const updatedValues = {
+            ...inputValues,
+            [ev.target.name]: ev.target.value
+        };
+
+        setInputValues(updatedValues as ITask);
+    }
+
+    const handleSelectedPriorityChange = (ev: React.ChangeEvent<HTMLInputElement>): void => {
+        setSelectedPriority(ev.target.value as Priority);
+    }
+
+    const setPriorityColor = (priority: Priority): string => {
+        switch (priority) {
+            case "low":
+                return "rounded-bl-lg hover:bg-green-400";
+            case "medium":
+                return "rounded-0 hover:bg-yellow-400";
+            case "high":
+                return "rounded-0 hover:bg-red-400"
+            default:
+                return "rounded-bl-lg hover:bg-slate-200"
+        }
+    }
+
+    const isSelected = (priority: Priority): string => {
+        switch (priority) {
+            case "low":
+                return "bg-green-400";
+            case "medium":
+                return "bg-yellow-400";
+            case "high":
+                return "bg-red-400";
+            default:
+                return "bg-slate-300";
+
+        }
+    }
+
+    const handleRemoveThumbnail = () => {
+        setInputValues({
+            ...inputValues,
+            thumbnailSrc: ""
+        } as ITask);
+    }
+
+    const handleLinksChange = ({target: {value}}: React.ChangeEvent<HTMLInputElement>, index: number = 0): void => {
+        setExternalLinks(externalLinks => (
+            [
+                ...externalLinks.map((link: ExternalLink, i: number) =>
+                    i === index
+                        ?   {
+                                ...link,
+                                url: value
+                            }
+                        : link
+                    )
+            ] as ExternalLink[]
+        ));
+    }
+
+    const handleRemoveLink = (linkIndex: number): void => {
+        setExternalLinks([...externalLinks.filter((extLink: ExternalLink) =>
+                externalLinks.indexOf(extLink) !== linkIndex)]);
+    }
+
+    const handleAddLink = (externalLinks: ExternalLink[]): void => {
+        if (externalLinks.some((l: ExternalLink) => !l.url)) {
+            const emptyLinks: ExternalLink[] = externalLinks.filter((l: ExternalLink) => !l.url);
+
+            dispatch(setErrorMsg(`You must fill ${emptyLinks.length > 1
+                ? emptyLinks.map((l: ExternalLink) => l.name).join(", ")
+                : emptyLinks[0].name} before adding a new one`
+            ));
+
+            return;
+        }
+
+        if (externalLinks.length === MAX_EXTERNAL_LINKS) {
+            dispatch(setErrorMsg(`Cannot add more than ${MAX_EXTERNAL_LINKS} links`));
+            return;
+        }
+        
+        setExternalLinks(
+            [
+                ...externalLinks,
+                {
+                    name: `Link #${externalLinks.length + 1}`,
+                    url: ""
+                } as ExternalLink
+            ]
+        );
+    }
+
+    const handleLabelChange = (tag: Tag): void => {
+        setSelectedTags([...selectedTags, tag.tag]);
+    }
+
+    const handleStageChange = useCallback((ev: React.ChangeEvent<HTMLInputElement>): void => {
+        const stage = currentProject?.stages.find(s => s.stageId === ev.target.value);
+
+        if (stage) {
+            const selectedStage: SelectedStage = {
+                stageId: stage.stageId,
+                title: stage.title,
+            };
+
+            setSelectedStage(selectedStage);
+        }
+    }, [currentProject]);
 
     const removeDuplicates = (links: ExternalLink[]) => {
         setExternalLinks(renameLinks(getUniqueLinks(links)));
         dispatch(setErrorMsg(null));
     }
 
-    const handleSearchAssignees = (query: string) => {
+    const handleSearchAssignees = useCallback((query: string) => {
         query = query.trim().toLowerCase();
 
         const newSearchResults = currentProject?.team.filter(u =>
@@ -352,7 +369,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         if (!!newSearchResults?.length) {
             setAssigneesSearchResults(newSearchResults as IUser[]);
         } else setAssigneesSearchResults([]); 
-    }
+    }, [currentProject?.team])
 
     const resetAssigneesSearch = () => {
         setAssigneesSearchQuery("");
@@ -429,10 +446,10 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     }
 
     useEffect(() => {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             subtasks
-        } as ITask);
+        }) as ITask);
     }, [subtasks])
 
     useEffect(() => {
@@ -441,7 +458,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         } else {
             resetAssigneesSearch();
         }
-    }, [assigneesSearchQuery])
+    }, [assigneesSearchQuery, handleSearchAssignees])
 
     // Update selected stage in inputValues
     useEffect(() => {
@@ -464,7 +481,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             setSelectedAssignees(getAssignees(task.assignees));
             setSubtasks(task.subtasks);
         }
-    }, [task, isEditTaskModalOpen])
+    }, [task, isEditTaskModalOpen, currentProject?.team])
 
     // Add links to inputValues
     useEffect(() => {
@@ -492,29 +509,30 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         }) as ITask);
     }, [selectedTags])
 
+    const router = useRouter();
     useEffect(() => {
-        if (!currentProject) redirect(LINKS["PROJECTS"]);
-    }, [currentProject])
+        if (!currentProject) router.push(LINKS.PROJECTS);
+    }, [currentProject, router])
 
     useEffect(() => {
         setInputValues(DEFAULT_VALUES);
         setSelectedPriority(currentTask?.priority as Priority);
         setExternalLinks(currentTask?.externalLinks as ExternalLink[]);
         setSelectedTags(currentTask?.tags as TagName[]);
-    }, [currentTask])
+    }, [currentTask, DEFAULT_VALUES])
 
     useEffect(()=> {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             priority: selectedPriority as string
-        } as ITask);
+        }) as ITask);
     }, [selectedPriority])
 
     useEffect(()=> {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             assignees: assigneesIds as string[]
-        } as ITask);
+        }) as ITask);
     }, [assigneesIds])
 
   return (

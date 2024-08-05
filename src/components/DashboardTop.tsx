@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import useProjects from '@/hooks/useProjects';
 import { HiMiniChevronLeft, HiMiniChevronRight } from 'react-icons/hi2';
@@ -14,15 +14,11 @@ import { PROJECT_MENU_OPTIONS } from '@/utils/constants';
 import MoreOptions from './common/MoreOptions';
 import { ActivityType, TOption } from '@/utils/types';
 import { GoSearch } from "react-icons/go";
-import { IProject, ITask, setCurrentProject, setProjects } from '@/store/projects/projects.slice';
+import { IProject, ITask } from '@/store/projects/projects.slice';
 import SearchModal from './modals/SearchModal';
 import useAuth from '@/hooks/useAuth';
-import { updateUserData } from '@/services/user.api';
 import { IUser } from '@/store/auth/auth.slice';
-import { useRouter } from 'next/navigation';
-import { LINKS } from '@/utils/links';
 import useModals from '@/hooks/useModals';
-import { updateProject } from '@/services/projects.api';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 
@@ -34,16 +30,15 @@ type DashboardTopProps = {
 }
 
 const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTopProps) => {
-    const {currentProject, allTasks, handleLeaveProject, projects} = useProjects();
+    const {currentProject, tasks, handleLeaveProject} = useProjects();
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
-    const {user, isAuthenticated} = useAuth();
+    const {user, isAuthenticated, userId} = useAuth();
     const {openNewStageModal, openDeleteProjectModal, openEditProjectModal, openInvitationModal, openActivityLog} = useModals();
     const {createNewActivity, activities} = useActivityLog();
 
     const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
 
     const dispatch = useAppDispatch();
-    const router = useRouter();
 
     const openModal = (): void => {
       openNewStageModal();
@@ -69,15 +64,7 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
       openInvitationModal();
     }
 
-    const handleLeave = async (projectId: string) => {
-      // await handleLeaveProject(currentProject?.projectId as string, user?.userId as string);
-      
-      // const updatedUser = {
-      //   ...user,
-      //   mostRecentProject: null,
-      // } as IUser;
-      
-      // await updateUserData(updatedUser);
+    const handleLeave = useCallback(async (projectId: string) => {
       if (
         (currentProject?.team.length === 1) &&
         (currentProject.team[0].userId === user?.userId)
@@ -97,8 +84,16 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
         activityLog
       ]));
 
-      handleLeaveProject(projectId, user?.userId as string);
-    }
+      handleLeaveProject(projectId, userId as string);
+    }, [
+      currentProject,
+      activities,
+      createNewActivity,
+      user,
+      userId,
+      dispatch,
+      handleLeaveProject
+    ]);
 
     const handleOpt = async (opt: TOption): Promise<void> => {
       setMenuOpen(false);
@@ -119,26 +114,26 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
       }
     }
 
-    const toggleInputVisibility = (): void => {
+    const toggleInputVisibility = () => {
       setIsSearchModalOpen(!isSearchModalOpen);
     }
 
     const projectMenuOptions: string[] = useMemo(() => {
       if (isAuthenticated && ((user?.userId === currentProject?.createdBy))) {
-        return ((currentProject?.team.length === 1) && (currentProject.team[0].userId === user?.userId))
+        return ((currentProject?.team.length === 1) && (currentProject.team[0].userId === userId))
           ? [...PROJECT_MENU_OPTIONS.filter(o => o !== 'Leave project')]
           : PROJECT_MENU_OPTIONS;
-      } else return [
-        ...PROJECT_MENU_OPTIONS.filter(o => o !== 'Delete')
-      ];
-    }, [currentProject, user, isAuthenticated]);
+      }
+      
+      return PROJECT_MENU_OPTIONS.filter(o => o !== 'Delete');
+    }, [currentProject, userId, user, isAuthenticated]);
     
   return (
     <>
       <SearchModal
         isOpen={isSearchModalOpen}
         setIsOpen={setIsSearchModalOpen}
-        tasks={allTasks as ITask[]}
+        tasks={tasks as ITask[]}
       />
 
       {currentProject && (

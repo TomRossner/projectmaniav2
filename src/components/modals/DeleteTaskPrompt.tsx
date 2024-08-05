@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from '@/store/projects/projects.slice';
@@ -13,18 +13,19 @@ import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
+import useSocket from '@/hooks/useSocket';
 
 const DeleteTaskPrompt = () => {
     const {currentProject, currentTask, currentStage} = useProjects();
     const {isDeleteTaskModalOpen, closeDeleteTaskModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
+    const {emitEvent} = useSocket(userId as string);
 
     const dispatch = useAppDispatch();
 
-
-    // Handle stage deletion
-    const handleDeleteTask = async (): Promise<void> => {
+    // Handle task deletion
+    const handleDeleteTask = useCallback(async (): Promise<void> => {
         if (!currentTask) {
             dispatch(setErrorMsg('Failed deleting task'));
             return;
@@ -50,6 +51,8 @@ const DeleteTaskPrompt = () => {
 
         await deleteTask(currentTask.taskId);
 
+        emitEvent('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
+
         const activityLog = await createNewActivity(
             ActivityType.DeleteTask,
             user as IUser,
@@ -65,7 +68,17 @@ const DeleteTaskPrompt = () => {
         dispatch(setCurrentTask(null));
 
         closeDeleteTaskModal();
-    }
+    }, [
+        activities,
+        currentProject, 
+        currentStage,
+        currentTask,
+        emitEvent,
+        user,
+        dispatch, 
+        closeDeleteTaskModal,
+        createNewActivity
+    ]);
 
   return (
     <Modal

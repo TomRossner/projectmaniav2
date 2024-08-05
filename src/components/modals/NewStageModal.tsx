@@ -1,12 +1,11 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_STAGE } from '@/utils/constants';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
-import useStage from '@/hooks/useModals';
 import { createStage } from '@/services/projects.api';
 import Modal from './Modal';
 import { setErrorMsg } from '@/store/error/error.slice';
@@ -15,21 +14,39 @@ import useAuth from '@/hooks/useAuth';
 import useActivityLog from '@/hooks/useActivityLog';
 import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
+import useModals from '@/hooks/useModals';
+import useSocket from '@/hooks/useSocket';
 
 const NewStageModal = () => {
-    const {isNewStageModalOpen, closeNewStageModal} = useStage();
+    const {isNewStageModalOpen, closeNewStageModal} = useModals();
     const {currentProject, stages} = useProjects();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
     const {createNewActivity, activities} = useActivityLog();
+    const {emitEvent} = useSocket(userId as string);
 
     const [inputValues, setInputValues] = useState<NewStageData | null>(null);
 
     const dispatch = useAppDispatch();
 
-    const handleCreate = async (newStageData: NewStageData): Promise<void> => {
+    const handleClose = useCallback(() => {
+        closeNewStageModal();
+        setInputValues({
+            ...DEFAULT_STAGE,
+            projectId: currentProject?.projectId as string,
+            createdBy: userId as string,
+            lastUpdatedBy: userId as string,
+        });
+    }, [currentProject, userId, closeNewStageModal])
+
+    const handleCreate = useCallback(async (newStageData: NewStageData): Promise<void> => {
         if (!currentProject) {
             dispatch(setErrorMsg('Failed creating stage'));
             return;
+        }
+
+        newStageData = {
+            ...newStageData, 
+            lastUpdatedBy: user?.userId as string,
         }
 
         const {data: newStage} = await createStage(newStageData);
@@ -52,17 +69,19 @@ const NewStageModal = () => {
             activityLog
         ]));
 
-        handleClose();
-    }
+        emitEvent('newStage', newStage);
 
-    const handleClose = () => {
-        closeNewStageModal();
-        setInputValues({
-            ...DEFAULT_STAGE,
-            parentProjectId: currentProject?.projectId as string,
-            createdBy: user?.userId as string,
-        });
-    }
+        handleClose();
+    }, [
+        activities,
+        currentProject,
+        user,
+        emitEvent,
+        createNewActivity,
+        dispatch,
+        stages,
+        handleClose,
+    ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = ev.target;
@@ -74,13 +93,15 @@ const NewStageModal = () => {
     }
 
     useEffect(() => {
-        if (user && currentProject) {
-            setInputValues({...DEFAULT_STAGE,
-                createdBy: user?.userId,
-                parentProjectId: currentProject.projectId
+        if (userId && currentProject) {
+            setInputValues({
+                ...DEFAULT_STAGE,
+                createdBy: userId,
+                projectId: currentProject.projectId,
+                lastUpdatedBy: userId as string,
             });
         }
-    }, [])
+    }, [currentProject, userId])
     
   return (
     <Modal

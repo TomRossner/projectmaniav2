@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, setCurrentProject, setCurrentStageIndex } from '@/store/projects/projects.slice';
@@ -12,24 +12,26 @@ import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import { IUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
+import useSocket from '@/hooks/useSocket';
 
 const DeleteStagePrompt = () => {
     const {isDeleteStageModalOpen, closeDeleteStageModal} = useModals();
     const {currentStage, stages, currentProject} = useProjects();
     const {createNewActivity, activities} = useActivityLog();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
+    const {emitEvent} = useSocket(userId as string);
 
     const dispatch = useAppDispatch();
 
     // Update currentStageIndex
-    const updateCurrentStageIndex = (index: number) => {
+    const updateCurrentStageIndex = useCallback((index: number) => {
         if (index === 0) return dispatch(setCurrentStageIndex(index + 1));
         if (index === stages.length - 1) return dispatch(setCurrentStageIndex(index - 1));
         else return dispatch(setCurrentStageIndex(index - 1));
-    }
+    }, [stages, dispatch]);
 
     // Handle stage deletion
-    const handleDeleteStage = async () => {
+    const handleDeleteStage = useCallback(async () => {
         if (!currentStage) {
             dispatch(setErrorMsg('Failed deleting stage'));
             return;
@@ -55,12 +57,28 @@ const DeleteStagePrompt = () => {
         dispatch(setActivities([
             ...activities,
             activityLog
-        ]))
+        ]));
+
+        emitEvent('deleteStage', {
+            ...currentStage,
+            lastUpdatedBy: user?.userId as string
+        });
 
         updateCurrentStageIndex(currentStageIndex);
 
         closeDeleteStageModal();
-    }
+    }, [
+        activities,
+        currentProject,
+        currentStage,
+        user,
+        dispatch,
+        emitEvent,
+        createNewActivity,
+        stages,
+        closeDeleteStageModal,
+        updateCurrentStageIndex
+    ]);
 
   return (
     <Modal

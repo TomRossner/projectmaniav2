@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
 import StageTitle from './StageTitle';
@@ -68,7 +68,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     }
 
     // Needs improvement
-    const searchTasks = (inputValue: string): void => {
+    const searchTasks = useCallback((inputValue: string): void => {
         const value: string = inputValue.trim().toLowerCase();
         const results: ITask[] = tasks?.filter(
             (task: ITask) => task.title
@@ -81,7 +81,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
         } else {
             setSearchResults(results);
         }
-    }
+    }, [searchResults.length, tasks])
 
     const colorMatchedLetters = (text: string): JSX.Element[] => {
         const letters: string[] = text.trim().split("");
@@ -169,7 +169,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     useEffect(() => {
         if (searchInputValue) searchTasks(searchInputValue);
         else setSearchResults([]);
-    }, [searchInputValue])
+    }, [searchInputValue, searchTasks])
 
     useEffect(() => {
         if (!inputVisible && searchInputValue) setSearchInputValue("");

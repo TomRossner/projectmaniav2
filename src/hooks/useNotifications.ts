@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectINotifications } from '@/store/notifications/notifications.selectors';
 import { INotification, NewNotificationData } from '@/utils/interfaces';
@@ -44,7 +44,7 @@ const useNotifications = () => {
 
     const dispatch = useAppDispatch();
 
-    const handleRemoveNotification = async (notificationId: string) => {
+    const handleRemoveNotification = useCallback(async (notificationId: string) => {
       if (!user) {
         dispatch(setErrorMsg('Failed removing notification'));
         return;
@@ -61,7 +61,7 @@ const useNotifications = () => {
         await removeNotification(notificationId);
 
         dispatch(setNotifications([
-          ...notifications.filter(n => n.id !== notificationId)
+          ...notifications.filter(n => n.notificationId !== notificationId)
         ]));
 
         await updateUserData(updatedUserData);
@@ -70,7 +70,7 @@ const useNotifications = () => {
         dispatch(setErrorMsg('Failed removing notification'));
         return;
       }
-    }
+    }, [user, notifications, dispatch]);
 
     const createNotification = (newNotificationData: NewNotificationData): NewNotificationData => {
       const {
@@ -89,7 +89,7 @@ const useNotifications = () => {
     }
     
     const getUpdatedNotificationsIds = (notificationsIds: string[], notifications: INotification[]): string[] => {
-      return notificationsIds.filter(n => notifications.some(not => not.id === n));
+      return notificationsIds.filter(n => notifications.some(not => not.notificationId === n));
     }
 
   return {

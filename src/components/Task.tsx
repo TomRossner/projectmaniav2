@@ -117,6 +117,7 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
         variants={variants}
         initial={variants.initial}
         animate={animate && variants.animate}
+        exit={variants.exit}
         className={twMerge(`
           w-full
           max-w-[400px]

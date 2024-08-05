@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_PROJECT, DEFAULT_STAGE } from '@/utils/constants';
 import { NewProjectData, IProject, TeamMember, setProjects, IStage } from '@/store/projects/projects.slice';
@@ -27,69 +27,77 @@ const NewProjectModal = () => {
 
     const [inputValues, setInputValues] = useState<NewProjectData>(DEFAULT_PROJECT);
 
-    const handleCreate = async (newProjectData: NewProjectData) => {
-       try {
-        dispatch(setErrorMsg(null));
-
-        console.log({newProjectData})
-
-        const self: TeamMember = {
-            email: user?.email,
-            userId: user?.userId,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            imgSrc: user?.imgSrc,
-            isOnline: user?.isOnline
-        } as TeamMember;
-
-        
-        let newProject: NewProjectData = {
-            ...newProjectData,
-            team: [self],
-            createdBy: user?.userId as string,
-            stages: [],
-            activities: [],
-        }
-
-        const response = await createProject(newProject);
-        
-        const activityLog =  await createNewActivity(
-            ActivityType.CreateProject,
-            user as IUser,
-            response.data as IProject,
-            response.data.projectId as string
-        );
-
-        dispatch(setProjects([
-            ...projects,
-            response.data as IProject
-        ]));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
-
-        handleClose();
-
-        dispatch(setProjects([
-            ...projects,
-            response.data as IProject
-        ]));
-
-        handleClose();
-       } catch (error: unknown) {
-            handleError(error as AxiosError<unknown>);
-       }
-    }
-
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         closeNewProjectModal();
         setInputValues(DEFAULT_PROJECT);
-    }
+    }, [closeNewProjectModal])
+
+    const handleCreate = useCallback(async (newProjectData: NewProjectData) => {
+        try {
+         dispatch(setErrorMsg(null));
+ 
+         console.log({newProjectData})
+ 
+         const self: TeamMember = {
+             email: user?.email,
+             userId: user?.userId,
+             firstName: user?.firstName,
+             lastName: user?.lastName,
+             imgSrc: user?.imgSrc,
+             isOnline: user?.isOnline
+         } as TeamMember;
+ 
+         
+         let newProject: NewProjectData = {
+             ...newProjectData,
+             team: [self],
+             createdBy: user?.userId as string,
+             lastUpdatedBy: user?.userId as string,
+             stages: [],
+             activities: [],
+         }
+ 
+         const response = await createProject(newProject);
+         
+         const activityLog =  await createNewActivity(
+             ActivityType.CreateProject,
+             user as IUser,
+             response.data as IProject,
+             response.data.projectId as string
+         );
+ 
+         dispatch(setProjects([
+             ...projects,
+             response.data as IProject
+         ]));
+         dispatch(setActivities([
+             ...activities,
+             activityLog
+         ]));
+ 
+         handleClose();
+ 
+         dispatch(setProjects([
+             ...projects,
+             response.data as IProject
+         ]));
+ 
+         handleClose();
+        } catch (error: unknown) {
+             handleError(error as AxiosError<unknown>);
+        }
+     }, [activities,
+        dispatch,
+        projects,
+        handleClose,
+        handleError,
+        createNewActivity,
+        user
+     ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = ev.target;
-        setInputValues({...inputValues, [name]: value});
+        setInputValues(inputValues => ({...inputValues, [name]: value}));
     }
     
   return (

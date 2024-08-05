@@ -60,7 +60,7 @@ const Modal = ({
         document.addEventListener("mousedown", (ev) =>
             handleMouseClick(ev as unknown as MouseEvent<Element, MouseEvent<Element, MouseEvent>>)
         );
-    }, [])
+    }, [closeOnClickOutside, onClose])
 
   return (
     <AnimatePresence>

@@ -1,12 +1,12 @@
 'use client'
 
 import isAuth from '@/app/ProtectedRoute';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
-import { IProject, IStage, ITask, setCurrentStage, setCurrentStageIndex, setCurrentTask, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrentStageIndex, setCurrentTask, setStages } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
@@ -14,7 +14,7 @@ import { updateProject } from '@/services/projects.api';
 import { ScrollDirection } from '@/utils/types';
 import { scrollToIndex } from '@/utils/utils';
 import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
-import { redirect } from 'next/navigation';
+import { redirect, useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import EditTaskModal from '@/components/modals/EditTaskModal';
 import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
@@ -33,32 +33,36 @@ import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects
 import ActivityLog from '@/components/ActivityLog';
 import { fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
 import useActivityLog from '@/hooks/useActivityLog';
+import useSocket from '@/hooks/useSocket';
 
 const Project = () => {
-  const {user} = useAuth();
+  const {user, userId} = useAuth();
   const {
     currentProject,
     stages,
     currentStage,
     currentStageIndex,
-    currentTask
+    currentTask,
+    projectId
   } = useProjects();
   const {activities} = useActivityLog();
+  const {socket, emitEvent} = useSocket(userId as string);
 
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const [noMoreNext, setNoMoreNext] = useState<boolean>(false);
   const [noMorePrev, setNoMorePrev] = useState<boolean>(false);
 
   const stagesContainerRef = useRef<HTMLDivElement>(null);
 
-  const updateCurrentStageIndex = (direction: ScrollDirection, totalStages: number): void => {
+  const updateCurrentStageIndex = useCallback((direction: ScrollDirection, totalStages: number): void => {
     if (direction === 'next' && currentStageIndex < totalStages) {
       dispatch(setCurrentStageIndex(currentStageIndex + 1));
     } else if (direction === 'prev' && currentStageIndex > 0) {
       dispatch(setCurrentStageIndex(currentStageIndex - 1));
     }
-  }
+  }, [currentStageIndex, dispatch])
 
   const handleScroll = (direction: ScrollDirection) => {
     if (stages.length === 1) return;
@@ -83,7 +87,7 @@ const Project = () => {
     return await updateProject(project);
   }
 
-  const handleDisableNextAndPrevButtons = (index: number, stagesLength: number): void => {
+  const handleDisableNextAndPrevButtons = useCallback((index: number, stagesLength: number): void => {
     if (stagesLength <= 1) {
       setNoMoreNext(true);
       setNoMorePrev(true);
@@ -98,7 +102,7 @@ const Project = () => {
 
     if (index !== stagesLength && noMoreNext) setNoMoreNext(false);
     if (index > 0 && noMorePrev) setNoMorePrev(false);
-  }
+  }, [noMoreNext,noMorePrev]);
 
   const onDragStart = (ev: DragStartEvent) => {
     if (ev.active.data.current?.type === "stage") {
@@ -132,21 +136,21 @@ const Project = () => {
   // Set currentStageIndex to 0
   useEffect(() => {
     dispatch(setCurrentStageIndex(0));
-  }, [])
+  }, [dispatch])
   
   // Update currentProject's stages when stages change
   useEffect(() => {
     if (currentProject) {
       dispatch(setStages(currentProject.stages));
     }
-  }, [currentProject])
+  }, [currentProject, dispatch])
 
   // Set currentStage to be the first stage of currentProject if null, happens on mount.
   useEffect(() => {
     if (currentProject && stages.length && !currentStage) {
       dispatch(setCurrentStage(currentProject.stages[0]));
     }
-  }, [stages, currentStage])
+  }, [stages, currentStage, dispatch, currentProject])
 
   // Update currentProject in API when changed
   useEffect(() => {
@@ -154,19 +158,19 @@ const Project = () => {
       // Update project in API
       handleUpdateProject(currentProject);
       
-    } else if (!currentProject) redirect(LINKS['PROJECTS']);
-  }, [currentProject])
+    } else if (!currentProject) router.push(LINKS.PROJECTS);
+  }, [currentProject, router])
 
   // Update currentStage when currentStageIndex changes
   useEffect(() => {
     if (currentStageIndex < 0) setCurrentStageIndex(0);
     else dispatch(setCurrentStage(stages[currentStageIndex]));
-  }, [currentStageIndex])
+  }, [currentStageIndex, dispatch, stages])
 
   // Update buttons disable attribute when currenStageIndex changes
   useEffect(() => {
       handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
-  }, [currentStageIndex, stages])
+  }, [currentStageIndex, stages, handleDisableNextAndPrevButtons])
 
   // Update currentStage when stages change
   useEffect(() => {
@@ -174,12 +178,12 @@ const Project = () => {
 
     const updatedCurrentStage: IStage = stages.find((stage: IStage) => stage.stageId === currentStage?.stageId) as IStage;
     if (currentStage) dispatch(setCurrentStage(updatedCurrentStage));
-  }, [stages])
+  }, [stages, currentStage, dispatch])
 
   // Update next and previous buttons when currentStage changes
   useEffect(() => {
     handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
-  }, [currentStage])
+  }, [currentStage, currentStageIndex, stages, handleDisableNextAndPrevButtons])
 
   // Set mostRecentProject and update user
   useEffect(() => {
@@ -195,7 +199,7 @@ const Project = () => {
       updateUserData(updatedUser)
         .then(res => dispatch(setUser(res.data)));
     }
-  }, [currentProject?.projectId, user])
+  }, [currentProject, user, dispatch])
 
   const [isScrolledToLeft, setIsScrolledToLeft] = useState<boolean>(false);
   const [isScrolledToRight, setIsScrolledToRight] = useState<boolean>(false);
@@ -230,7 +234,121 @@ const Project = () => {
     // if ((!!activities.length && (currentProject?.projectId !== activities[0]?.projectId))) {
     // }
     dispatch(fetchActivityLogAsync(currentProject?.projectId as string)); 
-  }, [currentProject?.projectId])
+  }, [currentProject?.projectId, dispatch])
+
+  useEffect(() => {
+    if (user && currentProject && socket) {
+      const handleNewTask = async (data: ITask) => {
+        console.log("newTask", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject?.stages.map(s =>
+              s.stageId === data.currentStage?.stageId
+                ? {
+                  ...s,
+                  tasks: [...s.tasks, data]
+                } : s
+            ) as IStage[],
+          ],
+        } as IProject));
+      }
+
+      const handleDeleteTask = async (data: ITask) => {
+        console.log("deleteTask", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject?.stages.map(s =>
+              s.stageId === data.currentStage?.stageId
+                ? {
+                  ...s,
+                  tasks: [...s.tasks.filter(t => t.taskId !== data.taskId)]
+                } : s
+            ) as IStage[],
+          ],
+        } as IProject));
+      }
+
+      const handleUpdateTask = async (data: ITask) => {
+        console.log("updateTask", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject?.stages.map(s =>
+              s.stageId === data.currentStage?.stageId
+                ? {
+                  ...s,
+                  tasks: [...s.tasks.map(t => t.taskId === data.taskId ? data : t)]
+                } : s
+            ) as IStage[],
+          ],
+        } as IProject));
+      }
+
+      const handleNewStage = async (data: IStage) => {
+        console.log("newStage", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject.stages, data
+          ],
+        } as IProject));
+      }
+
+      const handleDeleteStage = async (data: IStage) => {
+        console.log("deleteStage", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject?.stages.filter(s => s.stageId !== data.stageId)
+          ],
+        } as IProject));
+      }
+
+      const handleUpdateStage = async (data: IStage) => {
+        console.log("updateStage", data);
+        
+        dispatch(setCurrentProject({
+          ...currentProject,
+          stages: [
+            ...currentProject?.stages.map(s => s.stageId === data.stageId ? data : s)
+          ],
+        } as IProject));
+      }
+
+      const handleUpdateProject = async (data: IProject) => {
+        console.log("updateProject", data);
+        
+        dispatch(setCurrentProject(data));
+      }
+
+      socket.on("connect", () => {
+        console.log("Socket now connected: ", socket?.id);
+
+        emitEvent('updateSocketId', {
+          userId: user.userId,
+          socketId: socket.id as string
+        });
+      });
+      
+      socket
+        .on('newTask', handleNewTask)
+        .on('deleteTask', handleDeleteTask)
+        .on('updateTask', handleUpdateTask)
+
+        .on('newStage', handleNewStage)
+        .on('deleteStage', handleDeleteStage)
+        .on('updateStage', handleUpdateStage)
+        
+        .on('updateProject', handleUpdateProject)
+    }
+  }, [socket, currentProject, user, dispatch])
 
   return (
     <>

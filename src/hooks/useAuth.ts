@@ -32,6 +32,8 @@ const useAuth = () => {
       return `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}`;
     }
 
+    const userId = useMemo(() => user?.userId, [user]);
+
     // const isAuthenticated = useMemo(() => !!user, [user]);
 
     // useEffect(() => {
@@ -45,6 +47,7 @@ const useAuth = () => {
       isAuthenticated,
       isLoading,
       authError,
+      userId,
       getUserInitials,
       getUserName,
       userInitials,

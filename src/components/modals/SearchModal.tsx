@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from './Modal'
 import Input from '../common/Input';
 import { GoSearch } from 'react-icons/go';
@@ -25,6 +25,8 @@ const SearchModal = (props: SearchModalProps) => {
 
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchResults, setSearchResults] = useState<ITask[]>([]);
+
+    const isDirty: boolean = useMemo(() => !!searchQuery.length, [searchQuery]);
 
     const closeSearchModal = () => {
         setIsOpen(false);
@@ -60,7 +62,7 @@ const SearchModal = (props: SearchModalProps) => {
         return matchingLetters as JSX.Element[];
     }
 
-    const searchTasks = (query: string): void => {
+    const searchTasks = useCallback((query: string): void => {
         query = query.trim().toLowerCase();
 
         if (!query.match(/[a-zA-Z0-9]/)) return;
@@ -75,9 +77,7 @@ const SearchModal = (props: SearchModalProps) => {
         } else {
             setSearchResults(results);
         }
-    }
-
-    const isDirty: boolean = useMemo(() => !!searchQuery.length, [searchQuery]);
+    }, [tasks, isDirty]);
 
     useEffect(() => {
         if (isOpen) {
@@ -88,7 +88,7 @@ const SearchModal = (props: SearchModalProps) => {
     useEffect(() => {
         if (isDirty) searchTasks(searchQuery);
         else setSearchResults([]);
-    }, [searchQuery, isDirty])
+    }, [searchQuery, isDirty, searchTasks])
 
   return (
     <Modal

@@ -58,40 +58,6 @@ const Projects = () => {
       </div>
 
       <ProjectsList projects={projects} />
-
-      {/* <button
-        disabled={isLoading}
-        type='button'
-        onClick={handleCreateProject}
-        className={`
-          my-5
-          px-4
-          pb-2
-          pt-3
-          rounded-bl-lg
-          bg-blue-400
-          hover:bg-blue-500
-          disabled:bg-blue-300
-          disabled:opacity-60
-          disabled:cursor-not-allowed
-          transition-all
-          text-white
-          font-semibold
-          text-xl
-          w-full
-          mx-auto
-          duration-75
-        `}
-    >
-        {isLoading
-            ? (
-                <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
-                    <LoadingIcon />
-                    Loading...
-                </span>
-              )
-            : 'Create project'}
-      </button> */}
     </Container>
   )
 }

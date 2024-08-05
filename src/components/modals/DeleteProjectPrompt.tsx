@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, setCurrentProject, setProjects } from '@/store/projects/projects.slice';
@@ -23,7 +23,7 @@ const DeleteProjectPrompt = () => {
     const dispatch = useAppDispatch();
 
     // Handle project deletion
-    const handleDeleteProject = async (): Promise<void> => {
+    const handleDeleteProject = useCallback(async () => {
         try {
             if (!currentProject) {
                 dispatch(setErrorMsg('Failed deleting project'));
@@ -61,7 +61,15 @@ const DeleteProjectPrompt = () => {
                 return;
             } else dispatch(setErrorMsg('Failed deleting project'));
         }
-    }
+    }, [
+        activities,
+        currentProject,
+        user,
+        dispatch,
+        projects,
+        closeDeleteProjectModal,
+        createNewActivity
+    ]);
 
   return (
     <Modal

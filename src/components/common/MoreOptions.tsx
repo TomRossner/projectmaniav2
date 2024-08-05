@@ -31,7 +31,9 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
         return opts.map(opt => createOption(opt));
     }
 
-    const opts = useMemo(() => createOptions(options), [options]);
+    const opts = useMemo(() => {
+        return createOptions(options);
+    }, [options])
 
     useOnClickOutside(moreOptionsRef, () => setIsOpen(false));
 
@@ -80,7 +82,10 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
                         <Option
                             key={idx}
                             action={() => action(opt)}
-                            isDisabled={disabled}
+                            isDisabled={opt.text === 'Edit' || opt.text === 'Delete'
+                                ? false
+                                : disabled
+                            }
                             opt={opt}
                         />
                     )

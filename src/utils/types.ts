@@ -106,7 +106,7 @@ type SortOrder = 'ascending' | 'descending';
 
 type NewSubTask = Pick<SubTask, "isDone" | "title"> & {subtaskId: string};
 
-type NewStageData = Pick<IStage, "tasks" | "title" | "createdBy" | "parentProjectId">;
+type NewStageData = Pick<IStage, "tasks" | "title" | "createdBy" | "projectId" | "lastUpdatedBy">;
 
 enum ActivityType {
     // Tasks

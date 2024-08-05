@@ -10,7 +10,7 @@ import Container from '@/components/common/Container';
 const Messages = () => {
   const {user, isAuthenticated} = useAuth();
   
-  const {socket} = useSocket();
+  const emitEvent = useSocket();
 
   const unreadMessages = []
 

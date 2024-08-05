@@ -19,7 +19,7 @@ type StageContentProps = {
 
 const StageContent = ({stage, tasks, setTasks}: StageContentProps) => {
   const dispatch = useAppDispatch();
-  const {updateProjectTasks, currentProject} = useProjects();
+  const {updateProjectTasks} = useProjects();
   const tasksIds = useMemo(() => tasks.map(t => ({id: t.taskId})), [tasks]);
 
   const resetFilters = () => {

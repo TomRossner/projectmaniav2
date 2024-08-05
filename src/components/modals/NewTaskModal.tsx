@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { ChangeEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, TAGS, MAX_EXTERNAL_LINKS, PRIORITIES, MAX_SUBTASKS } from '@/utils/constants';
 import { IProject, IStage, ITask, TeamMember, setCurrentProject } from '@/store/projects/projects.slice';
@@ -31,12 +31,14 @@ import useModals from '@/hooks/useModals';
 import useError from '@/hooks/useError';
 import useActivityLog from '@/hooks/useActivityLog';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
+import useSocket from '@/hooks/useSocket';
 
 const NewTaskModal = () => {
     const {isNewTaskModalOpen, closeNewTaskModal} = useModals();
-    const {currentProject, currentStage, allTasks} = useProjects();
-    const {user, getUserInitials, getUserName} = useAuth();
+    const {currentProject, currentStage, tasks} = useProjects();
+    const {user, getUserInitials, getUserName, userId} = useAuth();
     const {createNewActivity, activities} = useActivityLog();
+    const {emitEvent} = useSocket(userId as string);
 
     const [selectedPriority, setSelectedPriority] = useState<Priority>(DEFAULT_PRIORITY);
     const [selectedTags, setSelectedTags] = useState<TagName[]>([]);
@@ -69,7 +71,7 @@ const NewTaskModal = () => {
     const [tasksSearchResults, setTasksSearchResults] = useState<ITask[]>([]);
     const isTasksSearchInputDirty = useMemo(() => !!tasksSearchQuery.length, [tasksSearchQuery]);
 
-    const handleCreate = async (newTaskData: NewTaskData): Promise<void> => {
+    const handleCreate = useCallback(async (newTaskData: NewTaskData): Promise<void> => {
         if (!currentStage) {
             dispatch(setErrorMsg('Failed creating task'));
             return;
@@ -102,9 +104,13 @@ const NewTaskModal = () => {
                 title: currentStage?.title
             },
             createdBy: user?.userId as string,
+            projectId: currentProject?.projectId as string,
+            lastUpdatedBy: user?.userId as string,
         }
 
         const {data: task} = await createTask(newTask);
+
+        emitEvent('newTask', task);
 
         const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
             if (currentStage.stageId === stage.stageId) {
@@ -147,7 +153,18 @@ const NewTaskModal = () => {
 
         resetInputs();
         closeNewTaskModal();
-    }
+    }, [
+        activities,
+        currentProject,
+        currentStage,
+        user,
+        dispatch,
+        inputValues.dueDate,
+        inputValues.externalLinks,
+        emitEvent,
+        closeNewTaskModal,
+        createNewActivity
+    ]);
 
     const resetInputs = (): void => {
         setSelectedPriority(DEFAULT_PRIORITY);
@@ -263,7 +280,7 @@ const NewTaskModal = () => {
         setSelectedTags([...selectedTags, tag]);
     }
 
-    const handleSearchAssignees = (query: string) => {
+    const handleSearchAssignees = useCallback((query: string) => {
         query = query.trim().toLowerCase();
 
         const newSearchResults = currentProject?.team.filter((u: TeamMember) =>
@@ -274,7 +291,7 @@ const NewTaskModal = () => {
         if (!!newSearchResults?.length) {
             setAssigneesSearchResults(newSearchResults as IUser[]);
         } else setAssigneesSearchResults([]); 
-    }
+    }, [currentProject]);
 
     const resetAssigneesSearch = () => {
         setAssigneesSearchQuery("");
@@ -350,13 +367,13 @@ const NewTaskModal = () => {
         }
     }
 
-    const searchTasks = (query: string): void => {
+    const searchTasks = useCallback((query: string): void => {
         query = query.trim().toLowerCase();
 
         if (!query.match(/[a-zA-Z0-9]/)) return;
 
         const regex = createSearchRegExp(query);
-        const results: ITask[] = allTasks?.filter(
+        const results: ITask[] = tasks?.filter(
             (task: ITask) => task.title.match(regex)) as ITask[];
 
         if (!results && isTasksSearchInputDirty) {
@@ -365,7 +382,7 @@ const NewTaskModal = () => {
         } else {
             setTasksSearchResults(results);
         }
-    }
+    }, [tasks, isTasksSearchInputDirty]);
 
     const colorMatchedLetters = (text: string, query: string): JSX.Element[] | undefined => {
         query = query.trim();
@@ -412,10 +429,10 @@ const NewTaskModal = () => {
     }
 
     useEffect(() => {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             dependencies: dependenciesIds
-        } as NewTaskData);
+        }) as NewTaskData);
     }, [dependenciesIds])
 
     useEffect(() => {
@@ -423,13 +440,13 @@ const NewTaskModal = () => {
             searchTasks(tasksSearchQuery);
             dependenciesInputRef.current?.focus();
         } else setTasksSearchResults([]);
-    }, [tasksSearchQuery])
+    }, [tasksSearchQuery, searchTasks])
 
     useEffect(() => {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             subtasks
-        });
+        }));
     }, [subtasks])
 
     useEffect(() => {
@@ -438,13 +455,13 @@ const NewTaskModal = () => {
         } else {
             resetAssigneesSearch();
         }
-    }, [assigneesSearchQuery])
+    }, [assigneesSearchQuery, handleSearchAssignees])
 
     useEffect(()=> {
-        setInputValues({
+        setInputValues(inputValues => ({
             ...inputValues,
             assignees: assigneesIds as string[]
-        } as ITask);
+        }) as ITask);
     }, [assigneesIds])
 
     // Add links to inputValues

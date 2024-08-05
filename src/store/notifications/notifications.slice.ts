@@ -1,6 +1,7 @@
 
+import { getUserNotifications } from "@/services/notifications.api";
 import { INotification } from "@/utils/interfaces";
-import { createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 export type NotificationsState = {
     notifications: INotification[];
@@ -9,6 +10,15 @@ export type NotificationsState = {
 const initialState: NotificationsState = {
     notifications: [],
 }
+
+// export const fetchNotificationsAsync = createAsyncThunk('projectsSlice/fetchNotificationsAsync', async (userId: string) => {
+//     try {
+//         const {data} = await getUserNotifications(userId);
+//         return data;
+//     } catch (error) {
+//         handleError(error as AxiosError<ErrorData>);
+//     }
+// })
 
 export const notificationsSlice = createSlice({
     name: 'notificationsSlice',

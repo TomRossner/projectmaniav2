@@ -4,8 +4,8 @@ import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
-import { redirect, useRouter } from 'next/navigation';
-import React, { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Input from '../common/Input';
 import useModals from '@/hooks/useModals';
 import Modal from './Modal';
@@ -15,6 +15,7 @@ import { IUser } from '@/store/auth/auth.slice';
 import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
+import useSocket from '@/hooks/useSocket';
 
 const EditProjectModal = () => {
     const dispatch = useAppDispatch();
@@ -23,22 +24,23 @@ const EditProjectModal = () => {
     const {currentProject} = useProjects();
     const {isEditProjectModalOpen, closeEditProjectModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
+    const {emitEvent} = useSocket(userId as string);
 
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
-    const DEFAULT_VALUES = {
+    const DEFAULT_VALUES = useMemo(() => ({
         ...currentProject
-    } as IProject;
+    } as IProject), [currentProject])
 
     const [inputValues, setInputValues] = useState<IProject | null>(null);
 
-    const closeModal = () => {
+    const closeModal = useCallback(() => {
         closeEditProjectModal();
         setInputValues(DEFAULT_VALUES);
-    }
+    }, [DEFAULT_VALUES, closeEditProjectModal]);
 
-    const handleSave = async (updatedValues: IProject): Promise<void> => {
+    const handleSave = useCallback(async (updatedValues: IProject) => {
         if (!updatedValues.title) {
             updatedValues = {
                 ...updatedValues,
@@ -69,8 +71,21 @@ const EditProjectModal = () => {
         if (currentProject?.title !== updatedValues.title) {
             // Updates currentProject property in stages
             await updateProject(updatedCurrentProject);
+
+            emitEvent('updateProject', {
+                ...updatedCurrentProject,
+                lastUpdatedBy: user?.userId as string,
+            });
         }
-    }
+    }, [
+        activities,
+        currentProject,
+        emitEvent,
+        closeModal,
+        createNewActivity,
+        user,
+        dispatch
+    ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = ev.target;
@@ -79,11 +94,11 @@ const EditProjectModal = () => {
 
     useEffect(() => {
         if (!currentProject) router.push(LINKS.PROJECTS);
-    }, [currentProject])
+    }, [currentProject, router])
 
     useEffect(() => {
         setInputValues(DEFAULT_VALUES);
-    }, [])
+    }, [DEFAULT_VALUES])
 
     useEffect(() => {
         if (isEditProjectModalOpen && titleInputRef.current) {

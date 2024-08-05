@@ -4,7 +4,6 @@ import { ErrorData, Filter } from "@/utils/types";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 import { IUser } from "../auth/auth.slice";
-import { useRouter } from "next/navigation";
 
 export interface IProject extends NewProjectData {
     stages: IStage[];
@@ -20,6 +19,7 @@ export interface NewProjectData {
     createdBy: string;
     stages: IStage[];
     activities: Activity[];
+    lastUpdatedBy: string;
 }
 
 export type TeamMember = Pick<IUser, "email" | "userId" | "firstName" | "lastName" |"imgSrc" | "isOnline">;
@@ -28,8 +28,9 @@ export interface IStage {
     title: string;
     tasks: ITask[];
     stageId: string;
-    parentProjectId: string;
+    projectId: string;
     createdBy: string;
+    lastUpdatedBy: string;
 }
 
 export interface ITask extends NewTaskData {

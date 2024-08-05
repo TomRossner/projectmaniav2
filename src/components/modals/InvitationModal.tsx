@@ -14,16 +14,18 @@ import useSocket from '@/hooks/useSocket';
 import useProjects from '@/hooks/useProjects';
 import { IProject } from '@/store/projects/projects.slice';
 import { Sender, Recipient } from '@/utils/types';
-import { NewNotificationData } from '@/utils/interfaces';
+import { INotification, NewNotificationData } from '@/utils/interfaces';
 import Avatar from '../common/Avatar';
 import useNotifications from '@/hooks/useNotifications';
+import { createNotification } from '@/services/notifications.api';
+import { twMerge } from 'tailwind-merge';
 
 const InvitationModal = () => {
-    const {user, getUserName, getUserInitials} = useAuth();
+    const {user, getUserName, getUserInitials, userId} = useAuth();
     const {isInvitationModalOpen, closeInvitationModal} = useModals();
     const {currentProject} = useProjects();
-    const {socket} = useSocket();
-    const {createNotification} = useNotifications();
+    const {emitEvent} = useSocket(userId as string);
+    // const {createNotification} = useNotifications();
 
     const [searchResults, setSearchResults] = useState<IUser[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -37,7 +39,7 @@ const InvitationModal = () => {
             userName: getUserName(res),
             imgSrc: res.imgSrc
         })
-    ), [searchResults, user]);
+    ), [searchResults, user, getUserName]);
 
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -56,7 +58,7 @@ const InvitationModal = () => {
         return await getUsersByQuery(query);
     }
 
-    const handleSendInvitation = (recipient: Recipient) => {
+    const handleSendInvitation = async (recipient: Recipient) => {
         // socket.emit('sendInvitation', {userId});
         const recipientAsUser = searchResults.find(u => u.userId === recipient.userId) as IUser;
 
@@ -83,11 +85,15 @@ const InvitationModal = () => {
             } as Sender,
         }
 
-        const invitation = createNotification(notificationData);
+        const {data: notification} = await createNotification(notificationData);
 
-        socket!.emit("notification", invitation);
+        emitEvent("notification", notification as INotification);
     }
 
+    const isAlreadyATeamMember = (userId: string): boolean => {
+        return !!currentProject && currentProject?.team.some(u => u.userId === userId);
+    }
+ 
     useEffect(() => {
         if (isInvitationModalOpen && inputRef.current) {
             inputRef.current.focus();
@@ -145,7 +151,7 @@ const InvitationModal = () => {
         <div className='w-full flex flex-col gap-1'>
             {!!memoizedResults.length && (
                 memoizedResults.map(res => (
-                    <div key={res.userId} className='flex gap-2 w-full items-center border p-2 bg-slate-50'>
+                    <div key={res.userId} className={twMerge(`flex gap-2 w-full items-center border p-2 bg-slate-50 ${isAlreadyATeamMember(res.userId) && 'opacity-50 cursor-not-allowed'}`)}>
                         <div className='flex items-center gap-2 grow'>
                             <Avatar
                                 src={res.imgSrc}
@@ -161,6 +167,7 @@ const InvitationModal = () => {
                         <ButtonWithIcon
                             icon={<MdOutlinePersonAddAlt />}
                             title='Send invitation'
+                            disabled={isAlreadyATeamMember(res.userId)}
                             action={() => handleSendInvitation(searchResults.find(u => u.userId === res.userId) as IUser)}
                         />
                     </div>

@@ -26,28 +26,31 @@ const DEFAULT_PRIORITY: Priority = "low";
 const DEFAULT_TASK_VALUES: NewTaskData = {
     title: DEFAULT_TASK_TITLE,
     dueDate: new Date(Date.now()).toJSON(),
-    description: '',
+    description: "",
     priority: DEFAULT_PRIORITY as Priority,
     isDone: false,
-    thumbnailSrc: '',
+    thumbnailSrc: "",
     externalLinks: [],
     tags: [],
     assignees: [],
     subtasks: [],
     createdBy: "",
     dependencies: [],
+    projectId: "",
+    lastUpdatedBy: "",
 }
 
 const SCROLL_DIRECTIONS: ScrollDirection[] = ['next', 'prev'];
 
 const DEFAULT_PROJECT_TITLE: string = 'New project';
 
-const DEFAULT_PROJECT: Pick<IProject, "title" | "stages" | "team" | "createdBy" | "activities"> = {
+const DEFAULT_PROJECT: Pick<IProject, "title" | "stages" | "team" | "createdBy" | "activities" | "lastUpdatedBy"> = {
     title: DEFAULT_PROJECT_TITLE,
     stages: [],
     team: [],
     activities: [],
     createdBy: "",
+    lastUpdatedBy: "",
 }
 
 const TAGS: Tag[] = [

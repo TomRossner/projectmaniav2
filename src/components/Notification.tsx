@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback } from 'react'
 import Line from './common/Line';
 import Button from './common/Button';
 import { twMerge } from 'tailwind-merge';
@@ -10,7 +10,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { INotification } from '@/utils/interfaces';
 import { DateTime as dt} from "luxon";
-import { updateNotificationIsSeen } from '@/services/notifications.api';
+import { updateNotification } from '@/services/notifications.api';
 import { AnimatePresence, motion } from 'framer-motion';
 
 type NotificationProps = {
@@ -53,7 +53,7 @@ const Notification = ({
         return `${sender.firstName} ${sender.lastName}`;
     }
 
-    const updateIsSeen = async () => {
+    const updateIsSeen = useCallback(async () => {
         if (isSeen) return;
         
         const updatedNotification: INotification = {
@@ -62,13 +62,16 @@ const Notification = ({
         }
 
         const updatedNotifications: INotification[] = [
-            ...notifications.map(n => n.id === notification.id ? updatedNotification : n)
+            ...notifications.map(n => n.notificationId === notification.notificationId
+                ? updatedNotification
+                : n
+            )
         ]
 
         dispatch(setNotifications(updatedNotifications));
-
-        await updateNotificationIsSeen(notification.id, true);
-    }
+        
+        await updateNotification(notification);
+    }, [notifications, isSeen, dispatch, notification]);
 
     
     const getHowLongAgo = (date: Date): string => {

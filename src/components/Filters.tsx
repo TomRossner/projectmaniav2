@@ -120,7 +120,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     // Update filters
     useEffect(() => {
         dispatch(setFilters(selectedFilters));
-    }, [selectedFilters])
+    }, [selectedFilters, dispatch])
 
     // Reset selectedFilters when filters are cleared from 'Reset filters' button displayed when no tasks match filters. 
     useEffect(() => {
@@ -131,7 +131,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
         if (!filters.length && selectedAssignees.length > 0) {
             setSelectedAssignees([]);
         }
-    }, [filters])
+    }, [filters, selectedAssignees.length, selectedFilters.length])
 
     useEffect(() => {
         if (selectedAssignees.length) {
@@ -150,11 +150,11 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
 
             setSelectedFilters(updatedSelectedFilters);
         } else if (!selectedAssignees.length && filters.some((f: Filter) => f.category === FILTERS_CATEGORIES["Assignee"])) {
-            setSelectedFilters([
+            setSelectedFilters(selectedFilters => ([
                 ...selectedFilters.filter(f => f.category !== FILTERS_CATEGORIES["Assignee"])
-            ]);
+            ]));
         }
-    }, [selectedAssignees])
+    }, [selectedAssignees, filters, selectedFilters])
 
   return (
     <AnimatePresence>

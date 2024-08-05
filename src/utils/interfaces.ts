@@ -38,6 +38,8 @@ interface NewTaskData {
     subtasks: NewSubTask[];
     createdBy: string;
     dependencies: string[];
+    projectId: string;
+    lastUpdatedBy: string;
 }
 
 interface NewInvitationData {
@@ -53,7 +55,7 @@ interface Invitation extends NewInvitationData {
 }
 
 interface INotification extends NewNotificationData {
-    id: string;
+    notificationId: string;
     createdAt: Date;
     isSeen: boolean;
 }

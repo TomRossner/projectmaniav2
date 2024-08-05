@@ -1,6 +1,6 @@
 'use client'
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { LINKS } from '@/utils/links';
@@ -28,7 +28,7 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
     return (currentPath === LINKS[formattedPath]) || isProjectPath;
   }
 
-  const getLink = (text: string): string => {
+  const getLink = useCallback((text: string): string => {
     try {
       const formattedPath = text.replaceAll(SPACES_AND_DASHES_PATTERN, "_").toUpperCase();
 
@@ -43,7 +43,7 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
       console.error(error);
       return LINKS['NOT_FOUND'];
     }
-  }
+  }, [user]);
 
   const isSignOut: boolean = text.toLowerCase() === LINKS.SIGN_OUT.split("/")[1].replace("-", " ");
 

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Cross from './utils/Cross';
 import Logo from './utils/Logo';
 import MenuList from './MenuList';
@@ -17,34 +17,34 @@ import { MenuItem } from '@/utils/types';
 import { MdOutlineNotifications } from "react-icons/md";
 import { IUser } from '@/store/auth/auth.slice';
 
+const ul1: MenuItem[] = [
+    {
+        text: "Home",
+        icon: <BiHome />
+    },
+    {
+        text: "About",
+        icon: <LuInfo />
+    },
+    {
+        text: "Projects",
+        icon: <LuFolderClosed />
+    },
+    {
+        text: "Messages",
+        icon: <HiOutlineChatAlt />
+    },
+    {
+        text: "Notifications",
+        icon: <MdOutlineNotifications />
+    },
+]
+
 const MobileMenu = () => {
     const {isMobileMenuOpen, closeMobileMenu} = useMobileMenu();
     const {user} = useAuth();
 
-    const ul1: MenuItem[] = [
-        {
-            text: "Home",
-            icon: <BiHome />
-        },
-        {
-            text: "About",
-            icon: <LuInfo />
-        },
-        {
-            text: "Projects",
-            icon: <LuFolderClosed />
-        },
-        {
-            text: "Messages",
-            icon: <HiOutlineChatAlt />
-        },
-        {
-            text: "Notifications",
-            icon: <MdOutlineNotifications />
-        },
-    ]
-
-    const ul2: MenuItem[] = [
+    const ul2: MenuItem[] = useMemo(() => ([
         {
             text: "Settings",
             icon: <IoSettingsOutline />
@@ -64,7 +64,7 @@ const MobileMenu = () => {
             text: "Sign out",
             icon: <TbLogout2 />
         },
-    ]
+    ]), [user]);
 
     const menuLists = [
         ul1.map(i => ({...i, action: closeMobileMenu})),
