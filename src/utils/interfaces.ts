@@ -2,13 +2,13 @@ import { IProject, IStage, ITask, TeamMember } from "@/store/projects/projects.s
 import { ExternalLink, NotificationData, NotificationType, Priority, SelectedStage, Sender, SubTask, Recipient, TagName, NewSubTask, ActivityType } from "./types";
 import { IUser } from "@/store/auth/auth.slice";
 
-interface IUserSignUpData extends ILoginCredentials {
+interface IUserSignUpData extends LoginCredentials {
     firstName: string;
     lastName: string;
-    confirmPassword?: string;
+    confirmedPassword: string;
 }
 
-interface ILoginCredentials {
+interface LoginCredentials {
     email: string;
     password: string;
 }
@@ -82,7 +82,7 @@ interface Activity extends NewActivityData {
 }
 
 export type {
-    ILoginCredentials,
+    LoginCredentials,
     IPasswordRegExp,
     IUserSignUpData,
     NewTaskData,

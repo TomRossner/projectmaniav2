@@ -70,7 +70,7 @@ const Notification = ({
 
         dispatch(setNotifications(updatedNotifications));
         
-        await updateNotification(notification);
+        await updateNotification(updatedNotification);
     }, [notifications, isSeen, dispatch, notification]);
 
     
@@ -83,6 +83,8 @@ const Notification = ({
             ? 'Just now'
             : howLongAgo as string;
     }
+
+    console.log(notification.isSeen)
 
   return (
     <AnimatePresence>

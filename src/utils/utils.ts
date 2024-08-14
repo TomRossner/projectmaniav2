@@ -1,11 +1,11 @@
-import { IProject, IStage, ITask, TeamMember } from "@/store/projects/projects.slice";
-import { ScrollDirection, Priority, TOption, Status, NewSubTask, ActivityType } from "./types";
+import { IProject, IStage } from "@/store/projects/projects.slice";
+import { ScrollDirection, Priority, TOption, Status, NewSubTask } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
 import { LINKS } from "./links";
 import { IUser } from "@/store/auth/auth.slice";
 import { v4 as uuid } from "uuid";
-import { NewActivityData, NewInvitationData } from "./interfaces";
+import { NewInvitationData } from "./interfaces";
 
 const capitalizeFirstLetter = (string: string): string => {
     const trimmedString = string.trim();

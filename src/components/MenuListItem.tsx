@@ -9,13 +9,14 @@ import useAuth from '@/hooks/useAuth';
 import { usePathname } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
+import { BsCircleFill } from 'react-icons/bs';
 
 type MenuListItemProps = {
   listItem: MenuItem;
 }
 
 const MenuListItem = ({listItem}: MenuListItemProps) => {
-  const {text, action, imageSrc, icon} = listItem;
+  const {text, action, imageSrc, icon, withCount, count} = listItem;
   const {user} = useAuth();
   
   const currentPath = usePathname();
@@ -90,7 +91,19 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
           />
         }
         
-        <span className='pt-1'>{text}</span>
+        <span className='pt-1 grow'>{text}</span>
+
+        {withCount && (
+          <p className='relative flex items-center justify-center mr-2'>
+            <span className='absolute w-6 h-6 text-slate-200 rounded-full'>
+              <BsCircleFill />
+            </span>
+
+            <span className='z-50 text-blue-500 pt-1 text-[20px]'>
+              {count}
+            </span>
+          </p>
+        )}
     </Link>
   )
 }

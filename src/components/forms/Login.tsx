@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from "react-hook-form";
 import FormHeader from './FormHeader';
 import { twMerge } from 'tailwind-merge';
@@ -8,14 +8,13 @@ import { z } from 'zod';
 import { PASSWORD_MIN_LENGTH } from '@/utils/forms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import GoogleLogo from '../utils/GoogleLogo';
-import { fetchUserAsync, IUser, setAuthError, setUser, User } from '@/store/auth/auth.slice';
+import { fetchUserAsync, setAuthError } from '@/store/auth/auth.slice';
 import { useAppDispatch } from '@/hooks/hooks';
-import { getUserFromJwt } from '@/services/localStorage';
 import LoadingIcon from '../utils/LoadingIcon';
 import Button from '../common/Button';
-import useAuth from '@/hooks/useAuth';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
+import Line from '../common/Line';
 
 const logInSchema = z.object({
     email: z.string().email(),
@@ -51,8 +50,8 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                 .unwrap()
                 .catch(
                     (error: {message: string}) => {
-                        console.log(error)
-                        // dispatch(setAuthError(error.message))
+                        console.log(error);
+                        dispatch(setAuthError(error.message));
                     }
                 );
 
@@ -65,141 +64,118 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
         }
     }
 
-    const handleGoogleSignIn = async () => {
-        // const response = await googleSignIn(loginData.email)
-        const user = await dispatch(fetchUserAsync({
-            email: process.env.NEXT_PUBLIC_MOCK_EMAIL_2 as string,
-            password: process.env.NEXT_PUBLIC_MOCK_PASSWORD_2 as string
-        }))
-            .unwrap()
-            .catch(
-                ({message}: {message: string}) =>
-                    dispatch(setAuthError(message && 'Failed logging in'))
-            );
-
-        // dispatch(setUser(getUserFromJwt()));
-
-        if (user) {
-            reset();
-            router.push(LINKS.HOME);
-        }
-    }
-
   return (
-    <form
-        id='signIn'
-        onSubmit={handleSubmit(onSubmit)}
-        className={twMerge(`
-            max-w-[500px]
-            min-h-[450px]
-            transition-all
-            duration-100
-            w-full
-            grid
-            grid-cols-1
-            gap-5
-            pb-12
-            pt-5
-            px-10
-            border
-            border-slate-200
-            rounded-bl-lg
-            bg-slate-100
-        `)}
-    >
-        <FormHeader text='Login' />
-
-        <hr className='w-3/4 mx-auto' />
-
-        <div className='grid grid-cols-2 w-full gap-2'>
-            <input
-                {...register("email")}
-                type="email"
-                placeholder='Email'
-                autoComplete='username'
-                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
-            />
-
-            <input
-                {...register("password")}
-                type="password"
-                placeholder='Password'
-                autoComplete='current-password'
-                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
-            />
-        </div>
-
-        <p className='text-lg'>Don&apos;t have an account?
-            <span
-                onClick={toggleIsNotRegistered}
-                className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
-            >
-                Sign up
-            </span>
-        </p>
-
-        <button
-            disabled={isSubmitting}
-            type='submit'
-            className={`
-                px-4
-                pb-2
-                pt-3
-                rounded-bl-lg
-                disabled:bg-blue-300
-                disabled:cursor-not-allowed
-                disabled:opacity-60
-                bg-blue-400
-                hover:bg-blue-500
+    <div className='w-full flex flex-col bg-slate-100 pt-5 pb-12 border rounded-bl-lg px-10 gap-5 max-w-[500px] min-h-[450px] border-slate-200'>
+        <form
+            id='signIn'
+            onSubmit={handleSubmit(onSubmit)}
+            className={twMerge(`
                 transition-all
-                text-white
-                font-semibold
-                text-xl
+                duration-100
                 w-full
-                mx-auto
-                duration-75
-                max-h-[55px]
-            `}
+                grid
+                grid-cols-1
+                gap-5
+            `)}
         >
-            {isSubmitting
-                ? (
-                    <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
-                        <LoadingIcon />
-                        Loading...
-                    </span>
-                )
-                : 'Log in'
-            }
-        </button>
+            <FormHeader text='Login' />
 
-        <hr className='w-3/4 mx-auto'/>
+            <Line additionalStyles='w-3/4 mx-auto' />
 
-        <Button
-            disabled={isSubmitting}
-            type='button' // Set back to "submit"
-            action={handleGoogleSignIn}
-            additionalStyles={`
-                flex
-                w-full
-                border
-                border-slate-200
-                items-center
-                justify-center
-                gap-2
-                bg-slate-50
-                sm:hover:bg-white
-                active:bg-white
-                rounded-bl-lg
-                text-blue-400
-                text-xl
-                sm:hover:text-blue-500
-                active:text-blue-500
-            `}
-        >
-            <GoogleLogo width='w-5' />
-            <span className='pt-1'>Continue with Google</span>
-        </Button>
-    </form>
+            <div className='grid grid-cols-2 w-full gap-2'>
+                <input
+                    {...register("email")}
+                    type="email"
+                    placeholder='Email'
+                    autoComplete='username'
+                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                />
+
+                <input
+                    {...register("password")}
+                    type="password"
+                    placeholder='Password'
+                    autoComplete='current-password'
+                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                />
+            </div>
+
+            <p className='text-lg'>Don&apos;t have an account?
+                <span
+                    onClick={toggleIsNotRegistered}
+                    className='text-blue-500 underline hover:text-blue-600 cursor-pointer px-1'
+                >
+                    Sign up
+                </span>
+            </p>
+
+            <button
+                disabled={isSubmitting}
+                type='submit'
+                className={`
+                    px-4
+                    pb-2
+                    pt-3
+                    rounded-bl-lg
+                    disabled:bg-blue-300
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
+                    bg-blue-400
+                    hover:bg-blue-500
+                    transition-all
+                    text-white
+                    font-semibold
+                    text-xl
+                    w-full
+                    mx-auto
+                    duration-75
+                    max-h-[55px]
+                `}
+            >
+                {isSubmitting
+                    ? (
+                        <span className='flex gap-3 items-center justify-center max-w-[150px] mx-auto relative'>
+                            <LoadingIcon />
+                            Loading...
+                        </span>
+                    )
+                    : 'Log in'
+                }
+            </button>
+
+
+        </form>
+
+        <Line additionalStyles='w-3/4 mx-auto'/>
+        
+        <form action="http://localhost:3001/api/auth/login/google" method="get">
+            <Button
+                disabled={isSubmitting}
+                type='submit'
+                // action={handleGoogleSignIn}
+                additionalStyles={`
+                    flex
+                    w-full
+                    border
+                    border-slate-200
+                    items-center
+                    justify-center
+                    gap-2
+                    bg-slate-50
+                    sm:hover:bg-white
+                    active:bg-white
+                    rounded-bl-lg
+                    text-blue-400
+                    text-xl
+                    sm:hover:text-blue-500
+                    active:text-blue-500
+                `}
+            >
+                <GoogleLogo width='w-5' />
+                <span className='pt-1'>Continue with Google</span>
+            </Button>
+        </form>
+    </div>
   )
 }
 

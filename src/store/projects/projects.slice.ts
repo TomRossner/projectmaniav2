@@ -81,9 +81,11 @@ const handleError = (error: AxiosError<ErrorData>) => {
 }
 
 export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsAsync', async (userId: string) => {
+    if (!userId) return;
+
     try {
-        const {data} = await getAllProjects(userId);
-        return data;
+        const {data: projects} = await getAllProjects(userId);
+        return projects;
     } catch (error) {
         handleError(error as AxiosError<ErrorData>);
     }

@@ -7,7 +7,7 @@ import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, TAGS, MAX
 import { IProject, IStage, ITask, TeamMember, setCurrentProject } from '@/store/projects/projects.slice';
 import { capitalizeFirstLetter, convertToISODate, createNewSubtask, createSearchRegExp, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
-import { Activity, NewTaskData } from '@/utils/interfaces';
+import { NewTaskData } from '@/utils/interfaces';
 import { createTask } from '@/services/projects.api';
 import Image from 'next/image';
 import { BiPlus, BiTrash } from 'react-icons/bi';
@@ -31,14 +31,14 @@ import useModals from '@/hooks/useModals';
 import useError from '@/hooks/useError';
 import useActivityLog from '@/hooks/useActivityLog';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const NewTaskModal = () => {
     const {isNewTaskModalOpen, closeNewTaskModal} = useModals();
     const {currentProject, currentStage, tasks} = useProjects();
-    const {user, getUserInitials, getUserName, userId} = useAuth();
+    const {user, getUserInitials, getUserName} = useAuth();
     const {createNewActivity, activities} = useActivityLog();
-    const {emitEvent} = useSocket(userId as string);
+    const socket = getSocket();
 
     const [selectedPriority, setSelectedPriority] = useState<Priority>(DEFAULT_PRIORITY);
     const [selectedTags, setSelectedTags] = useState<TagName[]>([]);
@@ -110,7 +110,7 @@ const NewTaskModal = () => {
 
         const {data: task} = await createTask(newTask);
 
-        emitEvent('newTask', task);
+        socket?.emit('newTask', task);
 
         const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
             if (currentStage.stageId === stage.stageId) {
@@ -161,7 +161,6 @@ const NewTaskModal = () => {
         dispatch,
         inputValues.dueDate,
         inputValues.externalLinks,
-        emitEvent,
         closeNewTaskModal,
         createNewActivity
     ]);

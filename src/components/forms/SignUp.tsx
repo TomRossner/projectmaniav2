@@ -5,18 +5,35 @@ import { useForm } from "react-hook-form";
 import FormHeader from './FormHeader';
 import { twMerge } from 'tailwind-merge';
 import { z } from 'zod';
-import { NAME_MIN_LENGTH, PASSWORD_MIN_LENGTH } from '@/utils/forms';
+import { NAME_MAX_LENGTH, NAME_MIN_LENGTH, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@/utils/forms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { signUp } from '@/services/auth.api';
+import Line from '../common/Line';
+import { useAppDispatch } from '@/hooks/hooks';
+import { setErrorMsg } from '@/store/error/error.slice';
 
 const signUpSchema = z.object({
-    firstName: z.string().min(NAME_MIN_LENGTH, `Names must be at least ${NAME_MIN_LENGTH} characters`),
-    lastName: z.string().min(NAME_MIN_LENGTH, `Names must be at least ${NAME_MIN_LENGTH} characters`),
+    firstName: z
+        .string()
+        .min(NAME_MIN_LENGTH, `Name too short. Must be at least ${NAME_MIN_LENGTH} characters`)
+        .max(NAME_MAX_LENGTH, `Name too long`)
+        .regex(/[a-zA-Z]/),
+    lastName: z
+        .string()
+        .min(NAME_MIN_LENGTH, `Name too short. Must be at least ${NAME_MIN_LENGTH} characters`)
+        .max(NAME_MAX_LENGTH, 'Name too long')
+        .regex(/[a-zA-Z]/),
     email: z.string().email(),
-    password: z.string().min(PASSWORD_MIN_LENGTH, `Password must contain at least ${PASSWORD_MIN_LENGTH} characters`),
-    confirmPassword: z.string()
-}).refine(data => data.password === data.confirmPassword, {
-    message: "Passwords must match",
+    password: z
+        .string()
+        .min(PASSWORD_MIN_LENGTH, `Password must contain at least ${PASSWORD_MIN_LENGTH} characters`)
+        .max(PASSWORD_MAX_LENGTH, 'Password too long'),
+    confirmedPassword: z
+        .string()
+        .min(PASSWORD_MIN_LENGTH, `Password must contain at least ${PASSWORD_MIN_LENGTH} characters`)
+        .max(PASSWORD_MAX_LENGTH, 'Password too long'),
+}).refine(data => data.password === data.confirmedPassword, {
+    message: "Passwords do not match",
     path: ["confirmPassword"]
 });
 
@@ -36,12 +53,23 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
         resolver: zodResolver(signUpSchema)
     });
 
+    const dispatch = useAppDispatch();
+
     const onSubmit = async (data: TSignUpSchema) => {
         try {
             await signUp(data);
+            
             reset();
-        } catch (error) {
+            toggleIsNotRegistered();
+        } catch (error: any) {
             console.error(error);
+
+            if (error.response.status === 409) {
+                dispatch(setErrorMsg(error.response.data.error));
+                toggleIsNotRegistered();
+            }
+
+            reset();
         }
     }
 
@@ -69,41 +97,150 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
     >
         <FormHeader text='Create an account' />
 
-        <hr className='w-3/4 mx-auto' />
+        <Line additionalStyles='w-3/4 mx-auto' />
 
         <div className='grid grid-cols-2 w-full gap-2'>
             <input
-                {...register("firstName")}
+                {...register("firstName", {
+                    pattern: /[a-zA-Z]/,
+                    minLength: NAME_MIN_LENGTH,
+                    maxLength: NAME_MAX_LENGTH,
+                    required: true,
+                })}
                 type="text"
                 placeholder='First name'
-                className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                className={twMerge(`
+                    px-2
+                    pt-1
+                    outline-none
+                    border
+                    focus:border-blue-500
+                    rounded-bl-lg
+                    mb-2
+                    last:mb-0
+                    ${errors.firstName
+                        ? 'border-red-400'
+                        : 'border-transparent'
+                    }
+                `)}
             />
+
             <input
-                {...register("lastName")}
+                {...register("lastName", {
+                    pattern: /[a-zA-Z]/,
+                    minLength: NAME_MIN_LENGTH,
+                    maxLength: NAME_MAX_LENGTH,
+                    required: true,
+                })}
                 type="text"
                 placeholder='Last name'
-                className='px-2 pt-1 outline-none border border-transparent focus:border-blue-500 mb-2 last:mb-0'
+                className={twMerge(`
+                    px-2
+                    pt-1
+                    outline-none
+                    border
+                    focus:border-blue-500
+                    rounded-bl-lg
+                    mb-2
+                    last:mb-0
+                    ${errors.firstName
+                        ? 'border-red-400'
+                        : 'border-transparent'
+                    }
+                `)}
             />
+            
+            {(errors.firstName || errors.lastName) && (
+                <div className='w-full flex grow gap-1 items-center flex-col col-span-2'>
+                    <p className='px-2 py-0.5 bg-red-400 w-full text-white rounded-bl-lg'>{errors.firstName?.message || errors.lastName?.message}</p>
+                    {/* {errors.lastName && <p className='px-2 py-0.5 bg-red-400 w-full text-white rounded-bl-lg'>{errors.lastName?.message}</p>} */}
+                </div>
+            )}
 
             <input
-                {...register("email")}
+                {...register("email", {
+                    required: true,
+                })}
                 type="email"
                 placeholder='Email'
-                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                className={twMerge(`
+                    col-span-2 
+                    px-2 
+                    pt-1 
+                    outline-none 
+                    border 
+                    focus:border-blue-500 
+                    rounded-bl-lg 
+                    mb-2 
+                    last:mb-0 
+                    ${errors.firstName
+                        ? 'border-red-400'
+                        : 'border-transparent'
+                    }
+                `)}
             />
+            {errors.email && (
+                <div className='w-full flex grow gap-1 items-center flex-col col-span-2'>
+                    {errors.email && <p className='px-2 py-0.5 bg-red-400 w-full text-white rounded-bl-lg'>{errors.email?.message}</p>}
+                </div>
+            )}
 
             <input
-                {...register("password")}
+                {...register("password", {
+                    minLength: PASSWORD_MIN_LENGTH,
+                    maxLength: PASSWORD_MAX_LENGTH,
+                    required: true,
+                })}
                 type="password"
                 placeholder='Password'
-                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                className={twMerge(`
+                    col-span-2
+                    px-2
+                    pt-1
+                    outline-none
+                    border
+                    focus:border-blue-500
+                    rounded-bl-lg
+                    mb-2
+                    last:mb-0
+                    ${errors.firstName
+                        ? 'border-red-400'
+                        : 'border-transparent'
+                    }
+                `)}
             />
+            {errors.password && (
+                <div className='w-full flex grow gap-1 items-center flex-col col-span-2'>
+                    {errors.password && <p className='px-2 py-0.5 bg-red-400 w-full text-white rounded-bl-lg'>{errors.password?.message}</p>}
+                </div>
+            )}
             <input
-                {...register("confirmPassword")}
+                {...register("confirmedPassword", {
+                    minLength: PASSWORD_MIN_LENGTH,
+                    maxLength: PASSWORD_MAX_LENGTH,
+                    required: true,
+                })}
                 type="password"
                 placeholder='Confirm password'
-                className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg'
+                className={twMerge(`
+                    col-span-2 
+                    px-2 
+                    pt-1 
+                    outline-none 
+                    border 
+                    focus:border-blue-500 
+                    rounded-bl-lg 
+                    ${errors.firstName
+                        ? 'border-red-400'
+                        : 'border-transparent'
+                    }
+                `)}
             />
+            {errors.confirmedPassword && (
+                <div className='w-full flex grow gap-1 items-center flex-col col-span-2'>
+                    {errors.confirmedPassword && <p className='px-2 py-0.5 bg-red-400 w-full text-white rounded-bl-lg'>{errors.confirmedPassword?.message}</p>}
+                </div>
+            )}
         </div>
 
         <p className='text-lg'>Already have an account?

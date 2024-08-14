@@ -15,14 +15,14 @@ import useActivityLog from '@/hooks/useActivityLog';
 import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import useModals from '@/hooks/useModals';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const NewStageModal = () => {
     const {isNewStageModalOpen, closeNewStageModal} = useModals();
     const {currentProject, stages} = useProjects();
     const {user, userId} = useAuth();
     const {createNewActivity, activities} = useActivityLog();
-    const {emitEvent} = useSocket(userId as string);
+    const socket = getSocket();
 
     const [inputValues, setInputValues] = useState<NewStageData | null>(null);
 
@@ -69,14 +69,13 @@ const NewStageModal = () => {
             activityLog
         ]));
 
-        emitEvent('newStage', newStage);
+        socket?.emit('newStage', newStage);
 
         handleClose();
     }, [
         activities,
         currentProject,
         user,
-        emitEvent,
         createNewActivity,
         dispatch,
         stages,

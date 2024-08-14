@@ -15,7 +15,7 @@ import { IUser } from '@/store/auth/auth.slice';
 import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const EditProjectModal = () => {
     const dispatch = useAppDispatch();
@@ -24,8 +24,8 @@ const EditProjectModal = () => {
     const {currentProject} = useProjects();
     const {isEditProjectModalOpen, closeEditProjectModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const {user} = useAuth();
+    const socket = getSocket();
 
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -72,7 +72,7 @@ const EditProjectModal = () => {
             // Updates currentProject property in stages
             await updateProject(updatedCurrentProject);
 
-            emitEvent('updateProject', {
+            socket?.emit('updateProject', {
                 ...updatedCurrentProject,
                 lastUpdatedBy: user?.userId as string,
             });
@@ -80,7 +80,6 @@ const EditProjectModal = () => {
     }, [
         activities,
         currentProject,
-        emitEvent,
         closeModal,
         createNewActivity,
         user,

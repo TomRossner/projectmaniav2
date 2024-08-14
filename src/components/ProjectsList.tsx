@@ -17,7 +17,7 @@ const ProjectsList = ({projects = []}: List) => {
                 {...p}
             />
           ) : (
-              <p className='text-center w-full font-medium text-gray-400'>No projects</p>
+              <p className='text-center w-full font-medium text-stone-700 text-3xl my-14'>You do not have any projects</p>
           )
         }
     </div>

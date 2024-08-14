@@ -1,12 +1,12 @@
 'use client'
 
 import isAuth from '@/app/ProtectedRoute';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
-import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrentStageIndex, setCurrentTask, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrentStageIndex, setStages } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
@@ -23,8 +23,7 @@ import EditDashboardModal from '@/components/modals/EditProjectModal';
 import { AxiosResponse } from 'axios';
 import { IUser, setUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
-import { updateUser, updateUserData } from '@/services/user.api';
-import { refreshUser, saveJwt } from '@/services/localStorage';
+import { updateUserData } from '@/services/user.api';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import InvitationModal from '@/components/modals/InvitationModal';
@@ -32,8 +31,7 @@ import LoadingModal from '@/components/modals/LoadingModal';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
 import ActivityLog from '@/components/ActivityLog';
 import { fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
-import useActivityLog from '@/hooks/useActivityLog';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const Project = () => {
   const {user, userId} = useAuth();
@@ -43,10 +41,8 @@ const Project = () => {
     currentStage,
     currentStageIndex,
     currentTask,
-    projectId
   } = useProjects();
-  const {activities} = useActivityLog();
-  const {socket, emitEvent} = useSocket(userId as string);
+  const socket = getSocket();
 
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -104,34 +100,34 @@ const Project = () => {
     if (index > 0 && noMorePrev) setNoMorePrev(false);
   }, [noMoreNext,noMorePrev]);
 
-  const onDragStart = (ev: DragStartEvent) => {
-    if (ev.active.data.current?.type === "stage") {
-      setActiveStage(ev.active.data.current.stage);
-      return;
-    }
-  }
+  // const onDragStart = (ev: DragStartEvent) => {
+  //   if (ev.active.data.current?.type === "stage") {
+  //     setActiveStage(ev.active.data.current.stage);
+  //     return;
+  //   }
+  // }
 
-  const onDragEnd = (ev: DragEndEvent) => {
-    setActiveStage(null);
-    const {active, over} = ev;
+  // const onDragEnd = (ev: DragEndEvent) => {
+  //   setActiveStage(null);
+  //   const {active, over} = ev;
 
-    if (!over) return;
+  //   if (!over) return;
 
-    const oldIndex = stages.findIndex(s => s.stageId === active.id);
-    const newIndex = stages.findIndex(s => s.stageId === over.id);
+  //   const oldIndex = stages.findIndex(s => s.stageId === active.id);
+  //   const newIndex = stages.findIndex(s => s.stageId === over.id);
 
-    const newTasks = arrayMove(stages, oldIndex, newIndex);
+  //   const newTasks = arrayMove(stages, oldIndex, newIndex);
 
-    if (oldIndex === newIndex) return;
+  //   if (oldIndex === newIndex) return;
 
-    dispatch(setStages(newTasks));
-  }
+  //   dispatch(setStages(newTasks));
+  // }
 
-  const mouseSensor = useSensor(MouseSensor, {
-    activationConstraint: {
-      distance: 5
-    },
-  });
+  // const mouseSensor = useSensor(MouseSensor, {
+  //   activationConstraint: {
+  //     distance: 5
+  //   },
+  // });
 
   // Set currentStageIndex to 0
   useEffect(() => {
@@ -159,7 +155,7 @@ const Project = () => {
       handleUpdateProject(currentProject);
       
     } else if (!currentProject) router.push(LINKS.PROJECTS);
-  }, [currentProject, router])
+  }, [currentProject])
 
   // Update currentStage when currentStageIndex changes
   useEffect(() => {
@@ -170,7 +166,7 @@ const Project = () => {
   // Update buttons disable attribute when currenStageIndex changes
   useEffect(() => {
       handleDisableNextAndPrevButtons(currentStageIndex, stages.length);
-  }, [currentStageIndex, stages, handleDisableNextAndPrevButtons])
+  }, [currentStageIndex, stages.length, handleDisableNextAndPrevButtons])
 
   // Update currentStage when stages change
   useEffect(() => {
@@ -222,17 +218,11 @@ const Project = () => {
 
     if (container) container.addEventListener('scroll', handleScroll);
   }, [])
-
-  // const stagesIds = useMemo(() => stages.map(s => ({
-  //   id: s.stageId as string
-  // })), [stages]);
   
   const isJoiningProject = useAppSelector(selectIsJoiningProject);
   const isLeavingProject = useAppSelector(selectIsLeavingProject);
 
   useEffect(() => {
-    // if ((!!activities.length && (currentProject?.projectId !== activities[0]?.projectId))) {
-    // }
     dispatch(fetchActivityLogAsync(currentProject?.projectId as string)); 
   }, [currentProject?.projectId, dispatch])
 
@@ -330,13 +320,13 @@ const Project = () => {
 
       socket.on("connect", () => {
         console.log("Socket now connected: ", socket?.id);
-
-        emitEvent('updateSocketId', {
-          userId: user.userId,
-          socketId: socket.id as string
-        });
       });
       
+      socket.emit('updateSocketId', {
+        userId,
+        socketId: socket.id as string
+      });
+
       socket
         .on('newTask', handleNewTask)
         .on('deleteTask', handleDeleteTask)
@@ -348,7 +338,7 @@ const Project = () => {
         
         .on('updateProject', handleUpdateProject)
     }
-  }, [socket, currentProject, user, dispatch])
+  }, [socket, currentProject, userId, user])
 
   return (
     <>

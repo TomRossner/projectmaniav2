@@ -11,7 +11,7 @@ import { INotification } from '@/utils/interfaces';
 import useProjects from '@/hooks/useProjects';
 import ErrorModal from '@/components/modals/ErrorModal';
 import useAuth from '@/hooks/useAuth';
-import { IUser, setUser, User } from '@/store/auth/auth.slice';
+import { IUser, setUser } from '@/store/auth/auth.slice';
 import LoadingModal from '@/components/modals/LoadingModal';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
@@ -21,10 +21,9 @@ import { LINKS } from '@/utils/links';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
-import useSocket from '@/hooks/useSocket';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { updateUserData } from '@/services/user.api';
-import { Socket } from 'socket.io-client';
+import { getSocket } from '@/utils/socket';
 
 const Notifications = () => {
     const {notifications, handleRemoveNotification, getUpdatedNotificationsIds} = useNotifications();
@@ -33,12 +32,12 @@ const Notifications = () => {
     const isJoiningProject = useAppSelector(selectIsJoiningProject);
     const isLeavingProject = useAppSelector(selectIsLeavingProject);
     const {createNewActivity, activities} = useActivityLog();
-    const emitEvent = useSocket(userId as string);
+    const socket = getSocket();
 
     const dispatch = useAppDispatch();
     const router = useRouter();
 
-    const handleJoin = async (notificationData: Pick<IProject, "projectId" | "title">, notificationId: string, user: IUser) => {
+    const handleJoin = useCallback(async (notificationData: Pick<IProject, "projectId" | "title">, notificationId: string, user: IUser) => {
         handleJoinProject(notificationData, user);
         
         const {data: project} = await getProject(notificationData.projectId);
@@ -58,7 +57,14 @@ const Notifications = () => {
         
         handleRemoveNotification(notificationId);
         router.push(LINKS.HOME);
-    } 
+    }, [
+        activities,
+        createNewActivity,
+        dispatch,
+        handleJoinProject,
+        handleRemoveNotification,
+        router
+    ]);
 
     const getAction = (notification: INotification) => {
         switch (notification.type) {
@@ -74,7 +80,8 @@ const Notifications = () => {
     }
 
     const handleNotification = useCallback((newNotification: INotification) => {
-        console.log({newNotification})
+        console.log({newNotification});
+
           dispatch(setNotifications([...notifications, newNotification]));
           updateUserData({
               ...user,
@@ -84,24 +91,23 @@ const Notifications = () => {
               ),
           } as IUser)
               .then(res => dispatch(setUser(res.data)));
-    }, [user, notifications, dispatch, getUpdatedNotificationsIds])
-
-    const handleConnect = useCallback(() => {
-        if (socket) {
-            socket.emit('updateSocketId', {
-              userId: userId as string,
-              socketId: socket.id as string
-            });
-        }
-        
-    }, [socket, userId])
-
+    }, [
+        user,
+        notifications,
+        dispatch,
+        getUpdatedNotificationsIds
+    ]);
+    
     useEffect(() => {
-        if (socket) {
-            socket.on('connect', handleConnect);
-            socket.on('notification', handleNotification);
+        if (userId) {
+            socket?.emit('updateSocketId', {
+                userId: userId as string,
+                socketId: socket.id as string
+            });
+            
+            socket?.on('notification', handleNotification);
         }
-    }, [socket, handleNotification, handleConnect])
+    }, [socket, handleNotification, userId])
 
   return (
     <Container id='notificationsPage'>
@@ -109,10 +115,10 @@ const Notifications = () => {
             isOpen={isJoiningProject || isLeavingProject}
             text={
                 isJoiningProject
-                ? 'Joining project...'
-                : isLeavingProject
-                    ? 'Leaving project...'
-                    : ''
+                    ? 'Joining project...'
+                    : isLeavingProject
+                        ? 'Leaving project...'
+                        : ''
             }
         />
         <ErrorModal />

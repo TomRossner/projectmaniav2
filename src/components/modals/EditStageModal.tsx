@@ -4,7 +4,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Input from '../common/Input';
 import Modal from './Modal';
@@ -15,7 +15,7 @@ import { ActivityType } from '@/utils/types';
 import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const DEFAULT_VALUES = {
     title: '',
@@ -27,8 +27,8 @@ const EditStageModal = () => {
     const {currentProject, currentStage, stages} = useProjects();
     const {isEditStageModalOpen, closeEditStageModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const {user} = useAuth();
+    const socket = getSocket();
 
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -77,7 +77,7 @@ const EditStageModal = () => {
         // }
         await updateStage(updatedStage);
 
-        emitEvent('updateStage', updatedStage);
+        socket?.emit('updateStage', updatedStage);
     }, [
         activities,
         closeModal,
@@ -86,7 +86,6 @@ const EditStageModal = () => {
         stages,
         user,
         createNewActivity,
-        emitEvent,
         dispatch
     ]);
 

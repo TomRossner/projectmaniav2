@@ -14,7 +14,7 @@ import SignUp from '@/components/forms/SignUp';
 const SignIn = () => {
   const [isNotRegistered, setIsNotRegistered] = useState<boolean>(false);
 
-  const toggleIsNotRegistered = (): void => setIsNotRegistered(!isNotRegistered);
+  const toggleIsNotRegistered = () => setIsNotRegistered(!isNotRegistered);
 
   const dispatch = useAppDispatch();
   const {user, isAuthenticated} = useAuth();
@@ -25,7 +25,7 @@ const SignIn = () => {
     if (!user && isAuthenticated) dispatch(setIsAuthenticated(false));
 
     if (isAuthenticated) router.push(LINKS['HOME']);
-  }, [user, isAuthenticated])
+  }, [user, isAuthenticated, router, dispatch])
 
   return (
     <Container id='signInPage' className='my-auto w-full flex flex-col gap-5'>

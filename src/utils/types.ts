@@ -37,6 +37,8 @@ type MenuItem = {
     action?: () => void;
     icon?: ReactNode;
     imageSrc?: Pick<IUser, "imgSrc"> & string;
+    withCount?: boolean;
+    count?: number;
 }
 
 type TOption = {

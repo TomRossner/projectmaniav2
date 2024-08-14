@@ -31,7 +31,7 @@ import Line from "../common/Line";
 import { setErrorMsg } from "@/store/error/error.slice";
 import { setActivities } from "@/store/activity_log/activity_log.slice";
 import useActivityLog from "@/hooks/useActivityLog";
-import useSocket from "@/hooks/useSocket";
+import { getSocket } from "@/utils/socket";
 
 type EditTaskModalProps = {
     task: ITask;
@@ -46,8 +46,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
     const {currentProject, currentTask} = useProjects();
     const {isEditTaskModalOpen, closeEditTaskModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user, getUserInitials, getUserName, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const {user, getUserInitials, getUserName} = useAuth();
+    const socket = getSocket();
 
     const DEFAULT_VALUES: ITask = task;
 
@@ -226,7 +226,7 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             activityLog
         ]));
 
-        emitEvent('updateTask', updatedTask);
+        socket?.emit('updateTask', updatedTask);
 
         closeModal();
     }, [
@@ -235,7 +235,6 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         createNewActivity,
         currentProject,
         currentTask,
-        emitEvent,
         user,
         getUpdatedStages,
         dispatch

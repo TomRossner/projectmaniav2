@@ -1,12 +1,10 @@
 'use client'
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectAuth } from '@/store/auth/auth.selectors';
-import { IUser, setIsAuthenticated, setUser } from '@/store/auth/auth.slice';
-import { refreshUser, setTokenHeader } from '@/services/localStorage';
+import { IUser } from '@/store/auth/auth.slice';
 import { TeamMember } from '@/store/projects/projects.slice';
-import { fetchSession } from '@/services/auth.api';
 
 const useAuth = () => {
     const {
@@ -33,14 +31,6 @@ const useAuth = () => {
     }
 
     const userId = useMemo(() => user?.userId, [user]);
-
-    // const isAuthenticated = useMemo(() => !!user, [user]);
-
-    // useEffect(() => {
-    //   fetchSession().then(res => dispatch(setUser(res)));
-    //   // dispatch(setUser(refreshUser()));
-    //   // setTokenHeader();
-    // }, [])
 
     return {
       user,

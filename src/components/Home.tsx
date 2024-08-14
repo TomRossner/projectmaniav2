@@ -15,24 +15,23 @@ import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
 import { BsCircleFill } from 'react-icons/bs';
 import { getStagesCount, getTotalTasks, setProjectLink } from '@/utils/utils';
 import { twMerge } from 'tailwind-merge';
-import { TEAM_MEMBERS_COUNT } from '@/utils/constants';
+import { APP_VERSION, TEAM_MEMBERS_COUNT } from '@/utils/constants';
 import { getUserById, updateUserData } from '@/services/user.api';
 import { INotification } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { IUser, setUser } from '@/store/auth/auth.slice';
 import { getUserNotifications } from '@/services/notifications.api';
-import useSocket from '@/hooks/useSocket';
 import useNotifications from '@/hooks/useNotifications';
 import LoadingModal from './modals/LoadingModal';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
 import { openModal } from '@/store/modals/modals.slice';
 import { fetchSession } from '@/services/auth.api';
 import Loading from './common/Loading';
+import { closeSocket, getSocket, initializeSocket } from '@/utils/socket';
 
 const Home = () => {
   const {isAuthenticated, user, getUserInitials, getUserName, userId} = useAuth();
-  const {projects, getUserProjects, getMostRecentProject, isFetching, projectId} = useProjects();
-  const {socket, emitEvent} = useSocket(userId as string);
+  const {projects, getUserProjects, getMostRecentProject, isFetching} = useProjects();
   const {notifications, getUpdatedNotificationsIds} = useNotifications();
   const isJoiningProject = useAppSelector(selectIsJoiningProject);
   const isLeavingProject = useAppSelector(selectIsLeavingProject);
@@ -57,15 +56,15 @@ const Home = () => {
   }
 
   useEffect(() => {
-    if (user) {
+    if (user && userId) {
       console.log({user})
       if (!!user.mostRecentProject) {
         getMostRecentProject(user.mostRecentProject as Pick<IProject, "projectId" | "title">)
           .then(project => setMostRecentProject(project));
       }
       
-      getUserProjects(userId as string);
-      getUserNotifications(userId as string)
+      getUserProjects(userId);
+      getUserNotifications(userId)
         .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)));
     }
   }, [
@@ -75,17 +74,19 @@ const Home = () => {
     userId,
   ])
 
+  const socket = getSocket();
+
   const handleConnect = useCallback(() => {
     if (!socket) return;
 
     console.log("Socket now connected: ", socket?.id);
     
-    emitEvent('updateSocketId', {
+    socket.emit('updateSocketId', {
       userId: userId as string,
       socketId: socket.id as string
     });
     
-    emitEvent("online", {
+    socket.emit("online", {
         userId
     });
   }, [socket, userId]);
@@ -133,8 +134,16 @@ const handleNotification = useCallback((newNotification: INotification) => {
   ]);
 
   useEffect(() => {
+    if (userId) {
+      initializeSocket(userId as string);
+    }
+
+    if (!userId) {
+      closeSocket();
+    }
+
     fetchSession().then(res => dispatch(setUser(res ?? null)));
-  }, [dispatch])
+  }, [dispatch, userId])
 
   return (
     <Container id='homePage' className='text-xl flex gap-3 flex-col items-start w-full'>
@@ -151,7 +160,7 @@ const handleNotification = useCallback((newNotification: INotification) => {
       {!isAuthenticated ? (
         <div className='gap-10 py-20 flex items-center flex-col w-full'>
           <Header
-            text={`Welcome to ProJem!`}
+            text={`Welcome to Project Mania v${APP_VERSION}!`}
             additionalStyles='text-5xl w-[95%]'
           />
 

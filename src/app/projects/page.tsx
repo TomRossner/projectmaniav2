@@ -13,32 +13,6 @@ import useModals from '@/hooks/useModals';
 const Projects = () => {
   const {projects} = useProjects();
   const {openNewProjectModal} = useModals();
-  // const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // const handleCreateProject = async () => {
-  //   setIsLoading(true);
-    
-  //   try {
-  //     const self: TeamMember = {
-  //       email: user?.email,
-  //       userId: user?.userId,
-  //       firstName: user?.firstName,
-  //       lastName: user?.lastName
-  //     } as TeamMember;
-  
-  //     const newProject = {
-  //       title: `${user?.firstName}'s Project`,
-  //       team: [self],
-  //       stages: [DEFAULT_STAGE]
-  //     }
-  
-  //     return await createProject(newProject);
-  //   } catch (error: unknown) {
-  //     handleError(error as AxiosError);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }
 
   const handleNewProject = () => {
     openNewProjectModal();

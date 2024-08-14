@@ -13,7 +13,7 @@ import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 type TaskMenuProps = {
     setIsMenuOpen: (bool: boolean) => void;
@@ -36,7 +36,7 @@ const TaskMenu = forwardRef(function TaskMenu(props: TaskMenuProps, ref: Forward
     const {openBackLayer, openEditTaskModal, closeEditTaskModal, openDeleteTaskModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
     const {user, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const socket = getSocket();
     
     const openEditModal = () => {
         openBackLayer();
@@ -95,10 +95,9 @@ const TaskMenu = forwardRef(function TaskMenu(props: TaskMenuProps, ref: Forward
             activityLog
         ]));
 
-        emitEvent('updateTask', updatedTask);
+        socket?.emit('updateTask', updatedTask);
     }, [
         activities,
-        emitEvent,
         dispatch,
         currentProject,
         currentStage,

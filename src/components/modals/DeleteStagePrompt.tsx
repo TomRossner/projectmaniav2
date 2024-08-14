@@ -12,14 +12,14 @@ import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import { IUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const DeleteStagePrompt = () => {
     const {isDeleteStageModalOpen, closeDeleteStageModal} = useModals();
     const {currentStage, stages, currentProject} = useProjects();
     const {createNewActivity, activities} = useActivityLog();
-    const {user, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const {user} = useAuth();
+    const socket = getSocket();
 
     const dispatch = useAppDispatch();
 
@@ -59,7 +59,7 @@ const DeleteStagePrompt = () => {
             activityLog
         ]));
 
-        emitEvent('deleteStage', {
+        socket?.emit('deleteStage', {
             ...currentStage,
             lastUpdatedBy: user?.userId as string
         });
@@ -73,7 +73,6 @@ const DeleteStagePrompt = () => {
         currentStage,
         user,
         dispatch,
-        emitEvent,
         createNewActivity,
         stages,
         closeDeleteStageModal,

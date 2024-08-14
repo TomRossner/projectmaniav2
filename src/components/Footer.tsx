@@ -30,7 +30,7 @@ const Footer = () => {
           href={LINKS.HOME}
           className='font-semibold text-blue-500 pt-1 grow'
         >
-          Projem v{APP_VERSION_FULL}
+          Project Mania v{APP_VERSION_FULL}
         </Link>
         {/* <span className='pt-1 text-slate-300 grow'>|</span> */}
 

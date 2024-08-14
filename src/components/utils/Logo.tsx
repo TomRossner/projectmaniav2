@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { APP_VERSION } from '@/utils/constants';
 import { LINKS } from '@/utils/links';
 import { twMerge } from 'tailwind-merge';
 
@@ -33,7 +32,7 @@ const Logo = ({action, additionalStyles}: LogoProps) => {
         ${additionalStyles}
       `)}
     >
-      <span>Projem</span>
+      <span>Project Mania</span>
       {/* <span className='font-normal text-2xl'>v{APP_VERSION}</span> */}
     </Link>
   )

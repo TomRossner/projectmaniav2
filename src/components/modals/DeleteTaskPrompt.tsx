@@ -13,14 +13,14 @@ import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
-import useSocket from '@/hooks/useSocket';
+import { getSocket } from '@/utils/socket';
 
 const DeleteTaskPrompt = () => {
     const {currentProject, currentTask, currentStage} = useProjects();
     const {isDeleteTaskModalOpen, closeDeleteTaskModal} = useModals();
     const {createNewActivity, activities} = useActivityLog();
-    const {user, userId} = useAuth();
-    const {emitEvent} = useSocket(userId as string);
+    const {user} = useAuth();
+    const socket = getSocket();
 
     const dispatch = useAppDispatch();
 
@@ -51,7 +51,7 @@ const DeleteTaskPrompt = () => {
 
         await deleteTask(currentTask.taskId);
 
-        emitEvent('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
+        socket?.emit('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
 
         const activityLog = await createNewActivity(
             ActivityType.DeleteTask,
@@ -73,7 +73,6 @@ const DeleteTaskPrompt = () => {
         currentProject, 
         currentStage,
         currentTask,
-        emitEvent,
         user,
         dispatch, 
         closeDeleteTaskModal,

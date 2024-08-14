@@ -13,7 +13,7 @@ import '@greguintow/react-tippy/dist/tippy.css';
 const teko = Teko({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: `Projem v${APP_VERSION} - by Tom Rossner`,
+  title: `Project Mania v${APP_VERSION} - by Tom Rossner`,
   description: 'By Tom Rossner',
 }
 

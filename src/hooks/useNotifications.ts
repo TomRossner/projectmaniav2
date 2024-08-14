@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectINotifications } from '@/store/notifications/notifications.selectors';
 import { INotification, NewNotificationData } from '@/utils/interfaces';
@@ -93,7 +93,8 @@ const useNotifications = () => {
     }
 
   return {
-    notifications: memoizedNotifications,
+    // notifications: memoizedNotifications,
+    notifications,
     handleRemoveNotification,
     createNotification,
     getUpdatedNotificationsIds,

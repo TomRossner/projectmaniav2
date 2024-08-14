@@ -5,6 +5,7 @@ import { notificationsReducer } from "./notifications/notifications.reducer";
 import modalsReducer from "./modals/modals.reducer";
 import errorReducer from "./error/error.reducer";
 import activityLogReducer from "./activity_log/activity_log.reducer";
+import socketReducer from "./socket/socket.reducer";
 
 export const throwMiddleware: Middleware = () => (next) => (action: any) => {
   next(action);
@@ -22,6 +23,7 @@ export const makeStore = () => {
       modals: modalsReducer,
       error: errorReducer,
       activityLog: activityLogReducer,
+      socket: socketReducer,
     },
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(throwMiddleware), 
   })

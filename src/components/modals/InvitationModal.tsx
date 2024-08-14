@@ -10,22 +10,20 @@ import useAuth from '@/hooks/useAuth';
 import isAuth from '@/app/ProtectedRoute';
 import { GoSearch } from 'react-icons/go';
 import { RxCross2 } from 'react-icons/rx';
-import useSocket from '@/hooks/useSocket';
 import useProjects from '@/hooks/useProjects';
 import { IProject } from '@/store/projects/projects.slice';
 import { Sender, Recipient } from '@/utils/types';
 import { INotification, NewNotificationData } from '@/utils/interfaces';
 import Avatar from '../common/Avatar';
-import useNotifications from '@/hooks/useNotifications';
 import { createNotification } from '@/services/notifications.api';
 import { twMerge } from 'tailwind-merge';
+import { getSocket } from '@/utils/socket';
 
 const InvitationModal = () => {
     const {user, getUserName, getUserInitials, userId} = useAuth();
     const {isInvitationModalOpen, closeInvitationModal} = useModals();
     const {currentProject} = useProjects();
-    const {emitEvent} = useSocket(userId as string);
-    // const {createNotification} = useNotifications();
+    const socket = getSocket();
 
     const [searchResults, setSearchResults] = useState<IUser[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
@@ -59,7 +57,6 @@ const InvitationModal = () => {
     }
 
     const handleSendInvitation = async (recipient: Recipient) => {
-        // socket.emit('sendInvitation', {userId});
         const recipientAsUser = searchResults.find(u => u.userId === recipient.userId) as IUser;
 
         if (!recipientAsUser) return;
@@ -87,7 +84,7 @@ const InvitationModal = () => {
 
         const {data: notification} = await createNotification(notificationData);
 
-        emitEvent("notification", notification as INotification);
+        socket?.emit("notification", notification as INotification);
     }
 
     const isAlreadyATeamMember = (userId: string): boolean => {

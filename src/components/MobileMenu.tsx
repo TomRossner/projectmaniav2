@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import Cross from './utils/Cross';
 import Logo from './utils/Logo';
 import MenuList from './MenuList';
@@ -16,33 +16,48 @@ import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
 import { MdOutlineNotifications } from "react-icons/md";
 import { IUser } from '@/store/auth/auth.slice';
-
-const ul1: MenuItem[] = [
-    {
-        text: "Home",
-        icon: <BiHome />
-    },
-    {
-        text: "About",
-        icon: <LuInfo />
-    },
-    {
-        text: "Projects",
-        icon: <LuFolderClosed />
-    },
-    {
-        text: "Messages",
-        icon: <HiOutlineChatAlt />
-    },
-    {
-        text: "Notifications",
-        icon: <MdOutlineNotifications />
-    },
-]
+import { getSocket } from '@/utils/socket';
+import useNotifications from '@/hooks/useNotifications';
 
 const MobileMenu = () => {
     const {isMobileMenuOpen, closeMobileMenu} = useMobileMenu();
-    const {user} = useAuth();
+    const {user, userId} = useAuth();
+    const socket = getSocket();
+    const {notifications} = useNotifications();
+
+    useEffect(() => {
+        if (userId) {
+            socket?.emit('updateSocketId', {
+                userId,
+                socketId: socket.id,
+            })
+        }
+    }, [userId])
+
+    const ul1: MenuItem[] = useMemo(() => ([
+        {
+            text: "Home",
+            icon: <BiHome />
+        },
+        {
+            text: "About",
+            icon: <LuInfo />
+        },
+        {
+            text: "Projects",
+            icon: <LuFolderClosed />
+        },
+        {
+            text: "Messages",
+            icon: <HiOutlineChatAlt />
+        },
+        {
+            text: "Notifications",
+            icon: <MdOutlineNotifications />,
+            withCount: !!userId,
+            count: notifications.length
+        }
+    ]), [userId, notifications])
 
     const ul2: MenuItem[] = useMemo(() => ([
         {

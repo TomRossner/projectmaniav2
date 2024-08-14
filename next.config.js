@@ -5,7 +5,11 @@ const nextConfig = {
           {
             protocol: 'https',
             hostname: 'i.pngimg.me',
-          }
+          },
+          {
+            protocol: 'https',
+            hostname: 'lh3.googleusercontent.com',
+          },
         ]
     }
 }

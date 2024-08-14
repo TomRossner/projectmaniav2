@@ -4,7 +4,7 @@ import React, { ReactNode } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 type BackLayerProps = {
-  title: string;
+  title?: string;
   children: ReactNode;
   action?: () => void;
   closeOnClick?: boolean;
