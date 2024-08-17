@@ -28,6 +28,7 @@ type ModalProps = {
     withCrossIcon?: boolean;
     withCloseBtn?: boolean;
     isLoadingModal?: boolean;
+    additionalStyles?: string;
 }
 
 const Modal = ({
@@ -47,12 +48,13 @@ const Modal = ({
     withCrossIcon = false,
     withCloseBtn = true,
     isLoadingModal = false,
+    additionalStyles,
 } : ModalProps) => {
-    const modalRef = useRef(null);
+    const modalRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         const handleMouseClick = (ev: MouseEvent<Element, MouseEvent<Element, MouseEvent>>) => {
-            if (closeOnClickOutside && modalRef.current !== ev.target) {
+            if (closeOnClickOutside && !modalRef.current?.contains(ev.target as Node)) {
                 onClose();
             }
         }
@@ -87,6 +89,7 @@ const Modal = ({
                             overflow-y-hidden
                             relative
                             ${title === 'Error' ? "z-40" : "z-30"}
+                            ${additionalStyles}
                         `)}
                         ref={modalRef}
                         initial={{
@@ -131,6 +134,7 @@ const Modal = ({
                             overflow-y-hidden
                             relative
                             ${title === 'Error' ? "z-40" : "z-30"}
+                            ${additionalStyles}
                         `)}
                         ref={modalRef}
                         initial={{
@@ -163,7 +167,7 @@ const Modal = ({
                             />
                         )}
 
-                        <Line additionalStyles='pb-2' />
+                        {!!title.length && <Line additionalStyles='pb-2' />}
 
                         {children}
 

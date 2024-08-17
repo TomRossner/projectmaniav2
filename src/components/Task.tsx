@@ -126,7 +126,6 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
           flex-col
           p-3
           gap-3
-          cursor-pointer
           transition-all
           relative
           rounded-bl-lg
@@ -261,7 +260,6 @@ const Task = ({task, idx, setTasks, animate = true}: TaskProps) => {
         gap-3
         border
         border-slate-300
-        cursor-pointer
         transition-all
         relative
         rounded-bl-lg

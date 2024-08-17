@@ -84,9 +84,21 @@ export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsA
     if (!userId) return;
 
     try {
-        const {data: projects} = await getAllProjects(userId);
-        return projects;
+        const response = await getAllProjects(userId);
+        
+        if (response.status === 401) {
+            console.log("Throwing error: ", response);
+            throw new Error('You are not logged in');
+        }
+
+        return response.data;
     } catch (error) {
+        console.log(error);
+        if (typeof error === 'string') {
+            console.log("Type of error is string");
+            throw error;
+        }
+
         handleError(error as AxiosError<ErrorData>);
     }
 })

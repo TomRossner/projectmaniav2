@@ -21,6 +21,8 @@ type ButtonWithIconProps = {
     withTooltip?: boolean;
     withCount?: boolean;
     itemCount?: number;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
 }
 
 const ButtonWithIcon = ({
@@ -36,6 +38,8 @@ const ButtonWithIcon = ({
   withTooltip = true,
   withCount = false,
   itemCount = 0,
+  onMouseEnter,
+  onMouseLeave,
 }: ButtonWithIconProps) => {
   
   const {
@@ -73,6 +77,8 @@ const ButtonWithIcon = ({
           type='button'
           disabled={disabled}
           onClick={handleClick}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
           className={twMerge(`
             flex
             items-center
@@ -110,6 +116,8 @@ const ButtonWithIcon = ({
         type='button'
         disabled={disabled}
         onClick={handleClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         className={twMerge(`
           flex
           items-center

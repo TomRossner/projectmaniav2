@@ -15,6 +15,7 @@ import Button from '../common/Button';
 import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import Line from '../common/Line';
+import { BsGithub } from 'react-icons/bs';
 
 const logInSchema = z.object({
     email: z.string().email(),
@@ -173,6 +174,33 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
             >
                 <GoogleLogo width='w-5' />
                 <span className='pt-1'>Continue with Google</span>
+            </Button>
+        </form>
+        <form action="http://localhost:3001/api/auth/login/github" method="get">
+            <Button
+                disabled={isSubmitting}
+                type='submit'
+                // action={handleGoogleSignIn}
+                additionalStyles={`
+                    flex
+                    w-full
+                    border
+                    border-slate-200
+                    items-center
+                    justify-center
+                    gap-2
+                    bg-slate-50
+                    sm:hover:bg-white
+                    active:bg-white
+                    rounded-bl-lg
+                    text-stone-700
+                    text-xl
+                    sm:hover:text-stone-800
+                    active:text-stone-800
+                `}
+            >
+                <BsGithub />
+                <span className='pt-1'>Continue with GitHub</span>
             </Button>
         </form>
     </div>

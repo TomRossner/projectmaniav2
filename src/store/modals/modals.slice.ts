@@ -9,6 +9,8 @@ interface ModalsState {
     
     backLayer: boolean;
 
+    image: boolean;
+
     activityLog: boolean;
     
     deleteProject: boolean;
@@ -32,6 +34,8 @@ const initialState: ModalsState = {
     invitation: false,
     
     backLayer: false,
+
+    image: false,
 
     activityLog: false,
     

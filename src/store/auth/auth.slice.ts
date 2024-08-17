@@ -25,11 +25,6 @@ export interface AuthState {
 }
 
 export type User = (IUser & {
-    _id: string;
-    __v: number;
-    iat: number;
-    session: string;
-    exp: number;
     socketId: string;
     updatedAt: string;
 }) | null;

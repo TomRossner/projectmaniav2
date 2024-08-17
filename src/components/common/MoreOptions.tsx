@@ -1,4 +1,4 @@
-import React, { RefObject, forwardRef, useMemo, useRef } from 'react';
+import React, { ForwardedRef, RefObject, useMemo, useRef } from 'react';
 import { AnimatePresence, motion } from "framer-motion";
 import Option from '../Option';
 import { TOption } from '@/utils/types';
@@ -15,7 +15,7 @@ type MoreOptionsProps = {
     disabled?: boolean;
 }
 
-const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref) {
+const MoreOptions = (props: MoreOptionsProps) => {
     const {
         isOpen,
         setIsOpen,
@@ -25,7 +25,9 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
         disabled = false,
     } = props;
 
-    const moreOptionsRef = useRef<HTMLElement>(null);
+    const moreOptionsRef = useRef<HTMLUListElement>(null);
+    
+    useOnClickOutside(moreOptionsRef as RefObject<HTMLUListElement>, () => setIsOpen(false));
 
     const createOptions = (opts: string[]): TOption[] => {
         return opts.map(opt => createOption(opt));
@@ -34,8 +36,6 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
     const opts = useMemo(() => {
         return createOptions(options);
     }, [options])
-
-    useOnClickOutside(moreOptionsRef, () => setIsOpen(false));
 
   return (
     <AnimatePresence>
@@ -94,6 +94,6 @@ const MoreOptions = forwardRef(function MoreOptions(props: MoreOptionsProps, ref
         )}
     </AnimatePresence>
   )
-});
+}
 
 export default MoreOptions;

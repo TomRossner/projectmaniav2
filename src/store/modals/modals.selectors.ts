@@ -4,6 +4,8 @@ export const selectIsMobileMenuOpen = (state: RootState) => state.modals.mobileM
 
 export const selectIsBackLayerOpen = (state: RootState) => state.modals.backLayer;
 
+export const selectIsImageModalOpen = (state: RootState) => state.modals.image;
+
 export const selectIsErrorModalOpen = (state: RootState) => state.modals.error;
 
 export const selectIsInvitationModalOpen = (state: RootState) => state.modals.invitation;

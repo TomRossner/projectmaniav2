@@ -14,10 +14,6 @@ const Projects = () => {
   const {projects} = useProjects();
   const {openNewProjectModal} = useModals();
 
-  const handleNewProject = () => {
-    openNewProjectModal();
-  }
-
   return (
     <Container id='projectsPage'>
       <div className='flex items-center justify-between w-full'>
@@ -26,7 +22,7 @@ const Projects = () => {
         <ButtonWithIcon
           withTooltip
           title='New project'
-          action={handleNewProject}
+          action={openNewProjectModal}
           icon={<BiPlus />}
         />
       </div>

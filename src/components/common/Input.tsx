@@ -22,6 +22,9 @@ type InputProps = {
     hidden?: boolean;
     searchIcon?: ReactNode;
     isChecked?: boolean;
+    isReadOnly?: boolean;
+    accept?: string;
+    multiple?: boolean;
 }
 
 const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTMLInputElement>) {
@@ -42,7 +45,10 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
     onBlur,
     hidden = false,
     searchIcon,
-    isChecked = false
+    isChecked = false,
+    isReadOnly = false,
+    accept,
+    multiple = false,
   } = props;
 
   return (
@@ -75,6 +81,9 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
                 hidden={hidden}
                 placeholder={placeholder}
                 checked={isChecked}
+                readOnly={isReadOnly}
+                accept={accept}
+                multiple={multiple}
                 className={twMerge(`
                   text-lg
                   text-stone-600
@@ -108,6 +117,9 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
             value={value}
             placeholder={placeholder}
             checked={isChecked}
+            readOnly={isReadOnly}
+            accept={accept}
+            multiple={multiple}
             className={twMerge(`
                 px-2
                 text-lg

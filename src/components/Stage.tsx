@@ -31,7 +31,7 @@ const Stage = (stage: IStage) => {
 
     const draggableStyle = {
       transition,
-      transform: CSS.Transform.toString(transform)
+      transform: CSS.Transform.toString(transform),
     }
 
     useEffect(() => {
@@ -85,7 +85,7 @@ const Stage = (stage: IStage) => {
       <div
         {...attributes}
         {...listeners}
-        style={draggableStyle}
+        style={{...draggableStyle, cursor: 'default'}} // Cursor set to default, otherwise cursor-pointer is set on the whole stage
         ref={setNodeRef}
         onClick={() => dispatch(setCurrentStage(stage))}
         className={`

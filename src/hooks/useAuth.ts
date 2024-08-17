@@ -32,12 +32,15 @@ const useAuth = () => {
 
     const userId = useMemo(() => user?.userId, [user]);
 
+    const fullName = useMemo(() => `${user?.firstName} ${user?.lastName}`, [user]);
+
     return {
       user,
       isAuthenticated,
       isLoading,
       authError,
       userId,
+      fullName,
       getUserInitials,
       getUserName,
       userInitials,

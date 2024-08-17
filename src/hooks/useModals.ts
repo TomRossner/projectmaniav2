@@ -10,6 +10,7 @@ import {
   selectIsEditStageModalOpen,
   selectIsEditTaskModalOpen,
   selectIsErrorModalOpen,
+  selectIsImageModalOpen,
   selectIsInvitationModalOpen,
   selectIsNewProjectModalOpen,
   selectIsNewStageModalOpen,
@@ -24,6 +25,8 @@ const useModals = () => {
     const isInvitationModalOpen = useAppSelector(selectIsInvitationModalOpen);
 
     const isActivityLogOpen = useAppSelector(selectIsActivityLogOpen);
+    
+    const isImageModalOpen = useAppSelector(selectIsImageModalOpen);
 
     const isDeleteProjectModalOpen = useAppSelector(selectIsDeleteProjectModalOpen);
     const isDeleteStageModalOpen = useAppSelector(selectIsDeleteStageModalOpen);
@@ -39,7 +42,11 @@ const useModals = () => {
 
     const dispatch = useAppDispatch();
 
+    // Open
+
     const openBackLayer = () => dispatch(openModal('backLayer'));
+
+    const openImageModal = () => dispatch(openModal('image'));
 
     const openInvitationModal = () => dispatch(openModal('invitation'));
 
@@ -56,9 +63,15 @@ const useModals = () => {
     const openNewProjectModal = () => dispatch(openModal('newProject'));
     const openNewStageModal = () => dispatch(openModal('newStage'));
     const openNewTaskModal = () => dispatch(openModal('newTask'));
+
+    // Close
     
     const closeBackLayer = () => dispatch(closeModal('backLayer'));
+
     const closeInvitationModal = () => dispatch(closeModal('invitation'));
+
+    const closeImageModal = () => dispatch(closeModal('image'));
+    
     const closeActivityLog = () => dispatch(closeModal('activityLog'));
     
     const closeDeleteProjectModal = () => dispatch(closeModal('deleteProject'));
@@ -78,6 +91,7 @@ const useModals = () => {
     isErrorModalOpen,
     isInvitationModalOpen,
     isActivityLogOpen,
+    isImageModalOpen,
 
     isDeleteProjectModalOpen,
     isDeleteStageModalOpen,
@@ -95,6 +109,8 @@ const useModals = () => {
     openBackLayer,
 
     openInvitationModal,
+
+    openImageModal,
 
     openActivityLog,
 
@@ -114,6 +130,8 @@ const useModals = () => {
     closeBackLayer,
 
     closeInvitationModal,
+
+    closeImageModal,
 
     closeActivityLog,
     

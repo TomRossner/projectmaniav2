@@ -19,6 +19,8 @@ const Button = ({
   additionalStyles,
   type = "button",
   disabled = false,
+  withIcon = false,
+  icon,
 }: ButtonProps) => {
   return (
     <button
@@ -37,9 +39,11 @@ const Button = ({
           self-end
           disabled:opacity-50
           disabled:cursor-not-allowed
+          ${withIcon && 'flex gap-2 items-center justify-center pl-1'}
           ${additionalStyles}
         `)}
     >
+        {withIcon && icon}
         {children}
     </button>
   )

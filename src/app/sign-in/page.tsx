@@ -2,9 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Header from '@/components/common/Header';
-import { useAppDispatch } from '@/hooks/hooks';
 import useAuth from '@/hooks/useAuth';
-import { setIsAuthenticated } from '@/store/auth/auth.slice';
 import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import Container from '@/components/common/Container';
@@ -16,16 +14,13 @@ const SignIn = () => {
 
   const toggleIsNotRegistered = () => setIsNotRegistered(!isNotRegistered);
 
-  const dispatch = useAppDispatch();
   const {user, isAuthenticated} = useAuth();
 
   const router = useRouter();
 
   useEffect(() => {
-    if (!user && isAuthenticated) dispatch(setIsAuthenticated(false));
-
-    if (isAuthenticated) router.push(LINKS['HOME']);
-  }, [user, isAuthenticated, router, dispatch])
+    if (isAuthenticated) router.push(LINKS.HOME);
+  }, [user, isAuthenticated, router])
 
   return (
     <Container id='signInPage' className='my-auto w-full flex flex-col gap-5'>
