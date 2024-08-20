@@ -46,6 +46,15 @@ const DeleteStagePrompt = () => {
             )
         } as IProject;
 
+        socket?.emit('deleteStage', {
+            ...currentStage,
+            lastUpdatedBy: user?.userId as string
+        });
+
+        updateCurrentStageIndex(currentStageIndex);
+
+        closeDeleteStageModal();
+
         const activityLog = await createNewActivity(
             ActivityType.DeleteStage,
             user as IUser,
@@ -58,15 +67,6 @@ const DeleteStagePrompt = () => {
             ...activities,
             activityLog
         ]));
-
-        socket?.emit('deleteStage', {
-            ...currentStage,
-            lastUpdatedBy: user?.userId as string
-        });
-
-        updateCurrentStageIndex(currentStageIndex);
-
-        closeDeleteStageModal();
     }, [
         activities,
         currentProject,
@@ -76,7 +76,8 @@ const DeleteStagePrompt = () => {
         createNewActivity,
         stages,
         closeDeleteStageModal,
-        updateCurrentStageIndex
+        updateCurrentStageIndex,
+        socket,
     ]);
 
   return (

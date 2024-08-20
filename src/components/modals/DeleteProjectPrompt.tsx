@@ -9,7 +9,7 @@ import Modal from './Modal';
 import useModals from '@/hooks/useModals';
 import { setErrorMsg } from '@/store/error/error.slice';
 import { ActivityType } from '@/utils/types';
-import { IUser } from '@/store/auth/auth.slice';
+import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
@@ -30,7 +30,24 @@ const DeleteProjectPrompt = () => {
                 return;
             }
             
-            const activityLog =  await createNewActivity(
+            
+            await deleteProject(currentProject.projectId);
+
+            dispatch(updateUserAsync({
+                ...user,
+                mostRecentProject: null,
+            } as IUser));
+            
+            dispatch(setProjects([
+                ...projects.filter((project: IProject) =>
+                    project.projectId !== currentProject?.projectId
+                )
+            ]));
+
+            dispatch(setCurrentProject(null));
+            closeDeleteProjectModal();  
+
+            const activityLog = await createNewActivity(
                 ActivityType.DeleteProject,
                 user as IUser,
                 currentProject as IProject,
@@ -41,18 +58,6 @@ const DeleteProjectPrompt = () => {
                 ...activities,
                 activityLog
             ]));
-
-            await deleteProject(currentProject.projectId);
-            
-            dispatch(setProjects([
-                ...projects.filter((project: IProject) =>
-                    project.projectId !== currentProject?.projectId
-                )
-            ]));
-
-            dispatch(setCurrentProject(null));
-            closeDeleteProjectModal();  
-    
         } catch (error: any) {
             console.error(error);
 

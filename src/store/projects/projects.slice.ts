@@ -88,7 +88,30 @@ export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsA
         
         if (response.status === 401) {
             console.log("Throwing error: ", response);
-            throw new Error('You are not logged in');
+            throw 'You are not logged in';
+        }
+
+        return response.data;
+    } catch (error) {
+        console.log(error);
+        if (typeof error === 'string') {
+            console.log("Type of error is string");
+            throw error;
+        }
+
+        handleError(error as AxiosError<ErrorData>);
+    }
+})
+
+export const updateProjectAsync = createAsyncThunk('projectsSlice/updateProjectAsync', async (project: IProject) => {
+    if (!project) return;
+
+    try {
+        const response = await updateProject(project);
+        
+        if (response.status === 401) {
+            console.log("Throwing error: ", response);
+            throw 'You are not logged in';
         }
 
         return response.data;
@@ -144,10 +167,14 @@ export const joinProjectAsync = createAsyncThunk('/projectsSlice/joinProjectAsyn
                 ],
             } as IProject;
             
-            await updateProject(updatedProject);
+            const response = await updateProject(updatedProject);
 
+            if (response.status !== 200) {
+                throw 'Failed updating project';
+            }
+
+            return response.data;
         //   await handleRemoveNotification(notificationId);
-
         }
     } catch (error) {
         console.error(error);
@@ -174,7 +201,13 @@ export const leaveProjectAsync = createAsyncThunk('/projectsSlice/leaveProjectAs
                 ]
             }
 
-            await updateProject(updatedProject);
+            const response = await updateProject(updatedProject);
+
+            if (response.status !== 200) {
+                throw 'Failed updating project';
+            }
+
+            return response.data;
         }
       
     } catch (error: unknown) {
@@ -226,6 +259,17 @@ export const projectsSlice = createSlice({
             .addCase(fetchProjectsAsync.rejected, (state: ProjectsState) => {
                 state.isFetching = false;
             })
+
+            .addCase(updateProjectAsync.fulfilled, (state: ProjectsState, action: PayloadAction<IProject>) => {
+                state.isFetching = false;
+            })
+            .addCase(updateProjectAsync.pending, (state: ProjectsState) => {
+                state.isFetching = true;
+            })
+            .addCase(updateProjectAsync.rejected, (state: ProjectsState) => {
+                state.isFetching = false;
+            })
+
             .addCase(joinProjectAsync.fulfilled, (state: ProjectsState) => {
                 state.isJoiningProject = false;
             })
@@ -235,6 +279,7 @@ export const projectsSlice = createSlice({
             .addCase(joinProjectAsync.pending, (state: ProjectsState) => {
                 state.isJoiningProject = true;
             })
+
             .addCase(leaveProjectAsync.fulfilled, (state: ProjectsState) => {
                 state.isLeavingProject = false;
             })

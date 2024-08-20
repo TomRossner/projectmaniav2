@@ -2,14 +2,13 @@
 
 import { useAppDispatch } from '@/hooks/hooks';
 import useProjects from '@/hooks/useProjects';
-import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
+import { IProject, setCurrentProject, updateProjectAsync } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Input from '../common/Input';
 import useModals from '@/hooks/useModals';
 import Modal from './Modal';
-import { updateProject } from '@/services/projects.api';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { IUser } from '@/store/auth/auth.slice';
 import { ActivityType } from '@/utils/types';
@@ -53,37 +52,40 @@ const EditProjectModal = () => {
             ...updatedValues
         } as IProject;
 
-        const activityLog =  await createNewActivity(
-            ActivityType.UpdateProjectTitle,
-            user as IUser,
-            updatedValues as IProject,
-            currentProject?.projectId as string
-        );
-
+        
         dispatch(setCurrentProject(updatedCurrentProject));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
-
+        
         closeModal();
 
         if (currentProject?.title !== updatedValues.title) {
             // Updates currentProject property in stages
-            await updateProject(updatedCurrentProject);
+            dispatch(updateProjectAsync(updatedCurrentProject));
 
             socket?.emit('updateProject', {
                 ...updatedCurrentProject,
                 lastUpdatedBy: user?.userId as string,
             });
         }
+
+        const activityLog = await createNewActivity(
+            ActivityType.UpdateProjectTitle,
+            user as IUser,
+            updatedValues as IProject,
+            currentProject?.projectId as string
+        );
+        
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
     }, [
         activities,
         currentProject,
         closeModal,
         createNewActivity,
         user,
-        dispatch
+        dispatch,
+        socket,
     ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {

@@ -12,6 +12,7 @@ import ButtonWithIcon from './common/ButtonWithIcon';
 import { RxCross2 } from 'react-icons/rx';
 import { PRIORITY_ORDER } from '@/utils/constants';
 import { SortOption, SortOptionType, SortOrder } from '@/utils/types';
+import useFilters from '@/hooks/useFilters';
 
 type SortByProps = {
     isOpen: boolean;
@@ -42,7 +43,7 @@ const SORT_OPTIONS: SortOption[] = [
 
 const SortBy = ({isOpen, setIsOpen, setTasks, stage}: SortByProps) => {
     const [sortOptions, setSortOptions] = useState<SortOption[]>([]);
-    
+    const {getFilteredTasks, filters} = useFilters()
     const handleSubmit = (ev: FormEvent<HTMLFormElement>, tasks: ITask[]): void => {
         ev.preventDefault();
 
@@ -91,7 +92,7 @@ const SortBy = ({isOpen, setIsOpen, setTasks, stage}: SortByProps) => {
             }
         }
         
-        setTasks((sortedTasks));
+        setTasks(getFilteredTasks(sortedTasks, filters));
     }
 
     const closeSortByWindow = () => {
@@ -105,9 +106,12 @@ const SortBy = ({isOpen, setIsOpen, setTasks, stage}: SortByProps) => {
         }
 
         const isAlreadySelectedWithDifferentOrder: boolean = sortOptions.some(so =>
-            so.type === type && so.order !== order)
+            so.type === type && so.order !== order);
 
-        if (isAlreadySelectedWithDifferentOrder) {
+        // const isAlreadySelected: boolean = sortOptions.some(so =>
+        //     so.type === type && so.order === order);
+
+        if (isAlreadySelectedWithDifferentOrder || isSelected(type as SortOptionType, order)) {
             setSortOptions([...sortOptions.map(so =>
                 so.type === type
                     ? newOption

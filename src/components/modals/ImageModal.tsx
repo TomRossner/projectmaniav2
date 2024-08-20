@@ -17,7 +17,7 @@ const ImageModal = ({isOpen, image}: ImageModalProps) => {
         withCloseBtn={false}
         withSubmitBtn={false}
         onClose={closeImageModal}
-        additionalStyles='w-full flex items-center justify-center'
+        additionalStyles='sm:w-full max-w-[300px] flex items-center justify-center'
     >
         {image}
     </Modal>

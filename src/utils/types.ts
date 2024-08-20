@@ -176,6 +176,8 @@ enum ActivityType {
 
 type ActivityData = ITask | IStage | IProject | TeamMember;
 
+type AuthProvider = "google" | "github" | "local";
+
 export type {
     ScrollDirection,
     Tag,
@@ -207,6 +209,7 @@ export type {
     Order,
     NewStageData,
     ActivityData,
+    AuthProvider,
 }
 
 export {

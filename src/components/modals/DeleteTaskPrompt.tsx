@@ -53,21 +53,24 @@ const DeleteTaskPrompt = () => {
 
         socket?.emit('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
 
+        
+        dispatch(setCurrentProject(updatedCurrentProject));
+
+        dispatch(setCurrentTask(null));
+
+        closeDeleteTaskModal();
+
         const activityLog = await createNewActivity(
             ActivityType.DeleteTask,
             user as IUser,
             currentTask as ITask,
             currentProject?.projectId as string
         );
-
-        dispatch(setCurrentProject(updatedCurrentProject));
+        
         dispatch(setActivities([
             ...activities,
             activityLog
         ]));
-        dispatch(setCurrentTask(null));
-
-        closeDeleteTaskModal();
     }, [
         activities,
         currentProject, 
@@ -76,7 +79,8 @@ const DeleteTaskPrompt = () => {
         user,
         dispatch, 
         closeDeleteTaskModal,
-        createNewActivity
+        createNewActivity,
+        socket,
     ]);
 
   return (

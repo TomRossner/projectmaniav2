@@ -6,7 +6,7 @@ import NewTaskModal from '@/components/modals/NewTaskModal';
 import DashboardTop from '@/components/DashboardTop';
 import Stage from '@/components/Stage';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
-import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrentStageIndex, setStages } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrentStageIndex, setStages, updateProjectAsync } from '@/store/projects/projects.slice';
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
@@ -14,16 +14,15 @@ import { updateProject } from '@/services/projects.api';
 import { ScrollDirection } from '@/utils/types';
 import { scrollToIndex } from '@/utils/utils';
 import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import EditTaskModal from '@/components/modals/EditTaskModal';
 import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
 import EditStageModal from '@/components/modals/EditStageModal';
 import EditDashboardModal from '@/components/modals/EditProjectModal';
 import { AxiosResponse } from 'axios';
-import { IUser, setUser } from '@/store/auth/auth.slice';
+import { IUser, setUser, updateUserAsync } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
-import { updateUserData } from '@/services/user.api';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import InvitationModal from '@/components/modals/InvitationModal';
@@ -32,6 +31,7 @@ import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects
 import ActivityLog from '@/components/ActivityLog';
 import { fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
 import { getSocket } from '@/utils/socket';
+import { setErrorMsg } from '@/store/error/error.slice';
 
 const Project = () => {
   const {user, userId} = useAuth();
@@ -78,10 +78,14 @@ const Project = () => {
 
   const [activeStage, setActiveStage] = useState<IStage | null>(null);
 
-  const handleUpdateProject = async (project: IProject): Promise<AxiosResponse> => {
-    // await newUpdateProject(project);
-    return await updateProject(project);
-  }
+  // const handleUpdateProject = async (project: IProject) => {
+  //   try {
+  //     return dispatch(updateProjectAsync(project));
+  //   } catch (error) {
+  //     console.error(error);
+  //     dispatch(setErrorMsg('Failed updating project'));
+  //   }
+  // }
 
   const handleDisableNextAndPrevButtons = useCallback((index: number, stagesLength: number): void => {
     if (stagesLength <= 1) {
@@ -152,7 +156,7 @@ const Project = () => {
   useEffect(() => {
     if (currentProject) {
       // Update project in API
-      handleUpdateProject(currentProject);
+      dispatch(updateProjectAsync(currentProject));
       
     } else if (!currentProject) router.push(LINKS.PROJECTS);
   }, [currentProject])
@@ -192,8 +196,7 @@ const Project = () => {
         }
       } as IUser;
   
-      updateUserData(updatedUser)
-        .then(res => dispatch(setUser(res.data)));
+      dispatch(updateUserAsync(updatedUser));
     }
   }, [currentProject, user, dispatch])
 

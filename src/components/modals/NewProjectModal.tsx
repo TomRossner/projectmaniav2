@@ -35,8 +35,6 @@ const NewProjectModal = () => {
         try {
             dispatch(setErrorMsg(null));
     
-            console.log({newProjectData})
-    
             const self: TeamMember = {
                 email: user?.email,
                 userId: user?.userId,
@@ -55,39 +53,40 @@ const NewProjectModal = () => {
                 stages: [],
                 activities: [],
             }
-
-            console.log({newProject})
     
             const response = await createProject(newProject);
             
-            const activityLog =  await createNewActivity(
+            
+            dispatch(setProjects([
+                ...projects,
+                response.data as IProject
+            ]));
+            
+            handleClose();
+            
+            dispatch(setProjects([
+                ...projects,
+                response.data as IProject
+            ]));
+    
+            handleClose();
+            
+            const activityLog = await createNewActivity(
                 ActivityType.CreateProject,
                 user as IUser,
                 response.data as IProject,
                 response.data.projectId as string
             );
-    
-            dispatch(setProjects([
-                ...projects,
-                response.data as IProject
-            ]));
+
             dispatch(setActivities([
                 ...activities,
                 activityLog
             ]));
-    
-            handleClose();
-    
-            dispatch(setProjects([
-                ...projects,
-                response.data as IProject
-            ]));
-    
-            handleClose();
         } catch (error: unknown) {
             handleError(error as AxiosError<unknown>);
         }
-     }, [activities,
+     }, [
+        activities,
         dispatch,
         projects,
         handleClose,

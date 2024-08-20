@@ -57,19 +57,8 @@ const EditStageModal = () => {
             ),
         } as IProject;
 
-        const activityLog =  await createNewActivity(
-            ActivityType.UpdateStageTitle,
-            user as IUser,
-            currentStage as IStage,
-            currentProject?.projectId as string
-        );
-        
         dispatch(setCurrentProject(updatedCurrentProject));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
-
+        
         closeModal();
 
         // if (currentStage?.title !== updatedValues.title) {
@@ -78,6 +67,18 @@ const EditStageModal = () => {
         await updateStage(updatedStage);
 
         socket?.emit('updateStage', updatedStage);
+
+        const activityLog = await createNewActivity(
+            ActivityType.UpdateStageTitle,
+            user as IUser,
+            currentStage as IStage,
+            currentProject?.projectId as string
+        );
+
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
     }, [
         activities,
         closeModal,
@@ -86,7 +87,8 @@ const EditStageModal = () => {
         stages,
         user,
         createNewActivity,
-        dispatch
+        dispatch,
+        socket,
     ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {

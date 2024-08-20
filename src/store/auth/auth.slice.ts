@@ -3,6 +3,8 @@ import { LoginCredentials } from "@/utils/interfaces";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { IProject } from "../projects/projects.slice";
 import { jwtDecode } from "jwt-decode";
+import { AuthProvider } from "@/utils/types";
+import { updateUserData } from "@/services/user.api";
 
 export interface IUser {
     firstName: string;
@@ -15,6 +17,7 @@ export interface IUser {
     contacts: string[];
     mostRecentProject?: Pick<IProject, "projectId" | "title"> | null;
     notifications: string[];
+    authProvider: AuthProvider;
 }
 
 export interface AuthState {
@@ -45,6 +48,27 @@ export const fetchUserAsync = createAsyncThunk('authSlice/fetchUserAsync', async
             return decodedUser;
         }
 
+        return res.data;
+        
+    } catch (error: any) {
+        if (error.response) {
+            const {response: {data: errorMsg}} = error;
+            console.log("fetchUser error: ", errorMsg)
+
+            return rejectWithValue(errorMsg);
+        } else throw error;
+    } 
+})
+
+export const updateUserAsync = createAsyncThunk('authSlice/updateUserAsync', async (user: IUser, {rejectWithValue}) => {
+    try {
+        const res = await updateUserData(user);
+
+        if (res.data.accessToken) {
+            const decodedUser = jwtDecode<User>(res.data.accessToken);
+            return decodedUser;
+        }
+        console.log("After update data", res.data);
         return res.data;
         
     } catch (error: any) {
@@ -101,6 +125,17 @@ export const authSlice = createSlice({
             })
             .addCase(fetchUserAsync.rejected, (state: AuthState, action) => {
                 state.authError = "Invalid email or password";
+            })
+
+            .addCase(updateUserAsync.fulfilled, (state: AuthState, action: PayloadAction<User>) => {
+                state.isLoading = false;
+                state.user = action.payload;
+            })
+            .addCase(updateUserAsync.pending, (state: AuthState) => {
+                state.isLoading = true;
+            })
+            .addCase(updateUserAsync.rejected, (state: AuthState, action) => {
+                state.authError = "Failed updating user";
             })
 
             .addCase(logoutUser.fulfilled, (state, action) => {

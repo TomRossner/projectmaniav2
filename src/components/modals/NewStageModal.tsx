@@ -56,22 +56,24 @@ const NewStageModal = () => {
             stages: [...stages, newStage as IStage],
         } as IProject;
 
-        const activityLog =  await createNewActivity(
+        
+        dispatch(setCurrentProject(updatedCurrentProject));
+
+        socket?.emit('newStage', newStage);
+
+        handleClose();
+
+        const activityLog = await createNewActivity(
             ActivityType.AddStage,
             user as IUser,
             currentProject as IProject,
             currentProject?.projectId as string
         );
 
-        dispatch(setCurrentProject(updatedCurrentProject));
         dispatch(setActivities([
             ...activities,
             activityLog
         ]));
-
-        socket?.emit('newStage', newStage);
-
-        handleClose();
     }, [
         activities,
         currentProject,
@@ -80,6 +82,7 @@ const NewStageModal = () => {
         dispatch,
         stages,
         handleClose,
+        socket,
     ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {

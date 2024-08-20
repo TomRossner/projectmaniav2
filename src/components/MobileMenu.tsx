@@ -21,7 +21,7 @@ import useNotifications from '@/hooks/useNotifications';
 
 const MobileMenu = () => {
     const {isMobileMenuOpen, closeMobileMenu} = useMobileMenu();
-    const {user, userId} = useAuth();
+    const {user, userId, fullName} = useAuth();
     const socket = getSocket();
     const {notifications} = useNotifications();
 
@@ -32,7 +32,7 @@ const MobileMenu = () => {
                 socketId: socket.id,
             })
         }
-    }, [userId])
+    }, [userId, socket])
 
     const ul1: MenuItem[] = useMemo(() => ([
         {
@@ -66,7 +66,7 @@ const MobileMenu = () => {
         },
         {
             text: user
-                ? `${user.firstName} ${user.lastName}`
+                ? `${fullName}`
                 : "Profile",
             icon: <CgProfile />,
             imageSrc: user?.imgSrc as Pick<IUser, "imgSrc"> & string,
@@ -79,7 +79,7 @@ const MobileMenu = () => {
             text: "Sign out",
             icon: <TbLogout2 />
         },
-    ]), [user]);
+    ]), [user, fullName]);
 
     const menuLists = [
         ul1.map(i => ({...i, action: closeMobileMenu})),

@@ -11,7 +11,7 @@ import { INotification } from '@/utils/interfaces';
 import useProjects from '@/hooks/useProjects';
 import ErrorModal from '@/components/modals/ErrorModal';
 import useAuth from '@/hooks/useAuth';
-import { IUser, setUser } from '@/store/auth/auth.slice';
+import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
 import LoadingModal from '@/components/modals/LoadingModal';
 import { useAppDispatch, useAppSelector } from '@/hooks/hooks';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
@@ -22,7 +22,6 @@ import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import { setNotifications } from '@/store/notifications/notifications.slice';
-import { updateUserData } from '@/services/user.api';
 import { getSocket } from '@/utils/socket';
 
 const Notifications = () => {
@@ -42,14 +41,16 @@ const Notifications = () => {
         
         const {data: project} = await getProject(notificationData.projectId);
 
-        const activityLog =  await createNewActivity(
+        
+        dispatch(setCurrentProject(project));
+        
+        const activityLog = await createNewActivity(
             ActivityType.JoinProject,
             user as IUser,
             project as IProject,
             project.projectId as string
         );
 
-        dispatch(setCurrentProject(project));
         dispatch(setActivities([
             ...activities,
             activityLog
@@ -82,15 +83,14 @@ const Notifications = () => {
     const handleNotification = useCallback((newNotification: INotification) => {
         console.log({newNotification});
 
-          dispatch(setNotifications([...notifications, newNotification]));
-          updateUserData({
-              ...user,
-              notifications: getUpdatedNotificationsIds(
-                  [...user?.notifications as string[], newNotification.notificationId],
-                  [...notifications, newNotification]
-              ),
-          } as IUser)
-              .then(res => dispatch(setUser(res.data)));
+        dispatch(setNotifications([...notifications, newNotification]));
+        dispatch(updateUserAsync({
+            ...user,
+            notifications: getUpdatedNotificationsIds(
+                [...user?.notifications as string[], newNotification.notificationId],
+                [...notifications, newNotification]
+            ),
+        } as IUser));
     }, [
         user,
         notifications,

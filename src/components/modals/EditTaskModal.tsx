@@ -212,23 +212,25 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
             stages: updatedStages
         } as IProject;
 
-        const activityLog =  await createNewActivity(
+        
+        // dispatch(setCurrentTask(updatedValues));
+        dispatch(setCurrentProject(updatedCurrentProject));
+        
+        socket?.emit('updateTask', updatedTask);
+        
+        closeModal();
+        
+        const activityLog = await createNewActivity(
             ActivityType.UpdateTask,
             user as IUser,
             currentTask as ITask,
             currentProject?.projectId as string
         );
 
-        // dispatch(setCurrentTask(updatedValues));
-        dispatch(setCurrentProject(updatedCurrentProject));
         dispatch(setActivities([
             ...activities,
             activityLog
         ]));
-
-        socket?.emit('updateTask', updatedTask);
-
-        closeModal();
     }, [
         activities,
         closeModal,
@@ -237,7 +239,8 @@ const EditTaskModal = ({task}: EditTaskModalProps) => {
         currentTask,
         user,
         getUpdatedStages,
-        dispatch
+        dispatch,
+        socket,
     ]);
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {

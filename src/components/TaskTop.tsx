@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react';
 import TaskTitle from './TaskTitle';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BsThreeDots } from 'react-icons/bs';
-import { IProject, IStage, ITask, setCurrentProject, setCurrentTask } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask, setCurrentProject, setCurrentTask, updateProjectAsync } from '@/store/projects/projects.slice';
 import { useAppDispatch } from '@/hooks/hooks';
 import MoreOptions from './common/MoreOptions';
 import { TASK_MENU_OPTIONS } from '@/utils/constants';
@@ -15,7 +15,6 @@ import useActivityLog from '@/hooks/useActivityLog';
 import { ActivityType, TOption } from '@/utils/types';
 import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
-import useSocket from '@/hooks/useSocket';
 import { getSocket } from '@/utils/socket';
 
 type TaskTopProps = {
@@ -86,20 +85,22 @@ const TaskTop = ({
       stages: updatedStages
     } as IProject;
 
-    const activityLog =  await createNewActivity(
+    
+    dispatch(setCurrentProject(updatedProject));
+    
+    socket?.emit('updateTask', updatedTask);
+    
+    const activityLog = await createNewActivity(
       ActivityType.UpdateIsDone,
       user as IUser,
       currentTask as ITask,
       currentProject?.projectId as string
     );
-    
-    dispatch(setCurrentProject(updatedProject));
+
     dispatch(setActivities([
         ...activities,
         activityLog
     ]));
-
-    socket?.emit('updateTask', updatedTask);
   }, [
       activities,
       dispatch,

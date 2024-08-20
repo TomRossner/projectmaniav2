@@ -72,7 +72,10 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
         return;
       }
       
-      const activityLog =  await createNewActivity(
+      
+      handleLeaveProject(projectId, userId as string);
+      
+      const activityLog = await createNewActivity(
         ActivityType.LeaveProject,
         user as IUser,
         currentProject as IProject,
@@ -83,8 +86,6 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
         ...activities,
         activityLog
       ]));
-
-      handleLeaveProject(projectId, userId as string);
     }, [
       currentProject,
       activities,

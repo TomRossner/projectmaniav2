@@ -16,10 +16,10 @@ import { BsCircleFill } from 'react-icons/bs';
 import { getStagesCount, getTotalTasks, setProjectLink } from '@/utils/utils';
 import { twMerge } from 'tailwind-merge';
 import { APP_VERSION, TEAM_MEMBERS_COUNT } from '@/utils/constants';
-import { getUserById, updateUserData } from '@/services/user.api';
+import { getUserById } from '@/services/user.api';
 import { INotification } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
-import { IUser, setUser } from '@/store/auth/auth.slice';
+import { IUser, setUser, updateUserAsync } from '@/store/auth/auth.slice';
 import { getUserNotifications } from '@/services/notifications.api';
 import useNotifications from '@/hooks/useNotifications';
 import LoadingModal from './modals/LoadingModal';
@@ -57,15 +57,17 @@ const Home = () => {
 
   useEffect(() => {
     if (user && userId) {
-      console.log({user})
+      console.log({user});
       if (!!user.mostRecentProject) {
         getMostRecentProject(user.mostRecentProject as Pick<IProject, "projectId" | "title">)
-          .then(project => setMostRecentProject(project));
+          .then(project => setMostRecentProject(project))
+          .catch(err => console.error(err));
       }
       
       getUserProjects(userId);
       getUserNotifications(userId)
-        .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)));
+        .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)))
+        .catch(err => console.error(err));
     }
   }, [
     user,
@@ -98,14 +100,13 @@ const handleOnline = useCallback(async (data: { userId: string }) => {
 
 const handleNotification = useCallback((newNotification: INotification) => {
     dispatch(setNotifications([...notifications, newNotification]));
-    updateUserData({
+    dispatch(updateUserAsync({
         ...user,
         notifications: getUpdatedNotificationsIds(
             [...user?.notifications as string[], newNotification.notificationId],
             [...notifications, newNotification]
         ),
-    } as IUser)
-        .then(res => dispatch(setUser(res.data)));
+    } as IUser));
 }, [user, dispatch, getUpdatedNotificationsIds, notifications]);
 
   useEffect(() => {

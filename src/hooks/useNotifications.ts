@@ -5,8 +5,7 @@ import { INotification, NewNotificationData } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { removeNotification } from '@/services/notifications.api';
 import useAuth from './useAuth';
-import { updateUserData } from '@/services/user.api';
-import { IUser } from '@/store/auth/auth.slice';
+import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
 import { setErrorMsg } from '@/store/error/error.slice';
 import { NotificationData } from '@/utils/types';
 import { IProject } from '@/store/projects/projects.slice';
@@ -64,8 +63,7 @@ const useNotifications = () => {
           ...notifications.filter(n => n.notificationId !== notificationId)
         ]));
 
-        await updateUserData(updatedUserData);
-        
+        dispatch(updateUserAsync(updatedUserData));
       } catch (error) {
         dispatch(setErrorMsg('Failed removing notification'));
         return;

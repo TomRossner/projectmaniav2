@@ -4,16 +4,12 @@ import { selectProjectsSlice } from '@/store/projects/projects.selectors';
 import { fetchProjectsAsync, IProject, IStage, ITask, joinProjectAsync, leaveProjectAsync, setCurrentProject, setProjects, TeamMember } from '@/store/projects/projects.slice';
 import useAuth from './useAuth';
 import { AxiosError } from 'axios';
-import { getProject, updateProject } from '@/services/projects.api';
+import { getProject } from '@/services/projects.api';
 import { LINKS } from '@/utils/links';
 import { useRouter } from 'next/navigation';
 import useNotifications from './useNotifications';
 import { setErrorMsg } from '@/store/error/error.slice';
-import { IUser } from '@/store/auth/auth.slice';
-import { updateUserData } from '@/services/user.api';
-import { ActivityType } from '@/utils/types';
-import { setActivities } from '@/store/activity_log/activity_log.slice';
-import useActivityLog from './useActivityLog';
+import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
 
 const useProjects = () => {
     const {
@@ -28,7 +24,7 @@ const useProjects = () => {
     const dispatch = useAppDispatch();
     const router = useRouter();
 
-    const {user, isAuthenticated} = useAuth();
+    const {user, userId, isAuthenticated} = useAuth();
     const {handleRemoveNotification} = useNotifications();
     // const {createNewActivity, activities} = useActivityLog();
 
@@ -39,15 +35,18 @@ const useProjects = () => {
 
     const projectId = useMemo(() => currentProject?.projectId, [currentProject]);
 
-    const handleError = (error: AxiosError): void => {
+    const handleError = (error: AxiosError) => {
       if (error.code === 'ERR_NETWORK') {
           dispatch(setErrorMsg(`Failed handling HTTP request - ${error.message.toLowerCase()}`));
           return;
-      } else dispatch(setErrorMsg('An error occurred while loading projects'));
+      } else {
+        console.error(error);
+        dispatch(setErrorMsg('An error occurred while loading projects'));
+      };
     }
 
     const getProjects = async () => {
-      return await dispatch(fetchProjectsAsync(user?.userId as string))
+      return await dispatch(fetchProjectsAsync(userId as string))
           .unwrap()
           .catch((error) => handleError(error));
     }
@@ -58,13 +57,18 @@ const useProjects = () => {
 
     const getMostRecentProject = async (userMostRecentProject: Pick<IProject, "projectId" | "title">): Promise<IProject | null> => {
       try {
-        if (userMostRecentProject) {
-          const {data: project} = await getProject(userMostRecentProject.projectId as string);
-          return project;
+        if (userMostRecentProject.projectId) {
+          const response = await getProject(userMostRecentProject.projectId as string);
+
+          if (response.status !== 200) {
+            throw "Couldn't find most recent project";
+          }
+
+          return response.data;
         } else return null;
       } catch (error) {
         console.error(error);
-
+        
         handleError(error as AxiosError);
         return null;
       }
@@ -102,8 +106,7 @@ const useProjects = () => {
         mostRecentProject: null,
       } as IUser;
       
-      await updateUserData(updatedUser);
-
+      dispatch(updateUserAsync(updatedUser));
       // const activityLog =  await createNewActivity(
       //   ActivityType.LeaveProject,
       //   user as IUser,
@@ -115,6 +118,7 @@ const useProjects = () => {
       //     ...activities,
       //     activityLog
       // ]));
+
       
       router.push(LINKS.HOME);
     }, [user, dispatch, router]);

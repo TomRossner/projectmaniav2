@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { BsGithub, BsLinkedin } from 'react-icons/bs';
 import { LINKS } from '@/utils/links';
 import { SocialLinks } from '@/utils/types';
+import { TbWorldWww } from 'react-icons/tb';
 
 const Footer = () => {
     const YEAR: number = new Date().getFullYear();
@@ -64,6 +65,16 @@ const Footer = () => {
           >
             <BsLinkedin className='text-blue-600'/>
             <span className='hidden sm:flex pt-1'>LinkedIn</span>
+          </Link>
+
+          <Link
+            target='_blank'
+            rel='noreferrer noopener'
+            href={SocialLinks.Portfolio}
+            className='flex items-center gap-1'
+          >
+            <TbWorldWww className='text-stone-800 text-lg'/>
+            <span className='hidden sm:flex pt-1'>Website</span>
           </Link>
         </div>
 

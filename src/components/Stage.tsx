@@ -36,7 +36,7 @@ const Stage = (stage: IStage) => {
 
     useEffect(() => {
       setTasks(getFilteredTasks(stage.tasks, appliedFilters));
-    }, [stage.tasks, appliedFilters, getFilteredTasks])
+    }, [stage.tasks, appliedFilters])
 
     if (isDragging) {
       return (

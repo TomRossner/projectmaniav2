@@ -6,7 +6,7 @@ import Container from '@/components/common/Container';
 import Header from '@/components/common/Header';
 import Image from 'next/image';
 import useAuth from '@/hooks/useAuth';
-import { IUser } from '@/store/auth/auth.slice';
+import { IUser, setUser } from '@/store/auth/auth.slice';
 import { BiBell, BiEdit } from 'react-icons/bi';
 import { twMerge } from 'tailwind-merge';
 import ImageModal from '@/components/modals/ImageModal';
@@ -19,6 +19,7 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { updateUserData } from '@/services/user.api';
 import { setErrorMsg } from '@/store/error/error.slice';
 import Button from '@/components/common/Button';
+import { capitalizeFirstLetter } from '@/utils/utils';
 
 const Profile = () => {
   const {user, fullName} = useAuth();
@@ -31,6 +32,7 @@ const Profile = () => {
     email,
     createdAt,
     isOnline,
+    authProvider
   } = user as IUser;
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -45,25 +47,27 @@ const Profile = () => {
       reader.readAsDataURL(file);
 
       reader.onload = async () => {
-        const base64EncodedFile = reader.result as string;
-
-        const response = await updateUserData({
-          ...user,
-          imgSrc: base64EncodedFile
-        } as IUser);
-        
-        if (response.status !== 200) {
-          throw new Error('Failed uploading image');
+        try {
+          const base64EncodedFile = reader.result as string;
+  
+          const response = await updateUserData({
+            ...user,
+            imgSrc: base64EncodedFile
+          } as IUser);
+          
+          if (response.status !== 200) {
+            throw 'Failed uploading image';
+          }
+          
+          setImgSrc(base64EncodedFile);
+          dispatch(setUser(response.data));
+        } catch (error: any) {
+          dispatch(setErrorMsg(error)); 
         }
-        
-        return setImgSrc(base64EncodedFile);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      dispatch(setErrorMsg(typeof error === 'string'
-        ? error
-        : 'Failed uploading image'
-      )); 
+      dispatch(setErrorMsg(error)); 
     }
   }
 
@@ -75,7 +79,7 @@ const Profile = () => {
     <Container id='profilePage'>
       <ImageModal
         isOpen={isImageModalOpen}
-        image={
+        image={!!imgSrc && (
           <Image
             src={imgSrc}
             alt={fullName}
@@ -83,7 +87,7 @@ const Profile = () => {
             height={200}
             className={`w-full rounded-sm`}
           />
-        }
+        )}
       />
 
       <div className='flex justify-between w-full items-center'>
@@ -117,22 +121,22 @@ const Profile = () => {
             items-center
             justify-center
             rounded-full
-            w-24
-            h-24
+            border border-blue-500
           `)}
         >
-          <Image
-            src={imgSrc}
-            alt={fullName}
-            width={100}
-            height={100}
-            onClick={openImageModal}
-            className={twMerge(`
-              rounded-full
-              cursor-pointer
-            `)
-          }
-          />
+          {!!imgSrc && (
+            <Image
+              src={imgSrc}
+              alt={fullName}
+              width={100}
+              height={100}
+              onClick={openImageModal}
+              className={twMerge(`
+                rounded-full
+                cursor-pointer
+              `)}
+            />
+          )}
 
           <InputLabel
             htmlFor='image'
@@ -174,7 +178,7 @@ const Profile = () => {
         </div>
         
         <div className='flex flex-col grow'>
-          <p className='text-2xl font-semibold text-stone-700 flex gap-3'>
+          <p className='text-2xl font-semibold text-stone-700 flex flex-col'>
             {fullName}
             {/* <span
               className={twMerge(`
@@ -190,16 +194,46 @@ const Profile = () => {
             >
               {isOnline ? 'Online' : 'Offline'}
             </span> */}
-            <span className='text-stone-400 font-light text-lg self-end'>{email}</span>
+            <span className='text-stone-400 font-light text-lg'>{email}</span>
           </p>
 
           {/* <p className='text-lg text-stone-400'>{email}</p> */}
-          <Line />
+          {/* <Line additionalStyles='mb-4' /> */}
 
-          <div className='h-9 grow' />
+
+
+          {/* <div className='h-6 grow' /> */}
           
-          <p className='text-md text-stone-600'>Member since {new Date(createdAt).toLocaleDateString()}</p>
         </div>
+      </div>
+
+      <Line additionalStyles='mb-3' />
+
+      <div className='w-full flex items-center justify-between'>
+        <p>Logged in using:
+          <span
+            className={twMerge(`
+              px-2
+              py-0.5
+              text-center
+              rounded-lg
+              w-fit
+              text-base
+              font-normal
+              text-slate-100
+              bg-slate-400
+              pt-1
+              mx-2
+            `)}
+          >
+            {authProvider === "local"
+              ? "Email & password"
+              : capitalizeFirstLetter(authProvider as string)
+            }
+          </span>
+        </p>
+
+        <p className='text-md text-stone-600'>Member since {new Date(createdAt).toLocaleDateString()}</p>
       </div>
 
       {/* <div className='flex gap-2'>

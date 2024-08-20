@@ -126,18 +126,8 @@ const NewTaskModal = () => {
             stages: updatedStages,
         } as IProject;
 
-        const activityLog =  await createNewActivity(
-            ActivityType.AddTask,
-            user as IUser,
-            currentStage as IStage,
-            currentProject?.projectId as string
-        );
-
+        
         dispatch(setCurrentProject(updatedCurrentProject));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
 
         /*
         -> Update currentProject ✅
@@ -153,6 +143,18 @@ const NewTaskModal = () => {
 
         resetInputs();
         closeNewTaskModal();
+        
+        const activityLog = await createNewActivity(
+            ActivityType.AddTask,
+            user as IUser,
+            currentStage as IStage,
+            currentProject?.projectId as string
+        );
+
+        dispatch(setActivities([
+            ...activities,
+            activityLog
+        ]));
     }, [
         activities,
         currentProject,
@@ -162,7 +164,8 @@ const NewTaskModal = () => {
         inputValues.dueDate,
         inputValues.externalLinks,
         closeNewTaskModal,
-        createNewActivity
+        createNewActivity,
+        socket,
     ]);
 
     const resetInputs = (): void => {

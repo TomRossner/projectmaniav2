@@ -11,6 +11,7 @@ import { IStage, ITask, TeamMember, setFilters } from '@/store/projects/projects
 import useProjects from '@/hooks/useProjects';
 import useFilters from '@/hooks/useFilters';
 import AssigneeCard from './common/AssigneeCard';
+import { twMerge } from 'tailwind-merge';
 
 type FiltersProps = {
     isOpen: boolean;
@@ -21,7 +22,7 @@ type FiltersProps = {
 
 const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
-    const {filters, getFilters, getFilteredTasks} = useFilters();
+    const {getFilters, getFilteredTasks, filters} = useFilters();
     const {currentProject} = useProjects();
 
     const {currentStage} = useProjects();
@@ -67,6 +68,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
             ];
 
         setSelectedFilters(updatedFilters);
+        // dispatch(setFilters(updatedFilters));
     }
 
     const isSelected = (opt: string): boolean => {
@@ -98,7 +100,8 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
 
         const filters = getFilters(["priority", "tag", "status", "date", "assignee"], selectedFilters);
 
-        setTasks(getFilteredTasks(stage.tasks, filters));
+        // setTasks(getFilteredTasks(stage.tasks, filters));
+        dispatch(setFilters(filters)); // New
         closeFilterWindow();
     }
 
@@ -119,8 +122,15 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     
     // Update filters
     useEffect(() => {
-        dispatch(setFilters(selectedFilters));
-    }, [selectedFilters, dispatch])
+        console.log(selectedFilters)
+        if (!selectedFilters.length) {
+            dispatch(setFilters(selectedFilters));
+        }
+    }, [selectedFilters])
+
+    useEffect(() => {
+        console.log(filters)
+    }, [filters])
 
     // Reset selectedFilters when filters are cleared from 'Reset filters' button displayed when no tasks match filters. 
     useEffect(() => {
@@ -131,7 +141,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
         if (!filters.length && selectedAssignees.length > 0) {
             setSelectedAssignees([]);
         }
-    }, [filters, selectedAssignees.length, selectedFilters.length])
+    }, [filters])
 
     useEffect(() => {
         if (selectedAssignees.length) {
@@ -154,7 +164,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                 ...selectedFilters.filter(f => f.category !== FILTERS_CATEGORIES["Assignee"])
             ]));
         }
-    }, [selectedAssignees, filters, selectedFilters])
+    }, [selectedAssignees])
 
   return (
     <AnimatePresence>
@@ -196,7 +206,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                     <Button
                         type='button'
                         action={clearAllFilters}
-                        disabled={!selectedFilters.length}
+                        // disabled={!selectedFilters.length}
                         additionalStyles='border-none w-fit font-normal text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
                     >
                         <span>Clear all {!!selectedFilters.length && `(${selectedFilters.length})`}</span>
@@ -245,7 +255,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                                                     text={o.option.toUpperCase()}
                                                     htmlFor={o.option}
                                                     isSelectable
-                                                    additionalStyles={`
+                                                    additionalStyles={twMerge(`
                                                         text-md
                                                         min-w-[60px]
                                                         px-3
@@ -270,7 +280,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                                                         ${sub.option === FILTERS_CATEGORIES["Priority"] && setPriorityColor(o.option as Priority)}
                                                         ${idx === 0 && "rounded-bl-lg"}
                                                         ${isSelected(o.option) && "opacity-100 border-blue-500"}
-                                                    `}
+                                                    `)}
                                                 />
                                             </Fragment>
                                         )
@@ -286,10 +296,10 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                 <div className='grow flex items-center w-full gap-2'>
                     <Button
                         type='submit'
-                        disabled={!filters.length}
+                        disabled={!selectedFilters.length}
                         additionalStyles='bg-blue-400 text-white rounded-bl-lg w-full'
                     >
-                        <span>Apply filters {!!filters.length && `(${filters.length})`}</span>
+                        <span>Apply filters {!!selectedFilters.length && `(${selectedFilters.length})`}</span>
                     </Button>
                     <Button
                         action={closeFilterWindow}

@@ -148,61 +148,64 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
         </form>
 
         <Line additionalStyles='w-3/4 mx-auto'/>
+
+        <div className='w-full flex flex-col gap-2'>
+            <form action="http://localhost:3001/api/auth/login/google" method="get">
+                <Button
+                    disabled={isSubmitting}
+                    type='submit'
+                    // action={handleGoogleSignIn}
+                    additionalStyles={`
+                        flex
+                        w-full
+                        border
+                        border-slate-200
+                        items-center
+                        justify-center
+                        gap-2
+                        bg-slate-50
+                        sm:hover:bg-white
+                        active:bg-white
+                        rounded-bl-lg
+                        text-blue-400
+                        text-xl
+                        sm:hover:text-blue-500
+                        active:text-blue-500
+                    `}
+                >
+                    <GoogleLogo width='w-5' />
+                    <span className='pt-1'>Continue with Google</span>
+                </Button>
+            </form>
+            <form action="http://localhost:3001/api/auth/login/github" method="get">
+                <Button
+                    disabled={isSubmitting}
+                    type='submit'
+                    // action={handleGoogleSignIn}
+                    additionalStyles={`
+                        flex
+                        w-full
+                        border
+                        border-slate-200
+                        items-center
+                        justify-center
+                        gap-2
+                        bg-slate-50
+                        sm:hover:bg-white
+                        active:bg-white
+                        rounded-bl-lg
+                        text-stone-700
+                        text-xl
+                        sm:hover:text-stone-800
+                        active:text-stone-800
+                    `}
+                >
+                    <BsGithub />
+                    <span className='pt-1'>Continue with GitHub</span>
+                </Button>
+            </form>
+        </div>
         
-        <form action="http://localhost:3001/api/auth/login/google" method="get">
-            <Button
-                disabled={isSubmitting}
-                type='submit'
-                // action={handleGoogleSignIn}
-                additionalStyles={`
-                    flex
-                    w-full
-                    border
-                    border-slate-200
-                    items-center
-                    justify-center
-                    gap-2
-                    bg-slate-50
-                    sm:hover:bg-white
-                    active:bg-white
-                    rounded-bl-lg
-                    text-blue-400
-                    text-xl
-                    sm:hover:text-blue-500
-                    active:text-blue-500
-                `}
-            >
-                <GoogleLogo width='w-5' />
-                <span className='pt-1'>Continue with Google</span>
-            </Button>
-        </form>
-        <form action="http://localhost:3001/api/auth/login/github" method="get">
-            <Button
-                disabled={isSubmitting}
-                type='submit'
-                // action={handleGoogleSignIn}
-                additionalStyles={`
-                    flex
-                    w-full
-                    border
-                    border-slate-200
-                    items-center
-                    justify-center
-                    gap-2
-                    bg-slate-50
-                    sm:hover:bg-white
-                    active:bg-white
-                    rounded-bl-lg
-                    text-stone-700
-                    text-xl
-                    sm:hover:text-stone-800
-                    active:text-stone-800
-                `}
-            >
-                <BsGithub />
-                <span className='pt-1'>Continue with GitHub</span>
-            </Button>
-        </form>
     </div>
   )
 }

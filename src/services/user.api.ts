@@ -1,6 +1,5 @@
 import { IUser } from "@/store/auth/auth.slice";
 import axios, { AxiosResponse } from "axios";
-import { saveJwt } from "./localStorage";
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL as string;
 axios.defaults.withCredentials = true;
