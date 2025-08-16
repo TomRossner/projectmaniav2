@@ -13,6 +13,7 @@ import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { prepend } from '@/utils/utils';
 
 const DeleteProjectPrompt = () => {
     const {isDeleteProjectModalOpen, closeDeleteProjectModal} = useModals();
@@ -54,10 +55,7 @@ const DeleteProjectPrompt = () => {
                 currentProject?.projectId as string
             );
 
-            dispatch(setActivities([
-                ...activities,
-                activityLog
-            ]));
+            dispatch(setActivities(prepend(activityLog, activities)));
         } catch (error: any) {
             console.error(error);
 

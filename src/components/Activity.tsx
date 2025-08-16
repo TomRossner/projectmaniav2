@@ -4,9 +4,9 @@ import { IProject, IStage, ITask, TeamMember } from '@/store/projects/projects.s
 import { getHowLongAgo } from '@/utils/dates';
 import { Activity } from '@/utils/interfaces';
 import { ActivityData, ActivityType } from '@/utils/types';
-import Image from 'next/image';
 import React, { useCallback } from 'react';
 import { twMerge } from 'tailwind-merge';
+import ImageWithFallback from './common/ImageWithFallback';
 
 type ActivityProps = {
     activity: Activity;
@@ -29,14 +29,7 @@ const ActivityItem = ({activity}: ActivityProps) => {
     } = activity;
     const {currentProject} = useProjects();
 
-    const {getUserName} = useAuth();
-
-    const renderActivity = (activity: Activity) => {
-        switch (type) {
-            case ActivityType.AddTask:
-                return 
-        }
-    }
+    const {getUserName, userInitials} = useAuth();
 
     const isTask = (data: ActivityData): data is ITask => {
         return (data as ITask) !== undefined;
@@ -153,13 +146,33 @@ const ActivityItem = ({activity}: ActivityProps) => {
             p-2
         `)}
     >
-        <Image
-            width={28}
-            height={28}
-            src={imgSrc ?? ''}
-            alt={firstName}
-            className='rounded-full w-7 h-7'
-        />
+        {imgSrc ? (
+            <ImageWithFallback
+                width={28}
+                height={28}
+                src={imgSrc}
+                alt={firstName}
+                className='rounded-full w-7 h-7'
+            />
+        ) : (
+            <span
+                className={twMerge(`
+                    w-7
+                    h-7
+                    inline-flex
+                    items-center
+                    justify-center
+                    rounded-full
+                    font-light
+                    border
+                    border-blue-400
+                    bg-white
+                    text-blue-400
+                `)}
+            >
+                {userInitials(activity.user)}
+            </span>
+        )}
 
         <p className='pl-2'>
             <b className='font-semibold'>{firstName}</b>

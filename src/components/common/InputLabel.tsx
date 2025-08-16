@@ -14,6 +14,7 @@ type LabelProps = {
     isSelectable?: boolean;
     withIcon?: boolean;
     icon?: ReactNode;
+    isModified?: boolean;
 }
 
 const InputLabel = ({
@@ -27,6 +28,7 @@ const InputLabel = ({
   isSelectable = false,
   withIcon = false,
   icon,
+  isModified = false,
 }: LabelProps) => {
 
   // Should return tag?
@@ -47,10 +49,22 @@ const InputLabel = ({
             ${isRequired && 'justify-between w-full'}
           `)}
         >
-          {text}
+          <span className='flex items-center gap-2'>
+            <span>
+              {text}
+              {isRequired && (
+                <span className='text-red-300'>*</span>
+              )}
+            </span>
+            {isModified && (
+              <span className='italic opacity-65 text-yellow-500 text-sm font-normal'>(modified)</span>
+            )}
+          </span>
           {(isOptional || isRequired) && (
             <span className='text-sm text-slate-400'>
-              {isOptional ? "(optional)" : "required"}
+              {isOptional ? "(optional)" : (
+                <span className='text-red-300'>required</span>
+              )}
             </span>
           )}
         </p>
@@ -70,14 +84,20 @@ const InputLabel = ({
             ${isSelectable && "bg-opacity-70 active:bg-opacity-100 sm:hover:bg-opacity-100"}
             ${additionalStyles}
             ${(isOptional || isRequired || withIcon) && 'flex items-center gap-1'}
+            ${(withIcon && !text) && 'gap-0'}
             ${isRequired && 'flex justify-between w-full items-center'}
           `)}
         >
           {withIcon && icon}
-          {text}
+          <span>
+            {text}
+            {isRequired && <span className='text-red-300'>*</span>}
+          </span>
           {(isOptional || isRequired) && (
             <span className={`text-sm text-slate-400`}>
-              {isOptional ? "(optional)" : "required"}
+              {isOptional ? "(optional)" : (
+                <span className='text-red-300'>required</span>
+              )}
             </span>
           )}
         </label>

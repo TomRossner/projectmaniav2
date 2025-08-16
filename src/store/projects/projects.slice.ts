@@ -1,9 +1,10 @@
-import { createProject, getAllProjects, getProject, updateProject } from "@/services/projects.api";
+import { createProject, getAllUserProjects, getProject, getProjectsPaginated, updateProject } from "@/services/projects.api";
 import { Activity, NewTaskData } from "@/utils/interfaces";
-import { ErrorData, Filter } from "@/utils/types";
+import { ErrorData, Filter, PaginationResponse } from "@/utils/types";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 import { IUser } from "../auth/auth.slice";
+import { DEFAULT_PAGE } from "@/utils/constants";
 
 export interface IProject extends NewProjectData {
     stages: IStage[];
@@ -35,6 +36,7 @@ export interface IStage {
 
 export interface ITask extends NewTaskData {
     createdAt: Date;
+    updatedAt: Date;
     taskId: string;
 }
 
@@ -50,6 +52,8 @@ export interface ProjectsState {
     filters: Filter[];
     isJoiningProject: boolean;
     isLeavingProject: boolean;
+    page: number;
+    totalPages: number | null;
 }
 
 const initialState: ProjectsState = {
@@ -64,6 +68,8 @@ const initialState: ProjectsState = {
     filters: [],
     isJoiningProject: false,
     isLeavingProject: false,
+    page: DEFAULT_PAGE,
+    totalPages: null,
 }
 
 const handleError = (error: AxiosError<ErrorData>) => {
@@ -80,26 +86,39 @@ const handleError = (error: AxiosError<ErrorData>) => {
     } else throw error;
 }
 
-export const fetchProjectsAsync = createAsyncThunk('projectsSlice/fetchProjectsAsync', async (userId: string) => {
+type FetchPaginatedProjectsParams = {
+    userId: string;
+    page: number;
+    limit?: number;
+}
+
+export const fetchPaginatedProjectsAsync = createAsyncThunk('projectsSlice/fetchPaginatedProjectsAsync', async ({userId, page, limit}: FetchPaginatedProjectsParams) => {
     if (!userId) return;
 
     try {
-        const response = await getAllProjects(userId);
-        
-        if (response.status === 401) {
-            console.log("Throwing error: ", response);
-            throw 'You are not logged in';
-        }
+        const {data: paginationResponse} = await getProjectsPaginated(userId, page, limit);
 
-        return response.data;
+        console.log(paginationResponse);
+        return paginationResponse as PaginationResponse;
     } catch (error) {
-        console.log(error);
-        if (typeof error === 'string') {
-            console.log("Type of error is string");
-            throw error;
-        }
+        console.error(error);
+        throw 'We were unable to find your projects. Please try again later';
+        // handleError(error as AxiosError<ErrorData>);
+    }
+})
 
-        handleError(error as AxiosError<ErrorData>);
+export const fetchAllProjectsAsync = createAsyncThunk('projectsSlice/fetchAllProjectsAsync', async (userId: string) => {
+    if (!userId) return;
+
+    try {
+        const {data: projects} = await getAllUserProjects(userId);
+
+        console.log(projects);
+        return projects;
+    } catch (error) {
+        console.error(error);
+        throw 'We were unable to find your projects. Please try again later';
+        // handleError(error as AxiosError<ErrorData>);
     }
 })
 
@@ -108,21 +127,11 @@ export const updateProjectAsync = createAsyncThunk('projectsSlice/updateProjectA
 
     try {
         const response = await updateProject(project);
+        console.log("Updated project data", response.data)
         
-        if (response.status === 401) {
-            console.log("Throwing error: ", response);
-            throw 'You are not logged in';
-        }
-
         return response.data;
     } catch (error) {
-        console.log(error);
-        if (typeof error === 'string') {
-            console.log("Type of error is string");
-            throw error;
-        }
-
-        handleError(error as AxiosError<ErrorData>);
+        console.error(error);
     }
 })
 
@@ -249,17 +258,34 @@ export const projectsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchProjectsAsync.fulfilled, (state: ProjectsState, action: PayloadAction<IProject[]>) => {
-                state.projects = action.payload;
+
+            // Fetch paginated
+            .addCase(fetchPaginatedProjectsAsync.fulfilled, (state: ProjectsState, action: PayloadAction<PaginationResponse | undefined>) => {
+                state.projects = state.projects.concat(action.payload!.results);
                 state.isFetching = false;
+                state.page = action.payload!.nextPage ?? state.page;
+                state.totalPages = action.payload!.totalPages;
             })
-            .addCase(fetchProjectsAsync.pending, (state: ProjectsState) => {
+            .addCase(fetchPaginatedProjectsAsync.pending, (state: ProjectsState) => {
                 state.isFetching = true;
             })
-            .addCase(fetchProjectsAsync.rejected, (state: ProjectsState) => {
+            .addCase(fetchPaginatedProjectsAsync.rejected, (state: ProjectsState) => {
                 state.isFetching = false;
             })
 
+            // Fetch all
+            .addCase(fetchAllProjectsAsync.fulfilled, (state: ProjectsState, action: PayloadAction<IProject[]>) => {
+                state.projects = action.payload;
+                state.isFetching = false;
+            })
+            .addCase(fetchAllProjectsAsync.pending, (state: ProjectsState) => {
+                state.isFetching = true;
+            })
+            .addCase(fetchAllProjectsAsync.rejected, (state: ProjectsState) => {
+                state.isFetching = false;
+            })
+
+            // Update project
             .addCase(updateProjectAsync.fulfilled, (state: ProjectsState, action: PayloadAction<IProject>) => {
                 state.isFetching = false;
             })
@@ -270,6 +296,7 @@ export const projectsSlice = createSlice({
                 state.isFetching = false;
             })
 
+            // Join project
             .addCase(joinProjectAsync.fulfilled, (state: ProjectsState) => {
                 state.isJoiningProject = false;
             })
@@ -280,6 +307,7 @@ export const projectsSlice = createSlice({
                 state.isJoiningProject = true;
             })
 
+            // Leave project
             .addCase(leaveProjectAsync.fulfilled, (state: ProjectsState) => {
                 state.isLeavingProject = false;
             })

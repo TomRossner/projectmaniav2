@@ -5,7 +5,7 @@ import useProjects from '@/hooks/useProjects';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Input from '../common/Input';
 import Modal from './Modal';
 import { updateStage } from '@/services/projects.api';
@@ -16,6 +16,8 @@ import { IUser } from '@/store/auth/auth.slice';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { getSocket } from '@/utils/socket';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { prepend } from '@/utils/utils';
 
 const DEFAULT_VALUES = {
     title: '',
@@ -41,44 +43,49 @@ const EditStageModal = () => {
         setInputValues(DEFAULT_VALUES);
     }, [closeEditStageModal]);
 
-    const handleSave = useCallback(async (updatedValues: IStage) => {
-        const updatedStage: IStage = {
-            ...currentStage,
-            ...updatedValues,
-            lastUpdatedBy: user?.userId as string,
-        } as IStage;
+    const handleSave = useCallback(async (ev: FormEvent<HTMLFormElement>, updatedValues: IStage) => {
+        ev.preventDefault();
 
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            stages: stages.map(s =>
-                s.stageId === updatedStage.stageId
-                    ? updatedStage
-                    : s
-            ),
-        } as IProject;
+        try {
+            const updatedStage: IStage = {
+                ...currentStage,
+                ...updatedValues,
+                lastUpdatedBy: user?.userId as string,
+            } as IStage;
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                stages: stages.map(s =>
+                    s.stageId === updatedStage.stageId
+                        ? updatedStage
+                        : s
+                ),
+            } as IProject;
+    
+            dispatch(setCurrentProject(updatedCurrentProject));
+            
+            closeModal();
+    
+            // if (currentStage?.title !== updatedValues.title) {
+            //     // Updates currentStage property in tasks
+            // }
+            await updateStage(updatedStage);
+    
+            socket?.emit('updateStage', updatedStage);
+    
+            const activityLog = await createNewActivity(
+                ActivityType.UpdateStageTitle,
+                user as IUser,
+                currentStage as IStage,
+                currentProject?.projectId as string
+            );
+    
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg('Failed updating stage'));
+        }
 
-        dispatch(setCurrentProject(updatedCurrentProject));
-        
-        closeModal();
-
-        // if (currentStage?.title !== updatedValues.title) {
-        //     // Updates currentStage property in tasks
-        // }
-        await updateStage(updatedStage);
-
-        socket?.emit('updateStage', updatedStage);
-
-        const activityLog = await createNewActivity(
-            ActivityType.UpdateStageTitle,
-            user as IUser,
-            currentStage as IStage,
-            currentProject?.projectId as string
-        );
-
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         closeModal,
@@ -122,21 +129,24 @@ const EditStageModal = () => {
   return (
     <Modal
         title={`Edit ${currentStage?.title}`}
-        onSubmit={() => handleSave(inputValues as IStage)}
+        onSubmit={(ev: FormEvent<HTMLFormElement>) => handleSave(ev, inputValues as IStage)}
+        submitBtnType='submit'
         onClose={closeModal}
         isOpen={isEditStageModalOpen}
         submitBtnText='Save'
     >
-        <Input
-            labelText='Title'
-            type="text"
-            name="title"
-            id="title"
-            ref={titleInputRef}
-            value={inputValues?.title}
-            onChange={handleInputChange}
-            additionalStyles='focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4'
-        />
+        <form onSubmit={(ev) => handleSave(ev, inputValues as IStage)} className='w-full flex flex-col'>
+            <Input
+                labelText='Title'
+                type="text"
+                name="title"
+                id="title"
+                ref={titleInputRef}
+                value={inputValues?.title}
+                onChange={handleInputChange}
+                additionalStyles='focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4'
+            />
+        </form>
     </Modal>
   )
 }

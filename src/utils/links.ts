@@ -5,7 +5,7 @@ export const LINKS: {[key: string]: string} = {
     SETTINGS: '/settings',
     ABOUT: '/about',
     PROFILE: '/profile',
-    SIGN_IN: '/sign-in',
+    SIGN_IN: '/login',
     SIGN_OUT: '/sign-out',
     NOT_FOUND: '/not-found',
     NOTIFICATIONS: '/notifications',

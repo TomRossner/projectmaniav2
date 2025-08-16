@@ -1,7 +1,6 @@
 'use client'
 
 import React, { ReactNode, useCallback } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { LINKS } from '@/utils/links';
 import { SPACES_AND_DASHES_PATTERN } from '@/utils/regexp';
@@ -10,6 +9,7 @@ import { usePathname } from 'next/navigation';
 import { twMerge } from 'tailwind-merge';
 import { MenuItem } from '@/utils/types';
 import { BsCircleFill } from 'react-icons/bs';
+import ImageWithFallback from './common/ImageWithFallback';
 
 type MenuListItemProps = {
   listItem: MenuItem;
@@ -82,7 +82,7 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
         }
 
         {imageSrc &&
-          <Image
+          <ImageWithFallback
             src={imageSrc}
             alt={text}
             className='rounded-full aspect-square'
@@ -91,7 +91,7 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
           />
         }
         
-        <span className='pt-1 grow'>{text}</span>
+        <span className='grow'>{text}</span>
 
         {withCount && (
           <p className='relative flex items-center justify-center mr-2'>
@@ -99,7 +99,7 @@ const MenuListItem = ({listItem}: MenuListItemProps) => {
               <BsCircleFill />
             </span>
 
-            <span className='z-50 text-blue-500 pt-1 text-[20px]'>
+            <span className='z-50 text-blue-500 text-[20px]'>
               {count}
             </span>
           </p>

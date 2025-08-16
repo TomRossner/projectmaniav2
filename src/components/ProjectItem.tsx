@@ -1,7 +1,8 @@
 import { useAppDispatch } from '@/hooks/hooks';
-import { IProject, setCurrentProject } from '@/store/projects/projects.slice';
+import useProjects from '@/hooks/useProjects';
+import { IProject, setCurrentProject, setProjects } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
-import { getStagesCount, getTotalTasks } from '@/utils/utils';
+import { getStagesCount, getTotalTasks, prepend } from '@/utils/utils';
 import Link from 'next/link';
 import React from 'react';
 import { BsCircleFill } from 'react-icons/bs';
@@ -16,9 +17,10 @@ const ProjectItem = (project: IProject) => {
     } = project;
 
     const dispatch = useAppDispatch();
-
+    const {projects} = useProjects();
     const handleSelectProject = async (): Promise<void> => {
       dispatch(setCurrentProject(project));
+      // dispatch(setProjects(prepend(project, projects.filter(p => p.projectId !== projectId))));
     }
 
   return (

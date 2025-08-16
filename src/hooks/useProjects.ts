@@ -1,15 +1,16 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectProjectsSlice } from '@/store/projects/projects.selectors';
-import { fetchProjectsAsync, IProject, IStage, ITask, joinProjectAsync, leaveProjectAsync, setCurrentProject, setProjects, TeamMember } from '@/store/projects/projects.slice';
+import { fetchAllProjectsAsync, fetchPaginatedProjectsAsync, IProject, IStage, ITask, joinProjectAsync, leaveProjectAsync, setCurrentProject, setProjects, TeamMember } from '@/store/projects/projects.slice';
 import useAuth from './useAuth';
 import { AxiosError } from 'axios';
-import { getProject } from '@/services/projects.api';
+import { getProject, getTask } from '@/services/projects.api';
 import { LINKS } from '@/utils/links';
 import { useRouter } from 'next/navigation';
 import useNotifications from './useNotifications';
 import { setErrorMsg } from '@/store/error/error.slice';
 import { IUser, updateUserAsync } from '@/store/auth/auth.slice';
+import { getHowLongAgo } from '@/utils/dates';
 
 const useProjects = () => {
     const {
@@ -19,6 +20,8 @@ const useProjects = () => {
       currentTask,
       isFetching,
       currentStageIndex,
+      page,
+      totalPages,
     } = useAppSelector(selectProjectsSlice);
 
     const dispatch = useAppDispatch();
@@ -28,12 +31,35 @@ const useProjects = () => {
     const {handleRemoveNotification} = useNotifications();
     // const {createNewActivity, activities} = useActivityLog();
 
-    const tasks = useMemo(() =>
-      currentProject?.stages.flatMap(s => s.tasks) ?? [], [currentProject]);
+    const tasks = useMemo(() => currentProject?.stages.flatMap(s => s.tasks) ?? [], [currentProject]);
+
+    // useEffect(() => {
+    //   if (tasks.length) {
+    //     console.log(tasks)
+
+    //     const notFound: ITask[] = [];
+
+    //     for (const task of tasks) {
+    //       try {
+    //         getTask(task.taskId)
+    //           .then(res => res.data ? console.log(res.data) : notFound.push(task))
+    //       } catch (error) {
+    //         console.error(error);
+    //       }
+    //     }
+    //     console.log(notFound)
+    //   }
+    // }, [tasks])
 
     const stages = useMemo(() => currentProject?.stages ?? [], [currentProject]);
 
     const projectId = useMemo(() => currentProject?.projectId, [currentProject]);
+
+    const memoizedProjects = useMemo(() => {
+      const ids = projects.map(({ projectId }) => projectId);
+      const filtered = projects.filter(({ projectId }, index) => !ids.includes(projectId, index + 1));
+      return filtered;
+    }, [projects])
 
     const handleError = (error: AxiosError) => {
       if (error.code === 'ERR_NETWORK') {
@@ -45,14 +71,16 @@ const useProjects = () => {
       };
     }
 
-    const getProjects = async () => {
-      return await dispatch(fetchProjectsAsync(userId as string))
-          .unwrap()
-          .catch((error) => handleError(error));
+    const getAllProjects = async (userId: string) => {
+      return await dispatch(fetchAllProjectsAsync(userId))
+        .unwrap()
+        .catch(error => dispatch(setErrorMsg("We couldn't get your projects. Please try again later")));
     }
 
-    const getUserProjects = (userId: string) => {
-      dispatch(fetchProjectsAsync(userId));
+    const getPaginatedProjects = async (userId: string, limit?: number) => {
+      return await dispatch(fetchPaginatedProjectsAsync({userId, page, limit}))
+        .unwrap()
+        .catch(error => dispatch(setErrorMsg("We couldn't get your projects. Please try again later")));
     }
 
     const getMostRecentProject = async (userMostRecentProject: Pick<IProject, "projectId" | "title">): Promise<IProject | null> => {
@@ -124,7 +152,7 @@ const useProjects = () => {
     }, [user, dispatch, router]);
 
   return {
-    projects,
+    projects: memoizedProjects,
     currentProject,
     currentStage,
     currentTask,
@@ -133,9 +161,12 @@ const useProjects = () => {
     tasks,
     currentStageIndex,
     projectId,
-    getProjects,
+    page,
+    totalPages,
+    getAllProjects,
+    // getAllUserProjects,
     handleError,
-    getUserProjects,
+    getPaginatedProjects,
     updateProjectTasks,
     handleLeaveProject,
     handleJoinProject,

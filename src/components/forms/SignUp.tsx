@@ -111,7 +111,6 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
                 placeholder='First name'
                 className={twMerge(`
                     px-2
-                    pt-1
                     outline-none
                     border
                     focus:border-blue-500
@@ -136,7 +135,6 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
                 placeholder='Last name'
                 className={twMerge(`
                     px-2
-                    pt-1
                     outline-none
                     border
                     focus:border-blue-500
@@ -165,8 +163,7 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
                 placeholder='Email'
                 className={twMerge(`
                     col-span-2 
-                    px-2 
-                    pt-1 
+                    px-2
                     outline-none 
                     border 
                     focus:border-blue-500 
@@ -196,7 +193,6 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
                 className={twMerge(`
                     col-span-2
                     px-2
-                    pt-1
                     outline-none
                     border
                     focus:border-blue-500
@@ -224,8 +220,7 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
                 placeholder='Confirm password'
                 className={twMerge(`
                     col-span-2 
-                    px-2 
-                    pt-1 
+                    px-2
                     outline-none 
                     border 
                     focus:border-blue-500 
@@ -257,8 +252,7 @@ const SignUp = ({toggleIsNotRegistered}: SignUpProps) => {
             disabled={isSubmitting}
             className={twMerge(`
                 px-4
-                pb-2
-                pt-3
+                py-2
                 rounded-bl-lg
                 bg-blue-400
                 hover:bg-blue-500

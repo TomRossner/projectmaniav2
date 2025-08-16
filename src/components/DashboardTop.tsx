@@ -12,15 +12,18 @@ import { twMerge } from 'tailwind-merge';
 import { BsThreeDots } from 'react-icons/bs';
 import { PROJECT_MENU_OPTIONS } from '@/utils/constants';
 import MoreOptions from './common/MoreOptions';
-import { ActivityType, TOption } from '@/utils/types';
+import { ActivityType, Filter, TOption } from '@/utils/types';
 import { GoSearch } from "react-icons/go";
-import { IProject, ITask } from '@/store/projects/projects.slice';
+import { IProject, IStage, ITask } from '@/store/projects/projects.slice';
 import SearchModal from './modals/SearchModal';
 import useAuth from '@/hooks/useAuth';
 import { IUser } from '@/store/auth/auth.slice';
 import useModals from '@/hooks/useModals';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import useActivityLog from '@/hooks/useActivityLog';
+import FiltersModal from './modals/FiltersModal';
+import Filters from './Filters';
+import useFilters from '@/hooks/useFilters';
 
 type DashboardTopProps = {
   moveNext: () => void;
@@ -33,7 +36,16 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
     const {currentProject, tasks, handleLeaveProject} = useProjects();
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const {user, isAuthenticated, userId} = useAuth();
-    const {openNewStageModal, openDeleteProjectModal, openEditProjectModal, openInvitationModal, openActivityLog} = useModals();
+    const {getFilters, getFilteredTasks} = useFilters();
+    const {
+      openNewStageModal,
+      openDeleteProjectModal,
+      openEditProjectModal,
+      openInvitationModal,
+      openActivityLog,
+      isFiltersModalOpen,
+      closeFiltersModal
+    } = useModals();
     const {createNewActivity, activities} = useActivityLog();
 
     const [isSearchModalOpen, setIsSearchModalOpen] = useState<boolean>(false);
@@ -110,6 +122,8 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
           return handleOpenInvitationModal();
         case "leave project":
           return handleLeave(currentProject?.projectId as string);
+        case "view mode":
+          return console.log("view mode");
         default:
           return setMenuOpen(false);
       }
@@ -120,21 +134,36 @@ const DashboardTop = ({moveNext, movePrev, noMoreNext, noMorePrev}: DashboardTop
     }
 
     const projectMenuOptions: string[] = useMemo(() => {
-      if (isAuthenticated && ((user?.userId === currentProject?.createdBy))) {
-        return ((currentProject?.team.length === 1) && (currentProject.team[0].userId === userId))
+      if (!isAuthenticated) return [];
+
+      const currentUserIsProjectCreator: boolean = user?.userId === currentProject?.createdBy;
+      const hasOnlyOneTeamMember: boolean = currentProject?.team.length === 1;
+      const teamMemberIsCurrentUser: boolean = currentProject?.team[0].userId === userId;
+
+      if (isAuthenticated && currentUserIsProjectCreator) {
+        return (hasOnlyOneTeamMember && teamMemberIsCurrentUser)
           ? [...PROJECT_MENU_OPTIONS.filter(o => o !== 'Leave project')]
           : PROJECT_MENU_OPTIONS;
       }
       
       return PROJECT_MENU_OPTIONS.filter(o => o !== 'Delete');
     }, [currentProject, userId, user, isAuthenticated]);
-    
+
   return (
     <>
       <SearchModal
         isOpen={isSearchModalOpen}
         setIsOpen={setIsSearchModalOpen}
         tasks={tasks as ITask[]}
+      />
+
+      <FiltersModal
+        filters={getFilters(["priority", "tag", "status", "date", "assignee"], [])}
+        isOpen={isFiltersModalOpen}
+        onApply={() => {}}
+        onClose={closeFiltersModal}
+        setTasks={() => {}}
+        tasks={tasks}
       />
 
       {currentProject && (

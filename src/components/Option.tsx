@@ -25,13 +25,13 @@ const Option = ({
         disabled={isDisabled}
         onClick={() => action(opt)}
         className={twMerge(`
-            pt-0.5
             px-1.5
             text-stone-500
             active:text-stone-800
             sm:hover:text-stone-800
             relative
             flex
+            text-start
             w-full
             justify-between
             disabled:text-stone-300

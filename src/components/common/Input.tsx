@@ -25,6 +25,7 @@ type InputProps = {
     isReadOnly?: boolean;
     accept?: string;
     multiple?: boolean;
+    withLabel?: boolean;
 }
 
 const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTMLInputElement>) {
@@ -49,17 +50,20 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
     isReadOnly = false,
     accept,
     multiple = false,
+    withLabel = true,
   } = props;
 
   return (
     <>
-        <InputLabel
-          htmlFor={id}
-          text={labelText as string}
-          additionalStyles={labelAdditionalStyles}
-          isOptional={isOptional}
-          isRequired={isRequired}
-        />
+        {withLabel && (
+          <InputLabel
+            htmlFor={id}
+            text={labelText as string}
+            additionalStyles={labelAdditionalStyles}
+            isOptional={isOptional}
+            isRequired={isRequired}
+          />
+        )}
 
         {withIconInsideInput ? (
           <div className='flex items-center relative grow w-full overflow-x-hidden bg-white border border-slate-300 rounded-bl-lg'>
@@ -91,7 +95,6 @@ const Input = forwardRef(function Input(props: InputProps, ref: ForwardedRef<HTM
                   outline-none
                   focus:border-blue-500
                   flex-shrink-0
-                  pt-1
                   bg-white
                   ${additionalStyles}
               `)}

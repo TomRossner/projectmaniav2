@@ -1,7 +1,6 @@
 import useModals from '@/hooks/useModals';
-import useProjects from '@/hooks/useProjects';
 import { AnimatePresence, motion } from 'framer-motion';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { RxCross2 } from 'react-icons/rx';
 import Header from './common/Header';
@@ -9,20 +8,36 @@ import BackLayer from './common/BackLayer';
 import Line from './common/Line';
 import ActivityItem from './Activity';
 import useActivityLog from '@/hooks/useActivityLog';
+import Button from './common/Button';
 import { useAppDispatch } from '@/hooks/hooks';
 import { fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
+import useProjects from '@/hooks/useProjects';
+import { DEFAULT_ACTIVITY_FETCH_LIMIT } from '@/utils/constants';
+import Loading from './common/Loading';
+import { twMerge } from 'tailwind-merge';
 
 const ActivityLog = () => {
-    const {currentProject} = useProjects();
     const {isActivityLogOpen, closeActivityLog} = useModals();
-    const {activities} = useActivityLog();
+    const {activities, page, isLoading} = useActivityLog();
+    const dispatch = useAppDispatch();
+    const {projectId} = useProjects();
+
+    const activitiesListRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (isLoading && activities.length) {
+            activitiesListRef.current?.scrollTo({
+                top: activitiesListRef.current.scrollHeight - 100, // NEEDS FIX - DOES NOT WORK
+                behavior: 'smooth'
+            });
+        }
+    }, [isLoading])
 
   return (
     <AnimatePresence>
         {isActivityLogOpen && (
             <BackLayer
                 title=''
-                closeOnClick
                 action={closeActivityLog}
                 zIndex='30'
             >
@@ -57,17 +72,48 @@ const ActivityLog = () => {
 
                     <Line />
 
+                    {isLoading && !activities.length && (
+                        <Loading withText text='Loading activity log...'/>
+                    )}
+
                     {!!activities?.length
                         ? (
-                            <div className='flex flex-col gap-2 overflow-y-auto overflow-x-hidden'>
-                                {activities.map(a => (
-                                    <ActivityItem activity={a} key={a.activityId} />
-                                ))}
-                            </div>
+                            <>
+                                <div ref={activitiesListRef} className={twMerge(`flex flex-col gap-2 overflow-y-auto overflow-x-hidden ${isLoading && 'opacity-55'}`)}>
+                                    {activities.map(a => (
+                                        <ActivityItem activity={a} key={a.activityId} />
+                                    ))}
+
+                                    <div className={twMerge(`flex items-center justify-center w-full ${isLoading ? 'h-fit' : 'h-0'}`)}>
+                                        {isLoading && (
+                                            <Loading imageStyles='my-0' width={30} height={30} />
+                                        )}
+                                    </div> 
+                                </div>
+
+                                <Line />
+                                
+                                <Button
+                                    action={() => dispatch(fetchActivityLogAsync({
+                                        projectId: projectId as string,
+                                        page,
+                                        limit: DEFAULT_ACTIVITY_FETCH_LIMIT
+                                    }))}
+                                    type='button'
+                                    additionalStyles='self-start border-none text-blue-400 sm:hover:text-blue-500 active:text-blue-500 w-fit'
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? 'Loading...' : 'Show more...'}
+                                </Button>
+                            </>
                         ) : (
-                            <p className='text-2xl text-stone-700 font-semibold flex justify-center items-center grow'>
-                                There are no activities.
-                            </p>
+                            <>
+                            {!isLoading && (
+                                <p className='text-2xl text-stone-700 font-semibold flex justify-center items-center grow'>
+                                    There are no activities.
+                                </p>
+                            )}
+                            </>
                         )
                     }
                 </motion.div>

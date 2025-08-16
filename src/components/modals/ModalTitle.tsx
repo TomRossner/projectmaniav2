@@ -17,15 +17,8 @@ const ModalTitle = ({
   action
 }: ModalTitleProps) => {
   return (
-    <h2 className='w-full text-stone-700 text-xl font-semibold flex items-center justify-between'>
+    <h2 className='grow text-stone-700 text-xl font-semibold truncate'>
       {text}
-      {/* {withIcon && (
-        <ButtonWithIcon
-          action={action}
-          icon={icon}
-          additionalStyles=''      
-        />
-      )} */}
     </h2>
   )
 }

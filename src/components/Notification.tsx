@@ -107,7 +107,7 @@ const Notification = ({
             >
                 <h3 className='text-xl w-full font-semibold text-stone-700 flex items-start justify-between'>
                     {getTitle(type)}
-                    <span className={`text-[10px] ${isSeen ? 'text-slate-400' : 'text-blue-400'} pt-1`}>
+                    <span className={`text-[10px] ${isSeen ? 'text-slate-400' : 'text-blue-400'}`}>
                         <BsCircleFill />
                     </span>
                 </h3>

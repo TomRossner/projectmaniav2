@@ -11,6 +11,7 @@ type ButtonProps = {
     disabled?: boolean;
     withIcon?: boolean;
     icon?: ReactNode;
+    disabledStyles?: string;
 }
 
 const Button = ({
@@ -21,6 +22,7 @@ const Button = ({
   disabled = false,
   withIcon = false,
   icon,
+  disabledStyles,
 }: ButtonProps) => {
   return (
     <button
@@ -41,6 +43,7 @@ const Button = ({
           disabled:cursor-not-allowed
           ${withIcon && 'flex gap-2 items-center justify-center pl-1'}
           ${additionalStyles}
+          ${disabledStyles}
         `)}
     >
         {withIcon && icon}

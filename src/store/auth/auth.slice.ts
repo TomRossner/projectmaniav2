@@ -64,11 +64,11 @@ export const updateUserAsync = createAsyncThunk('authSlice/updateUserAsync', asy
     try {
         const res = await updateUserData(user);
 
-        if (res.data.accessToken) {
-            const decodedUser = jwtDecode<User>(res.data.accessToken);
-            return decodedUser;
-        }
-        console.log("After update data", res.data);
+        // if (res.data.accessToken) {
+        //     const decodedUser = jwtDecode<User>(res.data.accessToken);
+        //     return decodedUser;
+        // }
+        
         return res.data;
         
     } catch (error: any) {
@@ -116,6 +116,7 @@ export const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Fetch user
             .addCase(fetchUserAsync.fulfilled, (state: AuthState, action: PayloadAction<User>) => {
                 state.isLoading = false;
                 state.isAuthenticated = action.payload !== null;
@@ -127,6 +128,7 @@ export const authSlice = createSlice({
                 state.authError = "Invalid email or password";
             })
 
+            // Update user
             .addCase(updateUserAsync.fulfilled, (state: AuthState, action: PayloadAction<User>) => {
                 state.isLoading = false;
                 state.user = action.payload;
@@ -138,6 +140,7 @@ export const authSlice = createSlice({
                 state.authError = "Failed updating user";
             })
 
+            // Logout
             .addCase(logoutUser.fulfilled, (state, action) => {
                 state.user = null;
                 state.isAuthenticated = false;

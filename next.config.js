@@ -14,6 +14,10 @@ const nextConfig = {
             protocol: 'https',
             hostname: 'avatars.githubusercontent.com',
           },
+          {
+            protocol: 'https',
+            hostname: 'project-mania-v2-s3bucket.s3.eu-west-3.amazonaws.com',
+          },
         ]
     }
 }

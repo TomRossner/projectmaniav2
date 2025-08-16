@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
+import ImageWithFallback from './ImageWithFallback';
 
 type AvatarProps = {
     width?: number;
@@ -28,7 +28,7 @@ const Avatar = ({
     <>
     {src ? (
         <span>
-            <Image
+            <ImageWithFallback
                 src={src}
                 alt={alt}
                 width={width}
@@ -50,7 +50,6 @@ const Avatar = ({
                 inline-flex
                 items-center
                 justify-center
-                pt-1
                 rounded-full
                 font-light
                 border

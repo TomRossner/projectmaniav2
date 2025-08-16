@@ -10,17 +10,15 @@ import { IProject, IStage, ITask, setCurrentProject, setCurrentStage, setCurrent
 import useProjects from '@/hooks/useProjects';
 import NewStageModal from '@/components/modals/NewStageModal';
 import DeleteStagePrompt from '@/components/modals/DeleteStagePrompt';
-import { updateProject } from '@/services/projects.api';
+import { getProject } from '@/services/projects.api';
 import { ScrollDirection } from '@/utils/types';
 import { scrollToIndex } from '@/utils/utils';
 import DeleteProjectPrompt from '@/components/modals/DeleteProjectPrompt';
 import { useRouter } from 'next/navigation';
-import { LINKS } from '@/utils/links';
 import EditTaskModal from '@/components/modals/EditTaskModal';
 import DeleteTaskPrompt from '@/components/modals/DeleteTaskPrompt';
 import EditStageModal from '@/components/modals/EditStageModal';
 import EditDashboardModal from '@/components/modals/EditProjectModal';
-import { AxiosResponse } from 'axios';
 import { IUser, setUser, updateUserAsync } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, closestCorners, useSensor } from '@dnd-kit/core';
@@ -29,9 +27,18 @@ import InvitationModal from '@/components/modals/InvitationModal';
 import LoadingModal from '@/components/modals/LoadingModal';
 import { selectIsJoiningProject, selectIsLeavingProject } from '@/store/projects/projects.selectors';
 import ActivityLog from '@/components/ActivityLog';
-import { fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
+import { FetchActivitiesParams, fetchActivityLogAsync } from '@/store/activity_log/activity_log.slice';
 import { getSocket } from '@/utils/socket';
 import { setErrorMsg } from '@/store/error/error.slice';
+import useActivityLog from '@/hooks/useActivityLog';
+import { DEFAULT_PAGE } from '@/utils/constants';
+import TaskModal from '@/components/modals/TaskModal';
+import useModals from '@/hooks/useModals';
+import {throttle} from "lodash";
+import FiltersModal from '@/components/modals/FiltersModal';
+import useFilters from '@/hooks/useFilters';
+import ImageModal from '@/components/modals/ImageModal';
+import ImageWithFallback from '@/components/common/ImageWithFallback';
 
 const Project = () => {
   const {user, userId} = useAuth();
@@ -43,6 +50,10 @@ const Project = () => {
     currentTask,
   } = useProjects();
   const socket = getSocket();
+  const {page, activities} = useActivityLog();
+  const {isTaskModalOpen, isImageModalOpen} = useModals();
+
+  const prevProjectRef = useRef<null | IProject>(null);
 
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -153,13 +164,16 @@ const Project = () => {
   }, [stages, currentStage, dispatch, currentProject])
 
   // Update currentProject in API when changed
-  useEffect(() => {
-    if (currentProject) {
-      // Update project in API
-      dispatch(updateProjectAsync(currentProject));
-      
-    } else if (!currentProject) router.push(LINKS.PROJECTS);
-  }, [currentProject])
+  // useEffect(() => {
+  //   // Only update if previous project was not null and prevProjectRef is different than currentProject
+  //   if (!!prevProjectRef.current && !!currentProject && !isEqual(prevProjectRef.current, currentProject)) {
+  //     console.log("Updating project...");
+  //     dispatch(updateProjectAsync(currentProject));
+  //   }
+
+  //   // Update the ref with the current project
+  //   prevProjectRef.current = currentProject as IProject;
+  // }, [currentProject, dispatch]);
 
   // Update currentStage when currentStageIndex changes
   useEffect(() => {
@@ -226,8 +240,10 @@ const Project = () => {
   const isLeavingProject = useAppSelector(selectIsLeavingProject);
 
   useEffect(() => {
-    dispatch(fetchActivityLogAsync(currentProject?.projectId as string)); 
-  }, [currentProject?.projectId, dispatch])
+    if (!activities.length && page === DEFAULT_PAGE && currentProject?.projectId) {
+      dispatch(fetchActivityLogAsync({projectId: currentProject?.projectId as string, page, limit: 10} as FetchActivitiesParams)); 
+    }
+  }, [currentProject?.projectId, activities.length])
 
   useEffect(() => {
     if (user && currentProject && socket) {
@@ -321,6 +337,19 @@ const Project = () => {
         dispatch(setCurrentProject(data));
       }
 
+      const handleProjectUpdated = async (data: {projectId: string}) => {
+        if (data.projectId === currentProject.projectId) {
+          try {
+            const {data: updatedProject} = await getProject(data.projectId);
+
+            dispatch(setCurrentProject(updatedProject as IProject));
+          } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg(`"${currentProject.title}" has been updated but we couldn't get the updated version. Try reloading the page or check back later`));
+          }
+        }
+      }
+
       socket.on("connect", () => {
         console.log("Socket now connected: ", socket?.id);
       });
@@ -331,29 +360,41 @@ const Project = () => {
       });
 
       socket
-        .on('newTask', handleNewTask)
-        .on('deleteTask', handleDeleteTask)
-        .on('updateTask', handleUpdateTask)
+        // .on('newTask', handleNewTask)
+        // .on('deleteTask', handleDeleteTask)
+        // .on('updateTask', handleUpdateTask)
 
-        .on('newStage', handleNewStage)
-        .on('deleteStage', handleDeleteStage)
-        .on('updateStage', handleUpdateStage)
+        // .on('newStage', handleNewStage)
+        // .on('deleteStage', handleDeleteStage)
+        // .on('updateStage', handleUpdateStage)
         
-        .on('updateProject', handleUpdateProject)
+        // .on('updateProject', handleUpdateProject)
+        .on('projectUpdated', handleProjectUpdated)
     }
-  }, [socket, currentProject, userId, user])
+
+    return () => {
+      socket?.off('projectUpdated')
+    }
+  }, [socket, currentProject, userId, user, dispatch])
+
+  const {isFiltersModalOpen, closeFiltersModal} = useModals();
+  const {getFilters} = useFilters();
 
   return (
     <>
     <DeleteProjectPrompt />
     <DeleteStagePrompt />
     <DeleteTaskPrompt />
+
     <EditDashboardModal />
     <EditStageModal />
     <EditTaskModal task={currentTask as ITask} />
+
     <NewStageModal />
     <NewTaskModal />
+
     <InvitationModal />
+
     <LoadingModal
       isOpen={isJoiningProject || isLeavingProject}
       text={
@@ -365,6 +406,23 @@ const Project = () => {
       }
     />
     <ActivityLog />
+
+    <TaskModal task={currentTask as ITask} />
+
+    {currentTask && (
+      <ImageModal
+        isOpen={isImageModalOpen}
+        image={
+          <ImageWithFallback
+              src={currentTask?.thumbnailSrc as string}
+              alt={''}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              style={{objectFit:"cover"}}
+              className='rounded-bl-lg w-full'
+          />
+        }
+      />
+    )}
 
     <div className='flex justify-end w-full h-[90vh]'>
         <div className='p-2 flex items-start justify-center grow max-w-screen-lg w-full mb-2'>

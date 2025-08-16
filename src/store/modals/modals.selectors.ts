@@ -23,3 +23,7 @@ export const selectIsEditTaskModalOpen = (state: RootState) => state.modals.edit
 export const selectIsNewProjectModalOpen = (state: RootState) => state.modals.newProject;
 export const selectIsNewStageModalOpen = (state: RootState) => state.modals.newStage;
 export const selectIsNewTaskModalOpen = (state: RootState) => state.modals.newTask;
+
+export const selectIsTaskModalOpen = (state: RootState) => state.modals.task;
+
+export const selectIsFiltersModalOpen = (state: RootState) => state.modals.filters;

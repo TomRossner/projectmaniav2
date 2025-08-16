@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
 import { selectAuth } from '@/store/auth/auth.selectors';
 import { IUser } from '@/store/auth/auth.slice';
@@ -16,9 +16,9 @@ const useAuth = () => {
 
     const dispatch = useAppDispatch();
 
-    const getUserName = (user: IUser | TeamMember): string => {
+    const getUserName = useCallback((user: IUser | TeamMember): string => {
       return `${user.firstName} ${user.lastName}`;
-    }
+    }, [])
     
     const getUserInitials = (userName: string): string => {
       return userName.split(" ")[0].charAt(0).toUpperCase()

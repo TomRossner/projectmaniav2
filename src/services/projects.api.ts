@@ -1,7 +1,7 @@
 import { NewProjectData, IProject, IStage, ITask } from "@/store/projects/projects.slice";
 import { NewTaskData } from "@/utils/interfaces";
 import { NewStageData } from "@/utils/types";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL as string;
 axios.defaults.withCredentials = true;
@@ -18,8 +18,18 @@ axios.defaults.withCredentials = true;
 
 // Projects API
 
-const getAllProjects = async (userId: string) =>
+const getProjectsPaginated = async (userId: string, page: number, limit?: number) =>
     await axios.get('/projects', {
+        params: {
+            userId,
+            page,
+            limit
+        },
+        withCredentials: true
+    });
+
+const getAllUserProjects = async (userId: string) =>
+    await axios.get('/projects/all', {
         params: {
             userId
         },
@@ -51,6 +61,13 @@ const deleteStage = async (stageId: string) =>
 
 // Tasks
 
+const getTask = async (taskId: string) =>
+    await axios.get(`/tasks`, {
+        params: {
+            taskId
+        }
+    })
+
 const deleteTask = async (taskId: string) =>
     await axios.delete(`/tasks/${taskId}`);
 
@@ -68,7 +85,8 @@ const updateTask = async (task: ITask) =>
 //     return await axios.put(`/projects/${project.projectId}`, project);
 // }
 export {
-    getAllProjects,
+    getAllUserProjects,
+    getProjectsPaginated,
 
     createProject,
     getProject,
@@ -79,6 +97,7 @@ export {
     updateStage,
     deleteStage,
 
+    getTask,
     createTask,
     updateTask,
     deleteTask,

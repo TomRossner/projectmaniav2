@@ -9,7 +9,7 @@ import Container from '@/components/common/Container';
 import Login from '@/components/forms/Login';
 import SignUp from '@/components/forms/SignUp';
 
-const SignIn = () => {
+const LoginPage = () => {
   const [isNotRegistered, setIsNotRegistered] = useState<boolean>(false);
 
   const toggleIsNotRegistered = () => setIsNotRegistered(!isNotRegistered);
@@ -41,4 +41,4 @@ const SignIn = () => {
   )
 }
 
-export default SignIn;
+export default LoginPage;

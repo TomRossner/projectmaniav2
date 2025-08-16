@@ -7,13 +7,13 @@ import { twMerge } from 'tailwind-merge';
 
 type TaskPriorityProps = {
   priority: Priority;
+  additionalStyles?: string
 }
 
-const TaskPriority = ({priority}: TaskPriorityProps) => {
+const TaskPriority = ({priority, additionalStyles}: TaskPriorityProps) => {
   return (
     <div
       className={twMerge(`
-        pt-0.5
         text-white
         rounded-bl-lg
         self-center
@@ -23,7 +23,9 @@ const TaskPriority = ({priority}: TaskPriorityProps) => {
         border
         border-slate-500
         text-sm
+        px-2
         ${setPriorityColor(priority)}
+        ${additionalStyles}
       `)}
     >
       <p className='w-full text-center self-end'>

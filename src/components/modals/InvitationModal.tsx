@@ -18,6 +18,9 @@ import Avatar from '../common/Avatar';
 import { createNotification } from '@/services/notifications.api';
 import { twMerge } from 'tailwind-merge';
 import { getSocket } from '@/utils/socket';
+import useDebounce from '@/hooks/useDebounce';
+import LoadingIcon from '../utils/LoadingIcon';
+import Loading from '../common/Loading';
 
 const InvitationModal = () => {
     const {user, getUserName, getUserInitials, userId} = useAuth();
@@ -29,6 +32,9 @@ const InvitationModal = () => {
     const [searchQuery, setSearchQuery] = useState<string>("");
 
     const isDirty = useMemo(() => !!searchQuery, [searchQuery]);
+    const debouncedInput = useDebounce(searchQuery, 500);
+
+    const [isSearching, setIsSearching] = useState<boolean>(false);
 
     const memoizedResults = useMemo(() => searchResults
         .filter(res => res.userId !== user?.userId)
@@ -50,6 +56,7 @@ const InvitationModal = () => {
         const {value} = ev.target;
 
         setSearchQuery(value);
+        setIsSearching(true);
     }
 
     const handleQuery = async (query: string) => {
@@ -57,6 +64,8 @@ const InvitationModal = () => {
     }
 
     const handleSendInvitation = async (recipient: Recipient) => {
+        setIsSending(true);
+
         const recipientAsUser = searchResults.find(u => u.userId === recipient.userId) as IUser;
 
         if (!recipientAsUser) return;
@@ -85,6 +94,8 @@ const InvitationModal = () => {
         const {data: notification} = await createNotification(notificationData);
 
         socket?.emit("notification", notification as INotification);
+        
+        setIsSending(false);
     }
 
     const isAlreadyATeamMember = (userId: string): boolean => {
@@ -97,14 +108,20 @@ const InvitationModal = () => {
         }
     }, [isInvitationModalOpen])
 
+    const handleSearchResults = (results: IUser[]) => {
+        setIsSearching(false);
+        setSearchResults(results);
+    }
 
     useEffect(() => {
-        if (isDirty) {
-            handleQuery(searchQuery)
-                .then(res => setSearchResults(res.data))
+        if (debouncedInput && isDirty) {
+            handleQuery(debouncedInput)
+                .then(res => handleSearchResults(res.data))
                 .catch(e => console.error(e));
         } else setSearchResults([]);
-    }, [searchQuery, isDirty])
+    }, [debouncedInput, isDirty]);
+
+    const [isSending, setIsSending] = useState<boolean>(false);
 
   return (
     <Modal
@@ -115,62 +132,72 @@ const InvitationModal = () => {
         withSubmitBtn={false}
         withCloseBtn={false}
     >
-        {/* <p className='text-gray-500'></p> */}
-
-        <Input
-            type='text'
-            id='search'
-            name='search'
-            additionalStyles='pl-1'
-            onChange={handleChange}
-            placeholder='Search...'
-            value={searchQuery}
-            ref={inputRef}
-            searchIcon={<GoSearch />}
-            withIconInsideInput
-            inputIcon={
-                <ButtonWithIcon
-                    withTooltip={false}
-                    icon={<RxCross2 />}
-                    action={() => setSearchQuery("")}
-                    additionalStyles="border-none h-full"
-                />
-            }
-        />
-        
-        {isDirty && (
-            <p className='flex w-full justify-between items-center px-1 mt-2'>
-                <span>Search results</span>
-                <span>{memoizedResults.length} result{memoizedResults.length === 1 ? '' : 's'} found</span>
-            </p>
-        )}
-
-        <div className='w-full flex flex-col gap-1'>
-            {!!memoizedResults.length && (
-                memoizedResults.map(res => (
-                    <div key={res.userId} className={twMerge(`flex gap-2 w-full items-center border p-2 bg-slate-50 ${isAlreadyATeamMember(res.userId) && 'opacity-50 cursor-not-allowed'}`)}>
-                        <div className='flex items-center gap-2 grow'>
-                            <Avatar
-                                src={res.imgSrc}
-                                text={getUserInitials(res.userName)}
-                                additionalStyles='w-7 h-7'
-                            />
-
-                            <p className='text-lg'>
-                                {res.userName}
-                            </p>
-                        </div>
-
-                        <ButtonWithIcon
-                            icon={<MdOutlinePersonAddAlt />}
-                            title='Send invitation'
-                            disabled={isAlreadyATeamMember(res.userId)}
-                            action={() => handleSendInvitation(searchResults.find(u => u.userId === res.userId) as IUser)}
-                        />
-                    </div>
-                ))
+        <form className='w-full flex flex-col'>
+            <Input
+                type='text'
+                id='search'
+                name='search'
+                additionalStyles='pl-1'
+                onChange={handleChange}
+                placeholder='Search...'
+                value={searchQuery}
+                ref={inputRef}
+                searchIcon={<GoSearch />}
+                withIconInsideInput
+                inputIcon={
+                    <ButtonWithIcon
+                        withTooltip={false}
+                        icon={<RxCross2 />}
+                        action={() => setSearchQuery("")}
+                        additionalStyles="border-none h-full"
+                    />
+                }
+            />
+            
+            {isDirty && (
+                <p className='flex w-full justify-between items-center px-1 mt-2'>
+                    <span>Search results</span>
+                    <span>{memoizedResults.length} result{memoizedResults.length === 1 ? '' : 's'} found</span>
+                </p>
             )}
-        </div>
+
+            {isSearching && isDirty && (
+                <div className='flex items-center gap-1.5 my-2'>
+                <Loading height={10} width={10} imageStyles='m-0 saturate-0' />
+                <p className='italic text-stone-400'>Searching...</p>
+                </div>
+            )}
+
+            <div className='w-full flex flex-col gap-1'>
+                {!!memoizedResults.length && (
+                    memoizedResults.map(res => (
+                        <div key={res.userId} className={twMerge(`flex gap-2 w-full items-center border p-2 bg-slate-50 ${isAlreadyATeamMember(res.userId) && 'opacity-50 cursor-not-allowed'}`)}>
+                            <div className='flex items-center gap-2 grow'>
+                                <Avatar
+                                    src={res.imgSrc}
+                                    text={getUserInitials(res.userName)}
+                                    additionalStyles='w-7 h-7'
+                                />
+
+                                <p className='text-lg'>
+                                    {res.userName}
+                                </p>
+                            </div>
+
+                            <ButtonWithIcon
+                                icon={(isSending
+                                    ? <Loading height={10} width={10} imageStyles='m-0 saturate-0' />
+                                    : <MdOutlinePersonAddAlt />
+                                )}
+                                title={'Send invitation'}
+                                disabled={isAlreadyATeamMember(res.userId) || isSending}
+                                action={() => handleSendInvitation(searchResults.find(u => u.userId === res.userId) as IUser)}
+                            />
+                        </div>
+                    ))
+                )}
+            </div>
+        </form>
     </Modal>
   )
 }

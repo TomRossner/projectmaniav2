@@ -247,6 +247,7 @@ const SortBy = ({isOpen, setIsOpen, setTasks, stage}: SortByProps) => {
                     <div className='grow flex items-center w-full gap-2'>
                         <Button
                             type='submit'
+                            disabled={!sortOptions.length}
                             additionalStyles='bg-blue-400 text-white rounded-bl-lg w-full'
                         >
                             <span>Save</span>

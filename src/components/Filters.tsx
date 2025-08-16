@@ -17,10 +17,11 @@ type FiltersProps = {
     isOpen: boolean;
     setIsOpen: (bool: boolean) => void;
     setTasks: (tasks: ITask[]) => void;
+    tasks: ITask[];
     stage: IStage;
 }
 
-const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
+const Filters = ({isOpen, setIsOpen, setTasks, stage, tasks = stage.tasks}: FiltersProps) => {
     const [selectedFilters, setSelectedFilters] = useState<Filter[]>([]);
     const {getFilters, getFilteredTasks, filters} = useFilters();
     const {currentProject} = useProjects();
@@ -41,7 +42,7 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     const clearAllFilters = () => {
         setSelectedFilters([]);
         setSelectedAssignees([]);
-        setTasks(stage.tasks);
+        setTasks(tasks);
     }
 
     const handleSelect = (ev: ChangeEvent<HTMLInputElement>, opt: StageOptions) => {
@@ -122,15 +123,10 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
     
     // Update filters
     useEffect(() => {
-        console.log(selectedFilters)
         if (!selectedFilters.length) {
             dispatch(setFilters(selectedFilters));
         }
     }, [selectedFilters])
-
-    useEffect(() => {
-        console.log(filters)
-    }, [filters])
 
     // Reset selectedFilters when filters are cleared from 'Reset filters' button displayed when no tasks match filters. 
     useEffect(() => {
@@ -262,7 +258,6 @@ const Filters = ({isOpen, setIsOpen, setTasks, stage}: FiltersProps) => {
                                                         flex
                                                         items-center
                                                         justify-center
-                                                        pt-0.5
                                                         cursor-pointer
                                                         text-white
                                                         opacity-30

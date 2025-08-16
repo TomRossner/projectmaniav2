@@ -1,4 +1,4 @@
-import { IProject, IStage } from "@/store/projects/projects.slice";
+import { IProject, IStage, ITask } from "@/store/projects/projects.slice";
 import { ScrollDirection, Priority, TOption, Status, NewSubTask } from "./types";
 import { ExternalLink } from "./types";
 import { URL_REGEX } from "./regexp";
@@ -32,17 +32,35 @@ const scrollToIndex = (index: number, direction: ScrollDirection, container: HTM
     });
 }
 
-const formatURL = (link: string): string => {
-  link = link.trim();
+// const formatURL = (link: string): string => {
+//   link = link.trim();
 
-  const http: string = 'http://';
-  const https: string = 'https://';
+//   const http: string = 'http://';
+//   const https: string = 'https://';
 
-  if (link.startsWith(http)) return link.substring(0, 4) + 's' + link.substring(4);
+//   if (link.startsWith(http)) return link.substring(0, 4) + 's' + link.substring(4);
 
-  if (!link.startsWith(https)) return `${https}${link}`;
+//   if (!link.startsWith(https)) return `${https}${link}`;
   
-  else return link;
+//   else return link;
+// }
+
+function formatURL(inputUrl: string) {
+  try {
+    // Add the 'https://' protocol if not present to ensure the URL is valid
+    if (!/^https?:\/\//i.test(inputUrl)) {
+      inputUrl = 'https://' + inputUrl;
+    }
+
+    // Create a new URL object, which will validate the URL format
+    const url = new URL(inputUrl);
+
+    // Return the validated and potentially corrected URL
+    return url.href;
+  } catch (error: any) {
+    console.error("Invalid URL:", error.message);
+    return null; // Return null if the URL is invalid
+  }
 }
 
 const getTotalTasks = (stages: IStage[]): string => {
@@ -118,7 +136,7 @@ const getUniqueLinks = (links: ExternalLink[]): ExternalLink[] => {
   const map = new Map();
   const uniqueLinks: ExternalLink[] = [];
 
-  for (let link of links) {
+  for (const link of links) {
     const normalizedUrl: string = normalizeUrl(link.url);
 
     if (!map.has(normalizedUrl)) {
@@ -150,9 +168,10 @@ const getDuplicatedLinks = (links: ExternalLink[]): ExternalLink[] => {
 const renameLinks = (links: ExternalLink[]): ExternalLink[] => {
   links = links.map((link, index) => {
       return {
+          ...link,
           name: `Link #${index + 1}`,
           url: link.url,
-      } as ExternalLink;
+      } satisfies ExternalLink;
   });
   
   return links;
@@ -250,6 +269,40 @@ const createNewSubtask = (subtasksLength: number): NewSubTask => {
   }
 }
 
+const getImageContentType = (imgSrc: string): string | undefined => {
+  if (imgSrc.startsWith('http')) return undefined;
+
+  if (imgSrc.startsWith('data:image/jpeg;')) {
+      return 'image/jpeg';
+  }
+  
+  if (imgSrc.startsWith('data:image/png;')) {
+      return 'image/png';
+  }
+
+  if (imgSrc.startsWith('data:image/webp;')) {
+      return 'image/webp';
+  }
+
+  else return undefined;
+}
+
+const createFileName = (user: IUser | null, type: 'user' | 'task'): string | undefined => {
+  if (!!user && type === 'user') {
+    return `${user?.firstName}_${user?.lastName}__profile_picture_${uuid()}`;
+  } else if (type === 'task') {
+    return `task_thumbnail__${uuid()}`;
+  }
+
+  else return undefined;
+}
+
+const prepend = (value: any, array: any[]) => {
+  const newArray = array.slice();
+  newArray.unshift(value);
+  return newArray;
+}
+
 export {
     capitalizeFirstLetter,
     convertToISODate,
@@ -271,4 +324,7 @@ export {
     generateId,
     createInvitation,
     createNewSubtask,
+    getImageContentType,
+    createFileName,
+    prepend,
 }

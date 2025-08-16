@@ -1,4 +1,3 @@
-import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { ExternalLink } from '@/utils/types';
 import { formatURL } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -22,8 +21,6 @@ const TaskLinks = (props: TaskLinksProps) => {
 
     const linksRef = useRef<HTMLElement>(null);
 
-    // useOnClickOutside(linksRef, () => setIsOpen(false));
-
   return (
     <AnimatePresence>
         {isOpen && !!links.length && (
@@ -31,7 +28,6 @@ const TaskLinks = (props: TaskLinksProps) => {
                 <motion.div
                     initial={{
                         opacity: 0,
-                        zIndex: 20,
                         marginBlock: "auto"
                     }}
                     animate={{
@@ -46,8 +42,6 @@ const TaskLinks = (props: TaskLinksProps) => {
                             duration: 0.1
                         }
                     }}
-                >
-                <div
                     ref={linksRef as RefObject<HTMLDivElement>}
                     className={`
                         w-[220px]
@@ -65,7 +59,7 @@ const TaskLinks = (props: TaskLinksProps) => {
                         border
                         border-slate-300
                         bg-slate-50
-                        z-40
+                        z-50
                     `}
                 >
                     {links.map((link: ExternalLink, index: number) => {
@@ -90,15 +84,14 @@ const TaskLinks = (props: TaskLinksProps) => {
                                     active:text-blue-500
                                 `}
                             >
-                                <span className='pt-1 w-full truncate'>{formatURL(link.url)}</span>
+                                <span className='w-full truncate'>{formatURL(link.url)}</span>
                                 
                                 <span className='text-lg' title={`Go to ${formatURL(link.url)}`}>
-                                <BiLinkExternal />
+                                    <BiLinkExternal />
                                 </span>
                             </Link>
                         )
                     })}
-                </div>
                 </motion.div>
             </ClickAwayListener>
         )}

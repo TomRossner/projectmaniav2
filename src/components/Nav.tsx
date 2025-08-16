@@ -10,11 +10,16 @@ import { LINKS } from '@/utils/links';
 import Link from 'next/link';
 import useMobileMenu from '@/hooks/useMobileMenu';
 import useModals from '@/hooks/useModals';
+import { CgProfile } from 'react-icons/cg';
+import Icon from './common/Icon';
+import useWindowDimensions from '@/hooks/useWindowDimensions';
+import { SCREEN_SIZES } from '@/utils/constants';
 
 const Nav = () => {
     const {isAuthenticated} = useAuth();
     const {openMobileMenu, closeMobileMenu} = useMobileMenu();
     const {openNewProjectModal} = useModals();
+    const {width} = useWindowDimensions();
 
     const handleNewProjectClick = () => {
       openNewProjectModal();
@@ -49,7 +54,7 @@ const Nav = () => {
       
       <Logo
         action={closeMobileMenu}
-        additionalStyles='absolute top-2 left-0 right-0 mx-auto'
+        additionalStyles='absolute top-1 left-0 right-0 mx-auto'
       />
 
       {!isAuthenticated ? (
@@ -80,7 +85,13 @@ const Nav = () => {
             sm:hover:text-stone-800
           `}
         >
-          Sign in
+          {(!!width && (width <= SCREEN_SIZES["md"]))
+            ? <Icon
+                icon={<CgProfile />}
+                additionalStyles='text-2xl text-stone-500 sm:hover:text-stone-700 active:text-stone-700'
+              />
+            : 'Sign in'
+          }
         </Link>
       ) : (
         <div className='absolute right-2'>
@@ -118,7 +129,7 @@ const Nav = () => {
                   <BiPlus />
                 </span>
 
-                <span className='text-center hidden sm:inline-block pt-1 text-xl font-medium'>
+                <span className='text-center hidden sm:inline-block text-xl font-medium'>
                   New project
                 </span>
             </button>

@@ -5,7 +5,7 @@ import useProjects from '@/hooks/useProjects';
 import { IProject, setCurrentProject, updateProjectAsync } from '@/store/projects/projects.slice';
 import { LINKS } from '@/utils/links';
 import { useRouter } from 'next/navigation';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Input from '../common/Input';
 import useModals from '@/hooks/useModals';
 import Modal from './Modal';
@@ -15,6 +15,8 @@ import { ActivityType } from '@/utils/types';
 import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { getSocket } from '@/utils/socket';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { prepend } from '@/utils/utils';
 
 const EditProjectModal = () => {
     const dispatch = useAppDispatch();
@@ -39,45 +41,49 @@ const EditProjectModal = () => {
         setInputValues(DEFAULT_VALUES);
     }, [DEFAULT_VALUES, closeEditProjectModal]);
 
-    const handleSave = useCallback(async (updatedValues: IProject) => {
-        if (!updatedValues.title) {
-            updatedValues = {
-                ...updatedValues,
-                title: currentProject?.title as string,
+    const handleSave = useCallback(async (ev: FormEvent<HTMLFormElement>, updatedValues: IProject) => {
+        ev.preventDefault();
+
+        try {
+            if (!updatedValues.title) {
+                updatedValues = {
+                    ...updatedValues,
+                    title: currentProject?.title as string,
+                }
             }
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                ...updatedValues
+            } as IProject;
+    
+            
+            dispatch(setCurrentProject(updatedCurrentProject));
+            
+            closeModal();
+    
+            if (currentProject?.title !== updatedValues.title) {
+                // Updates currentProject property in stages
+                dispatch(updateProjectAsync(updatedCurrentProject));
+    
+                socket?.emit('updateProject', {
+                    ...updatedCurrentProject,
+                    lastUpdatedBy: user?.userId as string,
+                });
+            }
+    
+            const activityLog = await createNewActivity(
+                ActivityType.UpdateProjectTitle,
+                user as IUser,
+                updatedValues as IProject,
+                currentProject?.projectId as string
+            );
+            
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg("Failed updating project"));
         }
-
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            ...updatedValues
-        } as IProject;
-
-        
-        dispatch(setCurrentProject(updatedCurrentProject));
-        
-        closeModal();
-
-        if (currentProject?.title !== updatedValues.title) {
-            // Updates currentProject property in stages
-            dispatch(updateProjectAsync(updatedCurrentProject));
-
-            socket?.emit('updateProject', {
-                ...updatedCurrentProject,
-                lastUpdatedBy: user?.userId as string,
-            });
-        }
-
-        const activityLog = await createNewActivity(
-            ActivityType.UpdateProjectTitle,
-            user as IUser,
-            updatedValues as IProject,
-            currentProject?.projectId as string
-        );
-        
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         currentProject,
@@ -93,9 +99,9 @@ const EditProjectModal = () => {
         setInputValues({...inputValues, [name]: value} as IProject);
     }
 
-    useEffect(() => {
-        if (!currentProject) router.push(LINKS.PROJECTS);
-    }, [currentProject, router])
+    // useEffect(() => {
+    //     if (!currentProject) router.push(LINKS.PROJECTS);
+    // }, [currentProject, router])
 
     useEffect(() => {
         setInputValues(DEFAULT_VALUES);
@@ -110,21 +116,24 @@ const EditProjectModal = () => {
   return (
     <Modal
         title={`Edit ${currentProject?.title}`}
-        onSubmit={() => handleSave(inputValues as IProject)}
+        onSubmit={(ev: FormEvent<HTMLFormElement>) => handleSave(ev, inputValues as IProject)}
+        submitBtnType='submit'
         onClose={closeModal}
         isOpen={isEditProjectModalOpen}
         submitBtnText='Save'
     >
-        <Input
-            labelText='Title'
-            type="text"
-            name="title"
-            id="title"
-            ref={titleInputRef}
-            value={inputValues?.title}
-            onChange={handleInputChange}
-            additionalStyles='focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4'
-        />
+        <form onSubmit={(ev) => handleSave(ev, inputValues as IProject)} className='w-full flex flex-col'>
+            <Input
+                labelText='Title'
+                type="text"
+                name="title"
+                id="title"
+                ref={titleInputRef}
+                value={inputValues?.title}
+                onChange={handleInputChange}
+                additionalStyles='focus:text-stone-900 focus:border-stone-900 text-stone-500 mb-4'
+            />
+        </form>
     </Modal>
   )
 }

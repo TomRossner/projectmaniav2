@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { FormEvent, useCallback, useEffect, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_STAGE } from '@/utils/constants';
 import { IProject, IStage, setCurrentProject } from '@/store/projects/projects.slice';
@@ -16,6 +16,7 @@ import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import useModals from '@/hooks/useModals';
 import { getSocket } from '@/utils/socket';
+import { prepend } from '@/utils/utils';
 
 const NewStageModal = () => {
     const {isNewStageModalOpen, closeNewStageModal} = useModals();
@@ -38,42 +39,47 @@ const NewStageModal = () => {
         });
     }, [currentProject, userId, closeNewStageModal])
 
-    const handleCreate = useCallback(async (newStageData: NewStageData): Promise<void> => {
+    const handleCreate = useCallback(async (ev: FormEvent<HTMLFormElement>, newStageData: NewStageData) => {
+        ev.preventDefault();
+
         if (!currentProject) {
             dispatch(setErrorMsg('Failed creating stage'));
             return;
         }
 
-        newStageData = {
-            ...newStageData, 
-            lastUpdatedBy: user?.userId as string,
+        try {
+            newStageData = {
+                ...newStageData, 
+                lastUpdatedBy: user?.userId as string,
+            }
+    
+            const {data: newStage} = await createStage(newStageData);
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                stages: [...stages, newStage as IStage],
+            } as IProject;
+    
+            
+            dispatch(setCurrentProject(updatedCurrentProject));
+    
+            socket?.emit('newStage', newStage);
+    
+            handleClose();
+    
+            const activityLog = await createNewActivity(
+                ActivityType.AddStage,
+                user as IUser,
+                currentProject as IProject,
+                currentProject?.projectId as string
+            );
+    
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg("Failed creating stage"));
         }
 
-        const {data: newStage} = await createStage(newStageData);
-
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            stages: [...stages, newStage as IStage],
-        } as IProject;
-
-        
-        dispatch(setCurrentProject(updatedCurrentProject));
-
-        socket?.emit('newStage', newStage);
-
-        handleClose();
-
-        const activityLog = await createNewActivity(
-            ActivityType.AddStage,
-            user as IUser,
-            currentProject as IProject,
-            currentProject?.projectId as string
-        );
-
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         currentProject,
@@ -108,13 +114,14 @@ const NewStageModal = () => {
   return (
     <Modal
         title='Create a stage'
-        onSubmit={() => handleCreate(inputValues as NewStageData)}
+        onSubmit={(ev: FormEvent<HTMLFormElement>) => handleCreate(ev, inputValues as NewStageData)}
+        submitBtnType='submit'
         onClose={handleClose}
         submitBtnText='Create'
         optionalNote={`This stage will be added to ${currentProject?.title}`}
         isOpen={isNewStageModalOpen}
     >
-        <div className='flex flex-col h-full w-full'>
+        <form onSubmit={(ev) => handleCreate(ev, inputValues as NewStageData)} className='w-full flex flex-col'>
             <Input
                 id='title'
                 type='text'
@@ -124,7 +131,7 @@ const NewStageModal = () => {
                 labelText='Title'
                 additionalStyles='mb-4'
             />
-        </div>
+        </form>
     </Modal>
   )
 }

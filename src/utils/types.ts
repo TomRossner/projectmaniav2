@@ -30,6 +30,7 @@ type TagName = 'feature' | 'bug' | 'ui' | 'hotfix' | 'backend';
 type ExternalLink = {
     name: string;
     url: string;
+    externalLinkId: string;
 }
 
 type MenuItem = {
@@ -46,6 +47,8 @@ type TOption = {
     disabled: boolean;
     icon?: ReactNode;
     isStageOpt?: boolean;
+    hasSubItems?: boolean;
+    subItems?: TOption[];
 }
 
 type Status = "completed" | "uncompleted";
@@ -178,6 +181,18 @@ type ActivityData = ITask | IStage | IProject | TeamMember;
 
 type AuthProvider = "google" | "github" | "local";
 
+type PaginationResponse = {
+    results: any[];
+    totalItems: number;
+    totalPages: number;
+    page: number;
+    limit: number;
+    hasPrevPage: boolean;
+    hasNextPage: boolean;
+    prevPage: number | null;
+    nextPage: number | null;
+}
+
 export type {
     ScrollDirection,
     Tag,
@@ -210,6 +225,7 @@ export type {
     NewStageData,
     ActivityData,
     AuthProvider,
+    PaginationResponse,
 }
 
 export {

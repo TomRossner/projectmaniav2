@@ -4,7 +4,6 @@ import React, { ChangeEvent, useEffect, useState } from 'react';
 import isAuth from '../ProtectedRoute';
 import Container from '@/components/common/Container';
 import Header from '@/components/common/Header';
-import Image from 'next/image';
 import useAuth from '@/hooks/useAuth';
 import { IUser, setUser } from '@/store/auth/auth.slice';
 import { BiBell, BiEdit } from 'react-icons/bi';
@@ -19,13 +18,22 @@ import { useAppDispatch } from '@/hooks/hooks';
 import { updateUserData } from '@/services/user.api';
 import { setErrorMsg } from '@/store/error/error.slice';
 import Button from '@/components/common/Button';
-import { capitalizeFirstLetter } from '@/utils/utils';
+import { capitalizeFirstLetter, createFileName, getImageContentType } from '@/utils/utils';
+import { uploadImageToS3 } from '@/services/images.api';
+import { IMAGE_MAX_SIZE } from '@/utils/constants';
+import Loading from '@/components/common/Loading';
+import ButtonWithIcon from '@/components/common/ButtonWithIcon';
+import { IoMdKey } from "react-icons/io";
+import ImageWithFallback from '@/components/common/ImageWithFallback';
+import useError from '@/hooks/useError';
 
 const Profile = () => {
   const {user, fullName} = useAuth();
   const {openImageModal, isImageModalOpen} = useModals();
   const [imgSrc, setImgSrc] = useState('');
   const dispatch = useAppDispatch();
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const {errorMsg} = useError();
 
   const {
     notifications,
@@ -36,42 +44,58 @@ const Profile = () => {
   } = user as IUser;
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (errorMsg) dispatch(setErrorMsg(null));
+
     if (!e.target.files?.length) return;
 
     handleUpload(e.target.files[0]);
   }
 
   const handleUpload = async (file: Blob) => {
+    
     try {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-
+      
       reader.onload = async () => {
-        try {
-          const base64EncodedFile = reader.result as string;
-  
-          const response = await updateUserData({
-            ...user,
-            imgSrc: base64EncodedFile
-          } as IUser);
-          
-          if (response.status !== 200) {
-            throw 'Failed uploading image';
-          }
-          
-          setImgSrc(base64EncodedFile);
-          dispatch(setUser(response.data));
-        } catch (error: any) {
-          dispatch(setErrorMsg(error)); 
+        setIsUploading(true);
+
+        const base64EncodedFile = reader.result as string;
+        const contentType = getImageContentType(base64EncodedFile);
+        const fileName = createFileName(user, 'user');
+        
+        if (!contentType || !fileName) {
+          throw new Error('Failed uploading image');
         }
+        
+        try {
+            const imageUpdateResponse = await uploadImageToS3(base64EncodedFile, fileName, contentType);
+            
+            const updateUserResponse = await updateUserData({
+              ...user,
+              imgSrc: imageUpdateResponse.data,
+            } as IUser);
+            
+            dispatch(setUser(updateUserResponse.data));
+            setImgSrc(updateUserResponse.data.imgSrc);
+          } catch (error) {
+            console.error(error);
+
+            dispatch(setErrorMsg(`Failed uploading image. Make sure the image's size does not exceed ${IMAGE_MAX_SIZE}`));
+          } finally {
+            setIsUploading(false);
+          }
       }
     } catch (error: any) {
       console.error(error);
       dispatch(setErrorMsg(error)); 
+    } finally {
+      setIsUploading(false);
     }
   }
 
   useEffect(() => {
+    console.log(user)
     setImgSrc(user?.imgSrc as string);
   }, [user]);
 
@@ -80,18 +104,19 @@ const Profile = () => {
       <ImageModal
         isOpen={isImageModalOpen}
         image={!!imgSrc && (
-          <Image
+          <ImageWithFallback
             src={imgSrc}
-            alt={fullName}
+            alt={''}
             width={200}
             height={200}
-            className={`w-full rounded-sm`}
+            className={'w-full rounded-sm'}
           />
         )}
       />
 
       <div className='flex justify-between w-full items-center'>
         <Header text='My Profile' additionalStyles='mb-3' />
+
         <Button
           withIcon
           icon={<BiEdit />}
@@ -104,12 +129,12 @@ const Profile = () => {
       </div>
 
       {!!notifications.length && (
-        <p className='rounded-lg w-full bg-blue-400 px-5 py-2 text-center text-lg text-white font-light flex items-center gap-2'>
+        <p className='rounded-lg w-full bg-blue-400 px-3 py-2 text-center text-white font-light flex items-center gap-1 text-nowrap'>
           <span className='flex items-center justify-start'>
             <BiBell />
           </span>
           You have <b>{notifications.length}</b> new notification{notifications.length === 1 ? '' : 's'}. <Link href={'/notifications'} className='underline'>Click here to see your notifications.</Link>
-          <div className='grow' />
+          <span className='grow' />
         </p>
       )}
 
@@ -121,27 +146,69 @@ const Profile = () => {
             items-center
             justify-center
             rounded-full
+            w-24
+            h-24
             border border-blue-500
           `)}
         >
-          {!!imgSrc && (
-            <Image
+          {isUploading && (
+            <div className='flex items-center justify-center w-full z-10'>
+              <Loading
+                imageStyles='mt-0 my-auto'
+                width={30}
+                height={30}
+              />
+            </div>
+          )}
+          {!!imgSrc ? (
+            <ImageWithFallback
               src={imgSrc}
-              alt={fullName}
-              width={100}
-              height={100}
+              alt=''
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              style={{objectFit:"cover"}}
               onClick={openImageModal}
               className={twMerge(`
                 rounded-full
                 cursor-pointer
+                ${isUploading && 'opacity-50'}
               `)}
             />
+          ) : (
+            <span
+              className={twMerge(`
+                inline-flex
+                items-center
+                justify-center
+                rounded-full
+                w-24
+                h-24
+                border
+                bg-slate-100
+                text-stone-400
+                text-4xl
+                font-semibold
+                ${isUploading && 'opacity-50'}
+              `)}
+            >
+              {user?.firstName.charAt(0)}{user?.lastName.charAt(0)}
+            </span>
           )}
 
-          <InputLabel
-            htmlFor='image'
-            withIcon
-            icon={<BiEdit />}
+          <ButtonWithIcon
+            disabled={isUploading}
+            action={() => {}}
+            withTooltip={false}
+            title='Upload image'
+            icon={
+              <InputLabel
+                htmlFor='image'
+                withIcon
+                icon={<BiEdit />}
+                additionalStyles='cursor-pointer'
+              />
+            }
+            disabledStyles='disabled:border-blue-400 disabled:text-blue-300'
             additionalStyles={`
               bg-white
               p-1
@@ -166,13 +233,14 @@ const Profile = () => {
               duration-100
             `}
           />
+
           <Input
             hidden
             type='file'
             id='image'
             name='image'
             onChange={handleImageChange}
-            accept='image/*'
+            accept='image/png, image/jpeg'
             multiple={false}
           />
         </div>
@@ -210,30 +278,33 @@ const Profile = () => {
       <Line additionalStyles='mb-3' />
 
       <div className='w-full flex items-center justify-between'>
-        <p>Logged in using:
-          <span
-            className={twMerge(`
-              px-2
-              py-0.5
-              text-center
-              rounded-lg
-              w-fit
-              text-base
-              font-normal
-              text-slate-100
-              bg-slate-400
-              pt-1
-              mx-2
-            `)}
-          >
-            {authProvider === "local"
-              ? "Email & password"
-              : capitalizeFirstLetter(authProvider as string)
-            }
-          </span>
-        </p>
+        {authProvider && (
+          <div className='flex gap-1 items-center px-1.5 py-0.5 bg-slate-100 rounded-lg'>
+            <span className='text-blue-500 text-xl px-1 py-0.5 bg-slate-200 rounded-lg'>
+              <IoMdKey />
+            </span>
 
-        <p className='text-md text-stone-600'>Member since {new Date(createdAt).toLocaleDateString()}</p>
+            <span
+              className={twMerge(`
+                px-1
+                py-0.5
+                text-center
+                rounded-lg
+                w-fit
+                text-base
+                font-normal
+                text-slate-800
+              `)}
+            >
+              {authProvider === "local"
+                ? "Email & password"
+                : capitalizeFirstLetter(authProvider as string)
+              }
+            </span>
+          </div>
+        )}
+
+        <p className='text-md text-stone-600 grow text-end'>Member since {new Date(createdAt).toLocaleDateString()}</p>
       </div>
 
       {/* <div className='flex gap-2'>

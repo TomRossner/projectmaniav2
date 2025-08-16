@@ -1,4 +1,4 @@
-import { IProject, IStage } from "@/store/projects/projects.slice";
+import { IProject } from "@/store/projects/projects.slice";
 import { NewTaskData } from "./interfaces";
 import { Tag, ScrollDirection, Screen, ExternalLink, StageOptions, Priority, NewStageData } from "./types";
 import { TooltipProps } from "@greguintow/react-tippy";
@@ -85,6 +85,7 @@ const TASK_MENU_OPTIONS: string[] = [
 const PROJECT_MENU_OPTIONS: string[] = [
     'Edit',
     'Invite',
+    'View mode',
     'Activity log',
     'Leave project',
     'Delete',
@@ -178,7 +179,8 @@ const STAGE_MENU_OPTIONS: string[] = [
 
 const DEFAULT_EXTERNAL_LINK: ExternalLink = {
     name: 'Link #1',
-    url: ''
+    url: '',
+    externalLinkId: ''
 }
 
 const MAX_EXTERNAL_LINKS: number = 10;
@@ -193,7 +195,7 @@ const DEFAULT_TOOLTIP_PROPS: TooltipProps = {
     inertia: true,
 }
 
-const SCREENS: Screen = {
+const SCREEN_SIZES: Screen = {
     "xs": 540,
     "sm": 640,
     "md": 768,
@@ -212,6 +214,11 @@ const PRIORITY_ORDER = {
 
 const MAX_SUBTASKS: number = 10;
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_ACTIVITY_FETCH_LIMIT: number = 10;
+
+const IMAGE_MAX_SIZE: string = '2Mb';
+
 export {
     APP_VERSION,
     APP_VERSION_FULL,
@@ -228,7 +235,7 @@ export {
     MAX_EXTERNAL_LINKS,
     TAGS,
     DEFAULT_TOOLTIP_PROPS,
-    SCREENS,
+    SCREEN_SIZES,
     PROJECT_MENU_OPTIONS,
     STAGE_MENU_OPTIONS,
     FILTERS_CATEGORIES,
@@ -236,4 +243,7 @@ export {
     TEAM_MEMBERS_COUNT,
     PRIORITY_ORDER,
     MAX_SUBTASKS,
+    DEFAULT_PAGE,
+    DEFAULT_ACTIVITY_FETCH_LIMIT,
+    IMAGE_MAX_SIZE,
 }

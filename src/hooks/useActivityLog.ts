@@ -5,15 +5,18 @@ import useProjects from './useProjects';
 import _ from "lodash";
 import { createActivity } from '@/services/activity.api';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { selectActivities, selectIsLoading } from '@/store/activity_log/activity_log.selectors';
-import { useEffect } from 'react';
-import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { selectActivities, selectIsLoading, selectPage, selectTotalPages } from '@/store/activity_log/activity_log.selectors';
+import { useEffect, useMemo } from 'react';
+import { setActivities, setPage } from '@/store/activity_log/activity_log.slice';
+import { DEFAULT_PAGE } from '@/utils/constants';
 
 const useActivityLog = () => {
     const {currentProject} = useProjects();
 
     const activities = useAppSelector(selectActivities);
     const isLoading = useAppSelector(selectIsLoading);
+    const page = useAppSelector(selectPage);
+    const totalPages = useAppSelector(selectTotalPages);
     
     const createNewActivity = async (
         type: ActivityType,
@@ -26,56 +29,6 @@ const useActivityLog = () => {
         return response.data as Activity;
     }
 
-    // const acts: Activity[] = [
-    //     {
-    //         activityId: generateId(),
-    //         createdAt: new Date(Date.now()),
-    //         createdBy: user?.userId as string,
-    //         data: currentProject?.stages[0] as IStage,
-    //         type: ActivityType.AddTask,
-    //         updatedAt: new Date(Date.now()),
-    //         user: user as IUser,
-    //         projectId: currentProject?.projectId as string,
-    //     },
-    //     {
-    //         activityId: generateId(),
-    //         createdAt: new Date(Date.now()),
-    //         createdBy: user?.userId as string,
-    //         data: currentProject?.stages[0].tasks[0] as ITask,
-    //         type: ActivityType.AddDescription,
-    //         updatedAt: new Date(Date.now()),
-    //         user: user as IUser,
-    //         projectId: currentProject?.projectId as string,
-    //     },
-    //     {
-    //         activityId: generateId(),
-    //         createdAt: new Date(Date.now()),
-    //         createdBy: user?.userId as string,
-    //         data: {
-    //             email: 'billgates@gmail.com',
-    //             firstName: 'Bill',
-    //             lastName: 'Gates',
-    //             imgSrc: user?.imgSrc,
-    //             isOnline: false,
-    //             userId: user?.userId
-    //         } as TeamMember,
-    //         type: ActivityType.JoinProject,
-    //         updatedAt: new Date(Date.now()),
-    //         user: user as IUser,
-    //         projectId: currentProject?.projectId as string,
-    //     },
-    //     {
-    //         activityId: generateId(),
-    //         createdAt: new Date(Date.now()),
-    //         createdBy: user?.userId as string,
-    //         data: currentProject?.stages[0].tasks[0] as ITask,
-    //         type: ActivityType.DeleteTask,
-    //         updatedAt: new Date(Date.now()),
-    //         user: user as IUser,
-    //         projectId: currentProject?.projectId as string,
-    //     },
-    // ]
-
     const groupActivitiesByDate = (activities: Activity[]): Activity[] => {
         const groupedByDate = _.sortBy(activities, (activity) => activity.createdAt);
         console.table(groupedByDate);
@@ -86,19 +39,39 @@ const useActivityLog = () => {
     }
 
     // const memoizedActivities = useMemo(() => groupActivitiesByDate(currentProject?.activities ?? acts), [currentProject]);
+    const memoizedActivities = useMemo(() => {
+        if (!currentProject) {
+            return [];
+        }
+
+        const ids = activities.map(({ activityId }) => activityId);
+        const filtered = activities.filter(({ activityId }, index) => !ids.includes(activityId, index + 1));
+
+        return filtered;
+    }, [currentProject, activities]);
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        if (!currentProject && !!activities.length) {
+        if ((!currentProject && !!activities.length)) {
             dispatch(setActivities([]));
+            dispatch(setPage(DEFAULT_PAGE));
         }
     }, [currentProject, activities, dispatch])
+
+    useEffect(() => {
+        if (currentProject?.projectId !== activities[0]?.projectId) {
+            dispatch(setActivities([]));
+            dispatch(setPage(DEFAULT_PAGE));
+        }
+    }, [currentProject, dispatch])
 
 
   return {
     createNewActivity,
-    activities,
+    activities: memoizedActivities,
     isLoading,
+    page,
+    totalPages,
   }
 }
 

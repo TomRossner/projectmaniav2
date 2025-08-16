@@ -14,6 +14,7 @@ import useActivityLog from '@/hooks/useActivityLog';
 import useAuth from '@/hooks/useAuth';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { getSocket } from '@/utils/socket';
+import { prepend } from '@/utils/utils';
 
 const DeleteTaskPrompt = () => {
     const {currentProject, currentTask, currentStage} = useProjects();
@@ -30,47 +31,49 @@ const DeleteTaskPrompt = () => {
             dispatch(setErrorMsg('Failed deleting task'));
             return;
         }
+
+        try {
+            const updatedStages: IStage[] = currentProject?.stages.map(
+                (stage: IStage) => {
+                    const updatedStageTasks = stage.tasks.filter((t: ITask) => t.taskId !== currentTask.taskId);
+    
+                    if (stage.stageId === currentStage?.stageId) {
+                        return {
+                            ...stage,
+                            tasks: updatedStageTasks
+                        };
+                    } else return stage;
+                }
+            ) as IStage[];
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                stages: updatedStages,
+            } as IProject;
+    
+            await deleteTask(currentTask.taskId);
+    
+            socket?.emit('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
+            
+            dispatch(setCurrentProject(updatedCurrentProject));
+    
+            dispatch(setCurrentTask(null));
+    
+            closeDeleteTaskModal();
+    
+            const activityLog = await createNewActivity(
+                ActivityType.DeleteTask,
+                user as IUser,
+                currentTask as ITask,
+                currentProject?.projectId as string
+            );
+            
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg("Failed deleting task"));
+        }
         
-        const updatedStages: IStage[] = currentProject?.stages.map(
-            (stage: IStage) => {
-                const updatedStageTasks = stage.tasks.filter((t: ITask) => t.taskId !== currentTask.taskId);
-
-                if (stage.stageId === currentStage?.stageId) {
-                    return {
-                        ...stage,
-                        tasks: updatedStageTasks
-                    };
-                } else return stage;
-            }
-        ) as IStage[];
-
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            stages: updatedStages,
-        } as IProject;
-
-        await deleteTask(currentTask.taskId);
-
-        socket?.emit('deleteTask', {...currentTask, lastUpdatedBy: user?.userId as string});
-
-        
-        dispatch(setCurrentProject(updatedCurrentProject));
-
-        dispatch(setCurrentTask(null));
-
-        closeDeleteTaskModal();
-
-        const activityLog = await createNewActivity(
-            ActivityType.DeleteTask,
-            user as IUser,
-            currentTask as ITask,
-            currentProject?.projectId as string
-        );
-        
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         currentProject, 

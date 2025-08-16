@@ -13,6 +13,7 @@ import useActivityLog from '@/hooks/useActivityLog';
 import { IUser } from '@/store/auth/auth.slice';
 import useAuth from '@/hooks/useAuth';
 import { getSocket } from '@/utils/socket';
+import { prepend } from '@/utils/utils';
 
 const DeleteStagePrompt = () => {
     const {isDeleteStageModalOpen, closeDeleteStageModal} = useModals();
@@ -37,36 +38,39 @@ const DeleteStagePrompt = () => {
             return;
         }
 
-        const currentStageIndex: number = stages.indexOf(currentStage);
+        try {
+            const currentStageIndex: number = stages.indexOf(currentStage);
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                stages: stages.filter((stage: IStage) =>
+                    stage.stageId !== currentStage?.stageId
+                )
+            } as IProject;
+    
+            socket?.emit('deleteStage', {
+                ...currentStage,
+                lastUpdatedBy: user?.userId as string
+            });
+    
+            updateCurrentStageIndex(currentStageIndex);
+    
+            closeDeleteStageModal();
+    
+            const activityLog = await createNewActivity(
+                ActivityType.DeleteStage,
+                user as IUser,
+                currentStage as IStage,
+                currentProject?.projectId as string
+            );
+    
+            dispatch(setCurrentProject(updatedCurrentProject));
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg("Failed deleting stage"));
+        }
 
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            stages: stages.filter((stage: IStage) =>
-                stage.stageId !== currentStage?.stageId
-            )
-        } as IProject;
-
-        socket?.emit('deleteStage', {
-            ...currentStage,
-            lastUpdatedBy: user?.userId as string
-        });
-
-        updateCurrentStageIndex(currentStageIndex);
-
-        closeDeleteStageModal();
-
-        const activityLog = await createNewActivity(
-            ActivityType.DeleteStage,
-            user as IUser,
-            currentStage as IStage,
-            currentProject?.projectId as string
-        );
-
-        dispatch(setCurrentProject(updatedCurrentProject));
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         currentProject,

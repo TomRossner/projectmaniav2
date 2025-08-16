@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from './hooks';
-import { selectINotifications } from '@/store/notifications/notifications.selectors';
+import { selectIsFetchingNotifications, selectNotifications } from '@/store/notifications/notifications.selectors';
 import { INotification, NewNotificationData } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
 import { removeNotification } from '@/services/notifications.api';
@@ -11,7 +11,8 @@ import { NotificationData } from '@/utils/types';
 import { IProject } from '@/store/projects/projects.slice';
 
 const useNotifications = () => {
-    const notifications = useAppSelector(selectINotifications);
+    const notifications = useAppSelector(selectNotifications);
+    const isFetching = useAppSelector(selectIsFetchingNotifications);
     const {user} = useAuth();
     
     const isProject = (data: NotificationData): data is Pick<IProject, "projectId" | "title"> => {
@@ -93,6 +94,7 @@ const useNotifications = () => {
   return {
     // notifications: memoizedNotifications,
     notifications,
+    isFetching,
     handleRemoveNotification,
     createNotification,
     getUpdatedNotificationsIds,

@@ -29,6 +29,9 @@ type ModalProps = {
     withCloseBtn?: boolean;
     isLoadingModal?: boolean;
     additionalStyles?: string;
+    submitBtnDisabled?: boolean;
+    submitBtnType?: 'button' | 'submit';
+    customTitle?: ReactNode;
 }
 
 const Modal = ({
@@ -49,6 +52,9 @@ const Modal = ({
     withCloseBtn = true,
     isLoadingModal = false,
     additionalStyles,
+    submitBtnDisabled = false,
+    submitBtnType = 'button',
+    customTitle,
 } : ModalProps) => {
     const modalRef = useRef<HTMLDivElement | null>(null);
 
@@ -132,6 +138,7 @@ const Modal = ({
                             gap-1
                             drop-shadow-md
                             overflow-y-hidden
+                            overflow-x-hidden
                             relative
                             ${title === 'Error' ? "z-40" : "z-30"}
                             ${additionalStyles}
@@ -156,15 +163,37 @@ const Modal = ({
                             }
                         }}
                     >
-                        <ModalTitle text={title} />
+                        {customTitle ? (
+                                <div className='relative flex w-full justify-between'>
+                                    {customTitle}
 
-                        {withCrossIcon && (
-                            <ButtonWithIcon
-                                action={onClose || close}
-                                icon={<RxCross2 />}
-                                additionalStyles='absolute end-2 top-2 bg-white'
-                                title='Close'
-                            />
+                                    {/* Custom margin for correct tooltip alignment with icon in modal (see task modal cross icon) - Tom */}
+                                    <div className='relative flex items-start justify-end -mr-2 -mt-1'>
+                                        {withCrossIcon && (
+                                            <ButtonWithIcon
+                                                action={onClose || close}
+                                                icon={<RxCross2 />}
+                                                additionalStyles='bg-white'
+                                                title='Close'
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            
+                        ) : (
+                            // Custom margin for correct tooltip alignment with icon in modal (see search modal cross icon) - Tom
+                            <div className='flex mr-1.5 -mt-1'>
+                                <ModalTitle text={title} />
+                            
+                                {withCrossIcon && (
+                                    <ButtonWithIcon
+                                        action={onClose || close}
+                                        icon={<RxCross2 />}
+                                        additionalStyles='absolute end-2 top-2 bg-white'
+                                        title='Close'
+                                    />
+                                )}
+                            </div>
                         )}
 
                         {!!title.length && <Line additionalStyles='pb-2' />}
@@ -176,13 +205,14 @@ const Modal = ({
                         )}
 
                         {withSubmitBtn && withCloseBtn && (
-                            <Line additionalStyles='pb-1' />
+                            <Line additionalStyles='pb-0' />
                         )}
                         
                         <div className='flex items-center gap-1 w-full'>
                             {withSubmitBtn && (
                                 <Button
                                     action={onSubmit}
+                                    type={submitBtnType}
                                     additionalStyles={twMerge(`
                                         text-white
                                         bg-blue-400
@@ -191,6 +221,8 @@ const Modal = ({
                                         w-full
                                         ${submitBtnStyles}
                                     `)}
+                                    disabled={submitBtnDisabled}
+                                    disabledStyles='disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-none'
                                 >
                                     {submitBtnText}
                                 </Button>
@@ -208,7 +240,7 @@ const Modal = ({
                                         ${closeBtnStyles}
                                     `)}
                                 >
-                                    <span className='pt-1'>{closeBtnText}</span>
+                                    <span>{closeBtnText}</span>
                                 </Button>
                             )}
                         </div>

@@ -16,6 +16,9 @@ import { ActivityType, TOption } from '@/utils/types';
 import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { getSocket } from '@/utils/socket';
+import { updateTask } from '@/services/projects.api';
+import { setErrorMsg } from '@/store/error/error.slice';
+import { prepend } from '@/utils/utils';
 
 type TaskTopProps = {
   title: string;
@@ -55,52 +58,55 @@ const TaskTop = ({
   }
 
   const handleIsDone = useCallback(async (task: ITask) => {
-    const {taskId} = task;
+    try {
+      const {taskId} = task;
 
-    const updatedTask: ITask = {
-      ...task,
-      isDone: !task.isDone,
-      lastUpdatedBy: user?.userId as string,
+      const updatedTask: ITask = {
+        ...task,
+        isDone: !task.isDone,
+        lastUpdatedBy: user?.userId as string,
+      } satisfies ITask;
+
+      const {data: updated} = await updateTask(updatedTask);
+
+      const updatedTasks: ITask[] = currentStage?.tasks.map(t => {
+        if (t.taskId === taskId) {
+          return updated;
+        } else return t;
+      }) as ITask[];
+
+      const updatedStage: IStage = {
+        ...currentStage as IStage,
+        tasks: updatedTasks
+      } satisfies IStage;
+
+      const updatedStages: IStage[] = currentProject?.stages.map(s => {
+        if (s.stageId === currentStage?.stageId) {
+          return updatedStage
+        } else return s;
+      }) as IStage[];
+
+      const updatedProject: IProject = {
+        ...currentProject as IProject,
+        stages: updatedStages
+      } satisfies IProject;
+
+      dispatch(setCurrentProject(updatedProject));
+      
+      socket?.emit('updateTask', updated);
+      
+      const activityLog = await createNewActivity(
+        ActivityType.UpdateIsDone,
+        user as IUser,
+        currentTask as ITask,
+        currentProject?.projectId as string
+      );
+
+      dispatch(setActivities(prepend(activityLog, activities)));
+    } catch (error) {
+      console.error(error);
+      dispatch(setErrorMsg('Failed updating task'));
     }
-
-    const updatedTasks: ITask[] = currentStage?.tasks.map(t => {
-      if (t.taskId === taskId) {
-        return updatedTask;
-      } else return t;
-    }) as ITask[];
-
-    const updatedStage: IStage = {
-      ...currentStage,
-      tasks: updatedTasks
-    } as IStage;
-
-    const updatedStages: IStage[] = currentProject?.stages.map(s => {
-      if (s.stageId === currentStage?.stageId) {
-        return updatedStage
-      } else return s;
-    }) as IStage[];
-
-    const updatedProject: IProject = {
-      ...currentProject,
-      stages: updatedStages
-    } as IProject;
-
-    
-    dispatch(setCurrentProject(updatedProject));
-    
-    socket?.emit('updateTask', updatedTask);
-    
-    const activityLog = await createNewActivity(
-      ActivityType.UpdateIsDone,
-      user as IUser,
-      currentTask as ITask,
-      currentProject?.projectId as string
-    );
-
-    dispatch(setActivities([
-        ...activities,
-        activityLog
-    ]));
   }, [
       activities,
       dispatch,

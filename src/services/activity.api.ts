@@ -3,10 +3,12 @@ import axios from "axios";
 
 axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL as string;
 
-const getActivityLog = async (projectId: string) => {
+const getActivityLog = async (projectId: string, page: number, limit?: number) => {
     return await axios.get(`/activities`, {
         params: {
-            projectId
+            projectId,
+            page,
+            limit,
         },
         withCredentials: true
     })

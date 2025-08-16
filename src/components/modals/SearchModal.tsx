@@ -1,14 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Modal from './Modal'
 import Input from '../common/Input';
 import { GoSearch } from 'react-icons/go';
 import { twMerge } from 'tailwind-merge';
 import ButtonWithIcon from '../common/ButtonWithIcon';
 import { RxCross2 } from 'react-icons/rx';
-import { ITask } from '@/store/projects/projects.slice';
+import { IStage, ITask, setCurrentTask } from '@/store/projects/projects.slice';
 import TaskPriority from '../TaskPriority';
 import { createSearchRegExp } from '@/utils/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import useModals from '@/hooks/useModals';
+import { useAppDispatch } from '@/hooks/hooks';
+import Button from '../common/Button';
+import { BiFilter } from 'react-icons/bi';
+import FiltersModal from './FiltersModal';
+import { Filter } from '@/utils/types';
+import Filters from '../Filters';
 
 type SearchModalProps = {
     isOpen: boolean;
@@ -25,8 +32,17 @@ const SearchModal = (props: SearchModalProps) => {
 
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [searchResults, setSearchResults] = useState<ITask[]>([]);
+    const {openTaskModal, openFiltersModal, isFiltersModalOpen, closeFiltersModal} = useModals();
+
+    const dispatch = useAppDispatch();
 
     const isDirty: boolean = useMemo(() => !!searchQuery.length, [searchQuery]);
+
+    const openTask = (task: ITask) => {
+        dispatch(setCurrentTask(task));
+        openTaskModal();
+        closeSearchModal();
+    }
 
     const closeSearchModal = () => {
         setIsOpen(false);
@@ -90,6 +106,18 @@ const SearchModal = (props: SearchModalProps) => {
         else setSearchResults([]);
     }, [searchQuery, isDirty, searchTasks])
 
+    const stages = useMemo(() => {
+        const stagesMap = new Map();
+
+        for (const task of searchResults) {
+            if (!stagesMap.has(task.currentStage?.stageId)) {
+                stagesMap.set(task.currentStage?.stageId, task.currentStage);
+            }
+        }
+
+        return Array.from(stagesMap.values());
+    }, [searchResults]);
+
   return (
     <Modal
         isOpen={isOpen}
@@ -100,99 +128,142 @@ const SearchModal = (props: SearchModalProps) => {
         withCloseBtn={false}
         withCrossIcon
     >
-        <Input
-            type="text"
-            id='searchInput'
-            name="stageSearchInput"
-            ref={searchInputRef}
-            searchIcon={<GoSearch />}
-            // onBlur={toggleInputVisibility}
-            additionalStyles={twMerge(`
-                transition-all
-                h-7
-                outline-none
-                border-slate-300
-                text-lg
-                focus:border-slate-300
-                border-l
-                pl-1
-                grow
-            `)}
-            onChange={handleSearchInputChange}
-            value={searchQuery}
-            placeholder='Search tasks...'
-            withIconInsideInput
-            inputIcon={
-                <ButtonWithIcon
-                    withTooltip={false}
-                    icon={<RxCross2 />}
-                    action={() => setSearchQuery("")}
-                    additionalStyles="border-none h-full"
-                />
-            }
-        />
+        <form className='w-full flex flex-col'>
+        {/* <Filters
+            isOpen={isFiltersModalOpen}
+            setIsOpen={closeFiltersModal}
+            setTasks={() => {}}
+            tasks={tasks}
+            stage={stages[0]}
+        /> */}
+            <Button
+                type='button'
+                icon={<BiFilter />}
+                withIcon
+                additionalStyles='px-2 py-0 self-start w-auto mb-2 text-base text-blue-500 border-blue-500'
+                action={openFiltersModal}
+            >
+                Filters
+            </Button>
 
-        <AnimatePresence>
-            {isOpen &&
-                <motion.div
-                    className='flex flex-col w-full'
-                    initial={{
-                        opacity: 0, 
-                    }}
-                    animate={{
-                        opacity: 100,
-                        transition: {
-                            duration: 0.05
-                        }
-                    }}
-                    exit={{
-                        opacity: 0,
-                        transition: {
-                            duration: 0.1
-                        }
-                    }}
-                >
-                    {isDirty
-                        && (
-                            <p className='text-right w-full px-2 py-1'>
-                                {searchResults.length} result{searchResults.length === 1 ? '' : 's'} found
-                            </p>
-                        )
-                    }
-                    <div className='flex flex-col gap-3 py-3 overflow-y-auto p-2 max-h-[20vh]'>
+            <Input
+                type="text"
+                id='searchInput'
+                name="stageSearchInput"
+                ref={searchInputRef}
+                searchIcon={<GoSearch />}
+                // onBlur={toggleInputVisibility}
+                additionalStyles={twMerge(`
+                    transition-all
+                    h-7
+                    outline-none
+                    border-slate-300
+                    text-lg
+                    focus:border-slate-300
+                    border-l
+                    pl-1
+                    grow
+                `)}
+                onChange={handleSearchInputChange}
+                value={searchQuery}
+                placeholder='Search tasks...'
+                withIconInsideInput
+                inputIcon={
+                    <ButtonWithIcon
+                        withTooltip={false}
+                        icon={<RxCross2 />}
+                        action={() => setSearchQuery("")}
+                        additionalStyles="border-none h-full"
+                    />
+                }
+            />
+
+            <AnimatePresence>
+                {isOpen &&
+                    <motion.div
+                        className='flex flex-col w-full'
+                        initial={{
+                            opacity: 0, 
+                        }}
+                        animate={{
+                            opacity: 100,
+                            transition: {
+                                duration: 0.05
+                            }
+                        }}
+                        exit={{
+                            opacity: 0,
+                            transition: {
+                                duration: 0.1
+                            }
+                        }}
+                    >
                         {isDirty
-                            ?   searchResults.map(
-                                    (task: ITask, idx) =>
-                                        <div
-                                            key={idx}
-                                            onClick={closeSearchModal}
-                                            className={twMerge(`
-                                                w-full
-                                                p-1
-                                                flex
-                                                justify-between
-                                                border
-                                                rounded-bl-lg
-                                                cursor-pointer
-                                                ${task.isDone
-                                                    ? 'bg-green-200 border-green-500'
-                                                    : 'border-blue-500 bg-slate-100'
-                                                }
-                                            `)}
-                                        >
-                                            <p className='text-xl text-stone-800'>
-                                                {colorMatchedLetters(task.title, searchQuery)}
-                                            </p>
-                                            
-                                            <TaskPriority priority={task.priority} />
-                                        </div>
-                                )
-                            :   <p className='text-stone-800 text-lg'>No tasks found</p>
+                            && (
+                                <p className='text-right w-full px-2 py-1'>
+                                    {searchResults.length} result{searchResults.length === 1 ? '' : 's'} found
+                                </p>
+                            )
                         }
-                    </div>
-                </motion.div>
-            }
-        </AnimatePresence>
+                        <div className='flex flex-col gap-3 py-3 overflow-y-auto p-2 max-h-[33vh]'>
+                            {isDirty
+                                ? (
+                                    <>
+                                        {stages.map((s: Pick<IStage, "title" | "stageId">) => {
+                                            return (
+                                                <Fragment key={s.stageId}>
+                                                    <p className='w-full flex justify-between'>
+                                                        <span>Stage title</span>
+                                                        <span>Results</span>
+                                                    </p>
+                                                    <p className='px-2 bg-slate-200 text-xl font-semibold flex justify-between w-full items-center'>
+                                                        <span>
+                                                            {s.title}
+                                                        </span>
+                                                        <span className='px-3'>
+                                                            {searchResults.filter(res => res.currentStage?.stageId === s.stageId).length}
+                                                        </span>
+                                                    </p>
+                
+                                                    {searchResults
+                                                        .filter(res => res.currentStage?.stageId === s.stageId)
+                                                        .map((task: ITask, idx) =>
+                                                            <div
+                                                                key={idx}
+                                                                onClick={() => openTask(task)}
+                                                                className={twMerge(`
+                                                                    w-full
+                                                                    p-1
+                                                                    flex
+                                                                    justify-between
+                                                                    border
+                                                                    rounded-bl-lg
+                                                                    cursor-pointer
+                                                                    ${task.isDone
+                                                                        ? 'bg-green-200 border-green-500'
+                                                                        : 'border-blue-500 bg-slate-100'
+                                                                    }
+                                                                `)}
+                                                            >
+                                                                <p className='text-xl text-stone-800'>
+                                                                    {colorMatchedLetters(task.title, searchQuery)}
+                                                                </p>
+                                                                
+                                                                <TaskPriority priority={task.priority} />
+                                                            </div>
+                                                        )
+                                                    }
+                                                </Fragment>
+                                            )
+                                        })}
+                                    </>
+                                ) : <p className='text-stone-800 text-lg'>No tasks found</p>
+                            }
+                        </div>
+                    </motion.div>
+                }
+            </AnimatePresence>
+        </form>
     </Modal>
   )
 }

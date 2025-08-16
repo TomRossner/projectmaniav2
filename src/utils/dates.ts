@@ -1,6 +1,7 @@
 import { DateTime } from "luxon";
 
 const getHowLongAgo = (date: Date): string => {
+    if (!date) return '';
     const howLongAgo = DateTime
         .fromISO(date.toString())
         .toRelative();

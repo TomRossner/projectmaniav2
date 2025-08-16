@@ -10,7 +10,6 @@ import React, { Fragment, useCallback, useEffect, useState } from 'react';
 import Container from './common/Container';
 import Button from './common/Button';
 import Header from './common/Header';
-import Image from 'next/image';
 import MostRecentProjectSkeleton from './skeletons/MostRecentProjectSkeleton';
 import { BsCircleFill } from 'react-icons/bs';
 import { getStagesCount, getTotalTasks, setProjectLink } from '@/utils/utils';
@@ -19,7 +18,7 @@ import { APP_VERSION, TEAM_MEMBERS_COUNT } from '@/utils/constants';
 import { getUserById } from '@/services/user.api';
 import { INotification } from '@/utils/interfaces';
 import { setNotifications } from '@/store/notifications/notifications.slice';
-import { IUser, setUser, updateUserAsync } from '@/store/auth/auth.slice';
+import { IUser, setUser, updateUserAsync, User } from '@/store/auth/auth.slice';
 import { getUserNotifications } from '@/services/notifications.api';
 import useNotifications from '@/hooks/useNotifications';
 import LoadingModal from './modals/LoadingModal';
@@ -28,10 +27,11 @@ import { openModal } from '@/store/modals/modals.slice';
 import { fetchSession } from '@/services/auth.api';
 import Loading from './common/Loading';
 import { closeSocket, getSocket, initializeSocket } from '@/utils/socket';
+import ImageWithFallback from './common/ImageWithFallback';
 
 const Home = () => {
   const {isAuthenticated, user, getUserInitials, getUserName, userId} = useAuth();
-  const {projects, getUserProjects, getMostRecentProject, isFetching} = useProjects();
+  const {projects, getPaginatedProjects, getMostRecentProject, isFetching} = useProjects();
   const {notifications, getUpdatedNotificationsIds} = useNotifications();
   const isJoiningProject = useAppSelector(selectIsJoiningProject);
   const isLeavingProject = useAppSelector(selectIsLeavingProject);
@@ -64,7 +64,7 @@ const Home = () => {
           .catch(err => console.error(err));
       }
       
-      getUserProjects(userId);
+      getPaginatedProjects(userId);
       getUserNotifications(userId)
         .then((res: { data: INotification[] }) => dispatch(setNotifications(res.data)))
         .catch(err => console.error(err));
@@ -143,7 +143,7 @@ const handleNotification = useCallback((newNotification: INotification) => {
       closeSocket();
     }
 
-    fetchSession().then(res => dispatch(setUser(res ?? null)));
+    fetchSession().then(res => dispatch(setUser(res.data ?? null)));
   }, [dispatch, userId])
 
   return (
@@ -193,7 +193,7 @@ const handleNotification = useCallback((newNotification: INotification) => {
                         <h4 className='text-2xl font-medium text-blue-500'>{mostRecentProject?.title}</h4>
                         <div className='grow' />
 
-                        <p className='text-md text-blue-400 px-1 pt-1 flex items-center gap-2'>
+                        <p className='text-md text-blue-400 px-1 flex items-center gap-2'>
                           {getStagesCount(mostRecentProject!.stages)}
                           <BsCircleFill className='w-1 pb-1' />
                           {getTotalTasks(mostRecentProject!.stages)}
@@ -210,9 +210,9 @@ const handleNotification = useCallback((newNotification: INotification) => {
                                         translate: -(idx * 10)
                                       }}
                                     >
-                                      <Image
+                                      <ImageWithFallback
                                         src={u.imgSrc}
-                                        alt={u.firstName}
+                                        alt={''}
                                         width={28}
                                         height={28}
                                         className={twMerge(`
@@ -233,7 +233,6 @@ const handleNotification = useCallback((newNotification: INotification) => {
                                         inline-flex
                                         items-center
                                         justify-center
-                                        pt-1
                                         rounded-full
                                         w-8
                                         h-8
@@ -286,7 +285,7 @@ const handleNotification = useCallback((newNotification: INotification) => {
                       <Link
                         href={setProjectLink(p.projectId)}
                         onClick={() => dispatch(setCurrentProject(p))}
-                        className='text-blue-400 w-full cursor-pointer sm:hover:text-blue-500 active:text-blue-500 pt-1 font-light'
+                        className='text-blue-400 w-full cursor-pointer sm:hover:text-blue-500 active:text-blue-500 font-light'
                       >
                         {p.title}
                       </Link>

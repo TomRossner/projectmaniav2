@@ -8,11 +8,11 @@ import { ExternalLink, TagName } from '@/utils/types';
 import Tag from '../Tag';
 import TaskPriority from '../TaskPriority';
 import TaskTop from '../TaskTop';
-import Image from 'next/image';
 import { twMerge } from 'tailwind-merge';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { createPortal } from 'react-dom';
+import ImageWithFallback from '../common/ImageWithFallback';
 
 type TaskDragOverlayProps = {
     task: ITask;
@@ -86,11 +86,11 @@ const TaskDragOverlay = (props: TaskDragOverlayProps) => {
     >
         {thumbnailSrc && (
             <div className='w-full h-32 flex items-start overflow-clip rounded-bl-lg border border-stone-200'>
-                <Image
+                <ImageWithFallback
                     src={thumbnailSrc}
                     width={100}
                     height={60}
-                    alt='Thumbnail'
+                    alt=''
                     className='opacity-95 aspect-auto w-full h-auto'
                 />
             </div>

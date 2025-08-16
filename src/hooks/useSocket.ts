@@ -20,6 +20,7 @@ type ServerToClientEvents = {
     newProject: (data: IProject) => void;
     deleteProject: (data: IProject) => void;
     updateProject: (data: IProject) => void;
+    projectUpdated: (data: {projectId: string}) => void;
 };
 
 type ClientToServerEvents = {
@@ -58,7 +59,8 @@ type SocketEvent =
     | "updateProject"
     | "friendRequest"
     | "updateSocketId"
-    | "connection";
+    | "connection"
+    // | "projectUpdated"
 
 const useSocket = (id: string) => {
     const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);

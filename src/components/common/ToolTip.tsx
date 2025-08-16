@@ -1,5 +1,5 @@
 import useWindowDimensions from '@/hooks/useWindowDimensions';
-import { SCREENS } from '@/utils/constants';
+import { SCREEN_SIZES } from '@/utils/constants';
 import { Tooltip, TooltipProps } from '@greguintow/react-tippy';
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
@@ -26,7 +26,7 @@ const ToolTip = ({
       position={position}
       inertia={inertia}
       animation={animation}
-      disabled={(!!width && (width < SCREENS["md"])) || disabled}
+      disabled={(!!width && (width < SCREEN_SIZES["md"])) || disabled}
       title={title}
       className={twMerge(
           className,

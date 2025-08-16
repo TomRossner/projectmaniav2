@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Teko } from 'next/font/google';
+import { Lato, Oswald, Outfit, Poppins, Roboto_Condensed, Teko, Ubuntu, Ubuntu_Condensed,  } from 'next/font/google';
 import './globals.css';
 import { APP_VERSION } from '@/utils/constants';
 import StoreProvider from './StoreProvider';
@@ -11,6 +11,12 @@ import NewProjectModal from '@/components/modals/NewProjectModal';
 import '@greguintow/react-tippy/dist/tippy.css';
 
 const teko = Teko({ subsets: ['latin'] })
+const poppins = Poppins({weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'], subsets: ['latin']})
+const lato = Lato({weight: ['100', '300', '400', '700', '900'], subsets: ['latin']})
+const oswald = Oswald({weight: ['200', '300', '400', '700'], subsets: ['latin']})
+const ubuntu = Ubuntu({weight: ['300', '400', '500', '700', '400'], subsets: ['latin']})
+const ubuntuCondensed = Ubuntu_Condensed({weight: ['400'], subsets: ['latin']})
+const outfit = Outfit({weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'], subsets: ['latin']})
 
 export const metadata: Metadata = {
   title: `Project Mania v${APP_VERSION} - by Tom Rossner`,
@@ -24,7 +30,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${teko.className}`}>
+      <body className={`${outfit.className}`}>
         <StoreProvider>
           <ErrorModal />
           <NewProjectModal />

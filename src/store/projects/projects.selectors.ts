@@ -25,3 +25,7 @@ export const selectFilters = (state: RootState): Filter[] => state.projects.filt
 export const selectIsJoiningProject = (state: RootState): boolean => state.projects.isJoiningProject;
 
 export const selectIsLeavingProject = (state: RootState): boolean => state.projects.isLeavingProject;
+
+export const selectPage = (state: RootState): number => state.projects.page;
+
+export const selectTotalPages = (state: RootState): number | null => state.projects.totalPages;

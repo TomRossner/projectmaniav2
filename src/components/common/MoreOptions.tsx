@@ -43,9 +43,11 @@ const MoreOptions = (props: MoreOptionsProps) => {
         {isOpen && (
             <ClickAwayListener onClickAway={() => setIsOpen(false)}>
                 <motion.ul
+                    onClick={(ev) => ev.stopPropagation()}
                     ref={moreOptionsRef as RefObject<HTMLUListElement>}
                     className={twMerge(`
-                        w-[100px]
+                        min-w-[100px]
+                        max-w-[120px]
                         z-50
                         absolute
                         right-3

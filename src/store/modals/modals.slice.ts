@@ -24,6 +24,10 @@ interface ModalsState {
     newProject: boolean;
     newStage: boolean;
     newTask: boolean;
+
+    task: boolean;
+
+    filters: boolean;
 }
 
 const initialState: ModalsState = {
@@ -50,6 +54,10 @@ const initialState: ModalsState = {
     newProject: false,
     newStage: false,
     newTask: false,
+
+    task: false,
+
+    filters: false
 }
 
 export const modalsSlice = createSlice({

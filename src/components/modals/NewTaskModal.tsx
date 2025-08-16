@@ -1,15 +1,14 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_EXTERNAL_LINK, DEFAULT_PRIORITY, DEFAULT_TASK_VALUES, TAGS, MAX_EXTERNAL_LINKS, PRIORITIES, MAX_SUBTASKS } from '@/utils/constants';
 import { IProject, IStage, ITask, TeamMember, setCurrentProject } from '@/store/projects/projects.slice';
-import { capitalizeFirstLetter, convertToISODate, createNewSubtask, createSearchRegExp, getInvalidLinks, getUniqueLinks, renameLinks, validateUrls } from '@/utils/utils';
+import { capitalizeFirstLetter, convertToISODate, createFileName, createNewSubtask, createSearchRegExp, getImageContentType, getInvalidLinks, getUniqueLinks, prepend, renameLinks, validateUrls } from '@/utils/utils';
 import useProjects from '@/hooks/useProjects';
 import { NewTaskData } from '@/utils/interfaces';
 import { createTask } from '@/services/projects.api';
-import Image from 'next/image';
 import { BiPlus, BiTrash } from 'react-icons/bi';
 import ButtonWithIcon from '../common/ButtonWithIcon';
 import { ExternalLink, Tag, TagName, Priority, SubTask, ActivityType } from '@/utils/types';
@@ -32,6 +31,8 @@ import useError from '@/hooks/useError';
 import useActivityLog from '@/hooks/useActivityLog';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
 import { getSocket } from '@/utils/socket';
+import { uploadImageToS3 } from '@/services/images.api';
+import ImageWithFallback from '../common/ImageWithFallback';
 
 const NewTaskModal = () => {
     const {isNewTaskModalOpen, closeNewTaskModal} = useModals();
@@ -71,90 +72,98 @@ const NewTaskModal = () => {
     const [tasksSearchResults, setTasksSearchResults] = useState<ITask[]>([]);
     const isTasksSearchInputDirty = useMemo(() => !!tasksSearchQuery.length, [tasksSearchQuery]);
 
-    const handleCreate = useCallback(async (newTaskData: NewTaskData): Promise<void> => {
+    const [isUploading, setIsUploading] = useState<boolean>(false);
+
+    const handleCreate = useCallback(async (ev: FormEvent<HTMLFormElement>, newTaskData: NewTaskData) => {
+        ev.preventDefault();
+
         if (!currentStage) {
             dispatch(setErrorMsg('Failed creating task'));
             return;
         }
 
-        const links: ExternalLink[] = renameLinks(getUniqueLinks(inputValues.externalLinks as ExternalLink[]));
-
-        const linksValid: boolean = validateUrls(links);
-
-        if (!!links[0]?.url && !linksValid) {
-            const invalidLinks: ExternalLink[] = getInvalidLinks(links);
+        try {
+            const links: ExternalLink[] = renameLinks(getUniqueLinks(inputValues.externalLinks as ExternalLink[]));
+    
+            const linksValid: boolean = validateUrls(links);
+    
+            if (!!links[0]?.url && !linksValid) {
+                const invalidLinks: ExternalLink[] = getInvalidLinks(links);
+                
+                dispatch(setErrorMsg(`${invalidLinks.map((l: ExternalLink) => l.name)
+                    .join(", ")} ${invalidLinks.length > 1
+                        ? 'are not valid links'
+                        : 'is not a valid link'
+                    }`
+                ));
+    
+                return;
+            }
+    
+            const date = new Date(inputValues.dueDate).toJSON();
+    
+            const newTask: NewTaskData = {
+                ...newTaskData,
+                dueDate: date,
+                currentStage: {
+                    stageId: currentStage?.stageId,
+                    title: currentStage?.title
+                },
+                createdBy: user?.userId as string,
+                projectId: currentProject?.projectId as string,
+                lastUpdatedBy: user?.userId as string,
+            }
+    
+            const {data: task} = await createTask(newTask);
+    
+            socket?.emit('newTask', task);
+    
+            const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
+                if (currentStage.stageId === stage.stageId) {
+                    return {
+                        ...currentStage,
+                        tasks: [...currentStage.tasks, task]
+                    }
+                } else return stage;
+            }) as IStage[];
+    
+            const updatedCurrentProject: IProject = {
+                ...currentProject,
+                stages: updatedStages,
+            } as IProject;
+    
             
-            dispatch(setErrorMsg(`${invalidLinks.map((l: ExternalLink) => l.name)
-                .join(", ")} ${invalidLinks.length > 1
-                    ? 'are not valid links'
-                    : 'is not a valid link'
-                }`
-            ));
-
-            return;
+            dispatch(setCurrentProject(updatedCurrentProject));
+    
+            /*
+            -> Update currentProject ✅
+            -> currentProject changed ✅
+            -> update stages to be currentProject's stages ✅
+            -> stages change ✅
+            -> update currentStage to be stage that has the same id ✅
+            -> currentStage change ✅
+            -> update tasks to be currentStage's tasks ✅
+            -> tasks updated, should render in UI
+            
+            */
+    
+            resetInputs();
+            closeNewTaskModal();
+            
+            const activityLog = await createNewActivity(
+                ActivityType.AddTask,
+                user as IUser,
+                currentStage as IStage,
+                currentProject?.projectId as string
+            );
+            console.log(activityLog)
+    
+            dispatch(setActivities(prepend(activityLog, activities)));
+        } catch (error) {
+            console.error(error);
+            dispatch(setErrorMsg("Failed creating task"));
         }
 
-        const date = new Date(inputValues.dueDate).toJSON();
-
-        const newTask: NewTaskData = {
-            ...newTaskData,
-            dueDate: date,
-            currentStage: {
-                stageId: currentStage?.stageId,
-                title: currentStage?.title
-            },
-            createdBy: user?.userId as string,
-            projectId: currentProject?.projectId as string,
-            lastUpdatedBy: user?.userId as string,
-        }
-
-        const {data: task} = await createTask(newTask);
-
-        socket?.emit('newTask', task);
-
-        const updatedStages: IStage[] = currentProject?.stages.map((stage: IStage) => {
-            if (currentStage.stageId === stage.stageId) {
-                return {
-                    ...currentStage,
-                    tasks: [...currentStage.tasks, task]
-                }
-            } else return stage;
-        }) as IStage[];
-
-        const updatedCurrentProject: IProject = {
-            ...currentProject,
-            stages: updatedStages,
-        } as IProject;
-
-        
-        dispatch(setCurrentProject(updatedCurrentProject));
-
-        /*
-        -> Update currentProject ✅
-        -> currentProject changed ✅
-        -> update stages to be currentProject's stages ✅
-        -> stages change ✅
-        -> update currentStage to be stage that has the same id ✅
-        -> currentStage change ✅
-        -> update tasks to be currentStage's tasks ✅
-        -> tasks updated, should render in UI
-        
-        */
-
-        resetInputs();
-        closeNewTaskModal();
-        
-        const activityLog = await createNewActivity(
-            ActivityType.AddTask,
-            user as IUser,
-            currentStage as IStage,
-            currentProject?.projectId as string
-        );
-
-        dispatch(setActivities([
-            ...activities,
-            activityLog
-        ]));
     }, [
         activities,
         currentProject,
@@ -172,6 +181,7 @@ const NewTaskModal = () => {
         setSelectedPriority(DEFAULT_PRIORITY);
         setInputValues(DEFAULT_TASK_VALUES);
         setSelectedTags([]);
+        setSubtasks([]);
     }
 
     const handleInputChange = (ev: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void => {
@@ -215,13 +225,44 @@ const NewTaskModal = () => {
         handleUpload(e.target.files[0]);
     }
 
-    const handleUpload = (file: Blob): void => {
+    const handleUpload = (file: Blob) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
 
         reader.onload = async () => {
-          const base64EncodedFile = reader.result as string;
-          setInputValues({...inputValues, thumbnailSrc: base64EncodedFile} as NewTaskData);
+            const base64EncodedFile = reader.result as string;
+
+            // Add loading state
+
+            // setInputValues(inputValues => ({
+            //     ...inputValues,
+            //     thumbnailSrc: base64EncodedFile
+            // }) as ITask);
+
+            const contentType = getImageContentType(base64EncodedFile);
+            console.log(contentType)
+            const fileName = createFileName(null, 'task');
+
+            if (!contentType || !fileName) {
+                throw new Error('Failed uploading image');
+            }
+
+            try {
+                setIsUploading(true);
+
+                const response = await uploadImageToS3(base64EncodedFile, fileName, contentType);
+
+                setInputValues(inputValues => ({
+                    ...inputValues,
+                    thumbnailSrc: response.data
+                }) as ITask);
+            } catch (error) {
+                console.error(error);
+                dispatch(setErrorMsg("Failed uploading image. Make sure the image's size does not exceed 2Mb"));
+                return;
+            } finally {
+                setIsUploading(false);
+            }
         }
     }
 
@@ -272,7 +313,8 @@ const NewTaskModal = () => {
                 ...externalLinks,
                 {
                     name: `Link #${externalLinks.length + 1}`,
-                    url: ""
+                    url: "",
+                    externalLinkId: ""
                 }
             ]
         );
@@ -313,6 +355,7 @@ const NewTaskModal = () => {
     }
 
     const handleRemoveAssignee = (assigneeId: string) => {
+        console.log(assigneeId)
         setSelectedAssignees([
             ...selectedAssignees.filter(a => a.userId !== assigneeId)
         ]);
@@ -464,6 +507,7 @@ const NewTaskModal = () => {
             ...inputValues,
             assignees: assigneesIds as string[]
         }) as ITask);
+        console.log(assigneesIds)
     }, [assigneesIds])
 
     // Add links to inputValues
@@ -509,13 +553,15 @@ const NewTaskModal = () => {
   return (
     <Modal
         title='Create a task'
-        onSubmit={() => handleCreate(inputValues)}
+        onSubmit={(ev: FormEvent<HTMLFormElement>) => handleCreate(ev, inputValues)}
+        submitBtnType='submit'
         onClose={closeNewTaskModal}
         optionalNote={`This task will be added to ${currentProject?.title} in ${currentStage?.title}`}
         submitBtnText='Create'
+        submitBtnDisabled={isUploading}
         isOpen={isNewTaskModalOpen}
     >
-        <div className='flex flex-col w-full overflow-y-auto'>
+        <form onSubmit={(ev) => handleCreate(ev, inputValues)} className='flex flex-col w-full overflow-y-auto'>
             <Input
                 id='title'
                 type='text'
@@ -564,7 +610,6 @@ const NewTaskModal = () => {
                                         shadow-sm
                                         text-center
                                         self-stretch
-                                        pt-1
                                         cursor-default
                                         select-none
                                         text-base
@@ -688,7 +733,7 @@ const NewTaskModal = () => {
                     `}
                     action={handleAddSubtask}
                 >
-                    <span className='pt-1'>Add subtask</span>
+                    <span className='text-base'>Add subtask</span>
                     <span className='text-sm'><BiPlus /></span>
                 </Button>
             </div>
@@ -755,6 +800,8 @@ const NewTaskModal = () => {
                                 <AssigneeCard
                                     assignee={assignee}
                                     key={assignee.userId}
+                                    isSelectable
+                                    isSelected={assigneesIds.some(id => id === assignee.userId)}
                                     onRemove={() => handleRemoveAssignee(assignee.userId)}
                                 />
                             )
@@ -932,7 +979,7 @@ const NewTaskModal = () => {
                     `}
                     action={handleAddLink}
                 >
-                    <span className='pt-1'>Add link</span>
+                    <span className='text-base'>Add link</span>
                     <span className='text-sm'><BiPlus /></span>
                 </Button>
             </div>
@@ -1010,7 +1057,7 @@ const NewTaskModal = () => {
                                 type='button'
                                 onClick={handleRemoveThumbnail}
                                 className={`
-                                    text-xl
+                                    text-base
                                     cursor-pointer
                                     text-blue-400
                                     sm:hover:text-blue-500
@@ -1026,20 +1073,19 @@ const NewTaskModal = () => {
                                 name='thumbnailSrc'
                                 onChange={handleUploadChange}
                                 additionalStyles='hidden'
-                                labelAdditionalStyles='cursor-pointer text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
+                                labelAdditionalStyles='text-base cursor-pointer text-blue-400 sm:hover:text-blue-500 active:text-blue-500'
                             />
                 }
             </div>
 
             {inputValues.thumbnailSrc && (
-                <Image
+                <ImageWithFallback
                     src={inputValues.thumbnailSrc}
-                    width={100} height={60}
-                    alt='Thumbnail'
+                    alt=''
                     className='w-full border border-black rounded-bl-lg'
                 />
             )}
-        </div>
+        </form>
     </Modal>
   )
 }

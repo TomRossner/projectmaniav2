@@ -10,16 +10,10 @@ const login = async (credentials: LoginCredentials) =>
     await axios.post('/sessions', credentials, {withCredentials: true});
 
 const googleSignIn = async () =>
-    await axios.post(`/auth/login/google`, {withCredentials: true});
+    await axios.get(`/auth/login/google`, {withCredentials: true});
 
 const fetchSession = async () => {
-    try {
-        const {data} = await axios.get('/users/me', {withCredentials: true});
-        return data;
-    } catch (error) {
-        console.error(error);
-        return null;
-    }
+    return await axios.get('/users/me', {withCredentials: true});
 }
 
 const deleteSession = async () => {

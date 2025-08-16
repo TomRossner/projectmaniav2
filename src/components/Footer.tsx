@@ -29,7 +29,7 @@ const Footer = () => {
     >
         <Link
           href={LINKS.HOME}
-          className='font-semibold text-blue-500 pt-1 grow'
+          className='font-semibold text-blue-500 grow'
         >
           Project Mania v{APP_VERSION_FULL}
         </Link>
@@ -39,12 +39,11 @@ const Footer = () => {
           href={SocialLinks.Portfolio}
           target='_blank'
           rel='noreferrer noopener'
-          className='pt-1'
         >
           Tom Rossner&copy; {YEAR}
         </Link>
 
-        <span className='pt-1 text-slate-300'>|</span>
+        <span className='text-slate-300'>|</span>
         
         <div className='flex items-center gap-3'>
           <Link
@@ -54,7 +53,7 @@ const Footer = () => {
             className='flex items-center gap-1'
           >
             <BsGithub />
-            <span className='hidden sm:flex pt-1'>GitHub</span>
+            <span className='hidden sm:flex'>GitHub</span>
           </Link>
 
           <Link
@@ -64,7 +63,7 @@ const Footer = () => {
             className='flex items-center gap-1'
           >
             <BsLinkedin className='text-blue-600'/>
-            <span className='hidden sm:flex pt-1'>LinkedIn</span>
+            <span className='hidden sm:flex'>LinkedIn</span>
           </Link>
 
           <Link
@@ -74,7 +73,7 @@ const Footer = () => {
             className='flex items-center gap-1'
           >
             <TbWorldWww className='text-stone-800 text-lg'/>
-            <span className='hidden sm:flex pt-1'>Website</span>
+            <span className='hidden sm:flex'>Website</span>
           </Link>
         </div>
 

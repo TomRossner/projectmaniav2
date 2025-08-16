@@ -1,7 +1,7 @@
 'use client'
 
 import { useAppDispatch } from '@/hooks/hooks';
-import React, { useCallback, useState } from 'react';
+import React, { ChangeEvent, FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Input from '../common/Input';
 import { DEFAULT_PROJECT } from '@/utils/constants';
 import { NewProjectData, IProject, TeamMember, setProjects } from '@/store/projects/projects.slice';
@@ -16,6 +16,7 @@ import useActivityLog from '@/hooks/useActivityLog';
 import { ActivityType } from '@/utils/types';
 import { IUser } from '@/store/auth/auth.slice';
 import { setActivities } from '@/store/activity_log/activity_log.slice';
+import { prepend } from '@/utils/utils';
 
 const NewProjectModal = () => {
     const dispatch = useAppDispatch();
@@ -24,6 +25,8 @@ const NewProjectModal = () => {
     const {user} = useAuth();
     const {createNewActivity, activities} = useActivityLog();
 
+    const titleInputRef = useRef<HTMLInputElement | null>(null);
+
     const [inputValues, setInputValues] = useState<NewProjectData>(DEFAULT_PROJECT);
 
     const handleClose = useCallback(() => {
@@ -31,8 +34,10 @@ const NewProjectModal = () => {
         setInputValues(DEFAULT_PROJECT);
     }, [closeNewProjectModal])
 
-    const handleCreate = useCallback(async (newProjectData: NewProjectData) => {
+    const handleCreate = useCallback(async (ev: FormEvent<HTMLFormElement>, newProjectData: NewProjectData) => {
         try {
+            ev.preventDefault();
+
             dispatch(setErrorMsg(null));
     
             const self: TeamMember = {
@@ -78,10 +83,7 @@ const NewProjectModal = () => {
                 response.data.projectId as string
             );
 
-            dispatch(setActivities([
-                ...activities,
-                activityLog
-            ]));
+            dispatch(setActivities(prepend(activityLog, activities)));
         } catch (error: unknown) {
             handleError(error as AxiosError<unknown>);
         }
@@ -99,17 +101,24 @@ const NewProjectModal = () => {
         const {name, value} = ev.target;
         setInputValues(inputValues => ({...inputValues, [name]: value}));
     }
+
+    useEffect(() => {
+        if (isNewProjectModalOpen) {
+            titleInputRef.current?.focus();
+        }
+    }, [isNewProjectModalOpen])
     
   return (
     <Modal
         title='Create a project'
-        onSubmit={() => handleCreate(inputValues)}
+        onSubmit={(ev: FormEvent<HTMLFormElement>) => handleCreate(ev, inputValues)}
         onClose={handleClose}
         submitBtnText='Create'
+        submitBtnType='submit'
         optionalNote="This will create a brand new project"
         isOpen={isNewProjectModalOpen}
     >
-        <div className='flex flex-col h-full w-full'>
+        <form className='flex flex-col w-full' onSubmit={(ev) => handleCreate(ev, inputValues)}>
             <Input
                 id='title'
                 type='text'
@@ -118,8 +127,9 @@ const NewProjectModal = () => {
                 value={inputValues.title}
                 labelText='Title'
                 additionalStyles='mb-4'
+                ref={titleInputRef}
             />
-        </div>
+        </form>
     </Modal>
   )
 }

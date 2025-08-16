@@ -10,11 +10,13 @@ import {
   selectIsEditStageModalOpen,
   selectIsEditTaskModalOpen,
   selectIsErrorModalOpen,
+  selectIsFiltersModalOpen,
   selectIsImageModalOpen,
   selectIsInvitationModalOpen,
   selectIsNewProjectModalOpen,
   selectIsNewStageModalOpen,
-  selectIsNewTaskModalOpen
+  selectIsNewTaskModalOpen,
+  selectIsTaskModalOpen
 } from "@/store/modals/modals.selectors";
 
 const useModals = () => {
@@ -40,6 +42,10 @@ const useModals = () => {
     const isNewStageModalOpen = useAppSelector(selectIsNewStageModalOpen);
     const isNewTaskModalOpen = useAppSelector(selectIsNewTaskModalOpen);
 
+    const isTaskModalOpen = useAppSelector(selectIsTaskModalOpen);
+
+    const isFiltersModalOpen = useAppSelector(selectIsFiltersModalOpen);
+
     const dispatch = useAppDispatch();
 
     // Open
@@ -64,6 +70,10 @@ const useModals = () => {
     const openNewStageModal = () => dispatch(openModal('newStage'));
     const openNewTaskModal = () => dispatch(openModal('newTask'));
 
+    const openTaskModal = () => dispatch(openModal('task'));
+    
+    const openFiltersModal = () => dispatch(openModal('filters'));
+
     // Close
     
     const closeBackLayer = () => dispatch(closeModal('backLayer'));
@@ -86,6 +96,10 @@ const useModals = () => {
     const closeNewStageModal = () => dispatch(closeModal('newStage'));
     const closeNewTaskModal = () => dispatch(closeModal('newTask'));
 
+    const closeTaskModal = () => dispatch(closeModal('task'));
+
+    const closeFiltersModal = () => dispatch(closeModal('filters'));
+
   return {
     isBackLayerOpen,
     isErrorModalOpen,
@@ -104,6 +118,10 @@ const useModals = () => {
     isNewProjectModalOpen,
     isNewStageModalOpen,
     isNewTaskModalOpen,
+
+    isTaskModalOpen,
+
+    isFiltersModalOpen,
 
     // Open modals
     openBackLayer,
@@ -126,6 +144,10 @@ const useModals = () => {
     openNewStageModal,
     openNewTaskModal,
 
+    openTaskModal,
+
+    openFiltersModal,
+
     // Close modals
     closeBackLayer,
 
@@ -146,6 +168,10 @@ const useModals = () => {
     closeNewProjectModal,
     closeNewStageModal,
     closeNewTaskModal,
+
+    closeTaskModal,
+
+    closeFiltersModal,
   }
 }
 

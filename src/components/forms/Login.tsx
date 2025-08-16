@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { LINKS } from '@/utils/links';
 import Line from '../common/Line';
 import { BsGithub } from 'react-icons/bs';
+import axios from 'axios';
 
 const logInSchema = z.object({
     email: z.string().email(),
@@ -25,7 +26,7 @@ const logInSchema = z.object({
 type TLogInSchema = z.infer<typeof logInSchema>;
 
 type LoginProps = {
-    toggleIsNotRegistered: () => void;
+    toggleIsNotRegistered?: () => void;
 }
 
 const Login = ({toggleIsNotRegistered}: LoginProps) => {
@@ -52,7 +53,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                 .catch(
                     (error: {message: string}) => {
                         console.log(error);
-                        dispatch(setAuthError(error.message));
+                        dispatch(setAuthError("Invalid email or password. Please try again"));
                     }
                 );
 
@@ -89,7 +90,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                     type="email"
                     placeholder='Email'
                     autoComplete='username'
-                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                    className='col-span-2 px-2 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
                 />
 
                 <input
@@ -97,7 +98,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                     type="password"
                     placeholder='Password'
                     autoComplete='current-password'
-                    className='col-span-2 px-2 pt-1 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
+                    className='col-span-2 px-2 outline-none border border-transparent focus:border-blue-500 rounded-bl-lg mb-2 last:mb-0'
                 />
             </div>
 
@@ -115,8 +116,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                 type='submit'
                 className={`
                     px-4
-                    pb-2
-                    pt-3
+                    py-2
                     rounded-bl-lg
                     disabled:bg-blue-300
                     disabled:cursor-not-allowed
@@ -154,7 +154,6 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                 <Button
                     disabled={isSubmitting}
                     type='submit'
-                    // action={handleGoogleSignIn}
                     additionalStyles={`
                         flex
                         w-full
@@ -174,7 +173,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                     `}
                 >
                     <GoogleLogo width='w-5' />
-                    <span className='pt-1'>Continue with Google</span>
+                    <span>Continue with Google</span>
                 </Button>
             </form>
             <form action="http://localhost:3001/api/auth/login/github" method="get">
@@ -201,7 +200,7 @@ const Login = ({toggleIsNotRegistered}: LoginProps) => {
                     `}
                 >
                     <BsGithub />
-                    <span className='pt-1'>Continue with GitHub</span>
+                    <span>Continue with GitHub</span>
                 </Button>
             </form>
         </div>

@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ButtonWithIcon from './common/ButtonWithIcon';
 import { BiPlus } from 'react-icons/bi';
 import StageTitle from './StageTitle';
-import { IStage, ITask } from '@/store/projects/projects.slice';
+import { IStage, ITask, setCurrentStage } from '@/store/projects/projects.slice';
 import TaskPriority from './TaskPriority';
 import { twMerge } from 'tailwind-merge';
 import { BsThreeDots } from 'react-icons/bs';
@@ -20,6 +20,7 @@ import useFilters from '@/hooks/useFilters';
 import SortBy from './SortBy';
 import { BsSortDown } from "react-icons/bs";
 import useModals from '@/hooks/useModals';
+import { useAppDispatch } from '@/hooks/hooks';
 
 type StageTopProps = {
     stage: IStage;
@@ -38,6 +39,8 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     const [menuOpen, setMenuOpen] = useState<boolean>(false);
     const [subMenuOpen, setSubMenuOpen] = useState<boolean>(false);
 
+    const dispatch = useAppDispatch();
+
     const [filtersTabOpen, setFiltersTabOpen] = useState<boolean>(false);
     const [sortByTabOpen, setSortByTabOpen] = useState<boolean>(false);
     const {filters} = useFilters();
@@ -52,6 +55,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
     }
 
     const handleAddNewTask = (): void => {
+        dispatch(setCurrentStage(stage));
         openNewTaskModal();
     }
 
@@ -236,7 +240,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
                 />
 
                 <ButtonWithIcon
-                    title={filtersTabOpen ? 'Close sort options' : 'Open sort options'}
+                    title={sortByTabOpen ? 'Close sort options' : 'Open sort options'}
                     action={handleSortByTab}
                     disabled={!tasks.length}
                     icon={<BsSortDown />} 
@@ -410,6 +414,7 @@ const StageTop = ({stage, tasks, setTasks}: StageTopProps) => {
         </div>
         
         <Filters
+            tasks={stage.tasks}
             isOpen={filtersTabOpen}
             setIsOpen={handleFiltersTab}
             setTasks={setTasks}
